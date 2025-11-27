@@ -1,0 +1,7 @@
+IMPORTANTE:
+
+Por favor, coloque o arquivo do seu logotipo nomeado como "logo.jpg" dentro desta pasta (public).
+
+O caminho final deve ser: /public/logo.jpg
+
+Isso garantirá que o site consiga carregar a imagem corretamente.
