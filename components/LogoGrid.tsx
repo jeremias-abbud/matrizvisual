@@ -1,12 +1,13 @@
 
 
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 // FIX: Corrected import to use 'PROJECTS' aliased as 'MOCK_PROJECTS' as it is exported from constants.ts
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
-import { ProjectCategory } from '../../types';
+import { ProjectCategory } from '../types';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 interface LogoItem {
