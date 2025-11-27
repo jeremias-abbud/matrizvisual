@@ -7,6 +7,7 @@ import WebShowcase from './components/WebShowcase';
 import Portfolio from './components/Portfolio';
 import About from './components/About';
 import Contact from './components/Contact';
+import BackToTop from './components/BackToTop';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <About />
       </main>
       <Contact />
+      <BackToTop />
     </div>
   );
 }

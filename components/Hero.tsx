@@ -15,7 +15,7 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-matriz-black pt-20 scroll-mt-28">
+    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-matriz-black pt-28 pb-32 md:pt-20 md:pb-24 scroll-mt-28">
       {/* Abstract Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matriz-purple/20 rounded-full blur-[128px]"></div>
@@ -74,7 +74,7 @@ const Hero: React.FC = () => {
       <a 
         href="#services" 
         onClick={(e) => handleScrollClick(e, '#services')}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10 group cursor-pointer"
+        className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10 group cursor-pointer"
         aria-label="Rolar para baixo"
       >
         <span className="text-[10px] uppercase tracking-[0.2em] text-white/30 group-hover:text-matriz-purple transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">

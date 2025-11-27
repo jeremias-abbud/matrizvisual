@@ -39,20 +39,17 @@ const Navbar: React.FC = () => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-5'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
-        {/* Logo Text/Icon */}
+        {/* Logo Image */}
         <a 
           href="#home" 
           className="flex items-center gap-2 group cursor-pointer" 
           onClick={(e) => handleNavClick(e, '#home')}
         >
-           <div className="relative w-8 h-8 border border-matriz-silver flex items-center justify-center overflow-hidden group-hover:border-matriz-purple transition-colors duration-300">
-             <div className="absolute w-[120%] h-[1px] bg-matriz-purple rotate-45"></div>
-             <span className="font-display font-bold text-lg text-white z-10">M</span>
-           </div>
-           <div className="flex flex-col">
-             <span className="font-display font-bold text-xl tracking-wider text-white leading-none">MATRIZ</span>
-             <span className="font-sans text-[10px] tracking-[0.3em] text-matriz-purple uppercase leading-none">Visual</span>
-           </div>
+           <img 
+             src="/logo.jpg" 
+             alt="Matriz Visual" 
+             className="h-10 md:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-90"
+           />
         </a>
 
         {/* Desktop Menu */}
