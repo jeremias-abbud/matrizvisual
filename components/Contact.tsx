@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
+import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const Contact: React.FC = () => {
+  const { assets } = useSiteAssets();
+
   return (
     <footer id="contact" className="bg-matriz-black border-t border-white/10 scroll-mt-28">
       {/* Contact Section */}
@@ -96,7 +100,7 @@ const Contact: React.FC = () => {
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
              <img 
-               src="/logo.png" 
+               src={assets.logo_main} 
                alt="Matriz Visual" 
                className="h-10 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
              />

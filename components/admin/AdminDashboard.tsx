@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../src/lib/supabase';
 import Login from './Login';
 import ProjectManager from './ProjectManager';
 import LogoManager from './LogoManager';
-import { LogOut, LayoutGrid, Image, Settings } from 'lucide-react';
+import SiteAssetsManager from './SiteAssetsManager';
+import { LogOut, LayoutGrid, Image, Settings, Palette } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'projects' | 'logos' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'logos' | 'assets' | 'settings'>('projects');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -58,6 +60,12 @@ const AdminDashboard: React.FC = () => {
             >
                 <Image size={20} /> Logotipos
             </button>
+            <button 
+                onClick={() => setActiveTab('assets')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'assets' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            >
+                <Palette size={20} /> Imagens do Site
+            </button>
             {/* 
             <button 
                 onClick={() => setActiveTab('settings')}
@@ -84,6 +92,7 @@ const AdminDashboard: React.FC = () => {
         <div className="p-8">
             {activeTab === 'projects' && <ProjectManager />}
             {activeTab === 'logos' && <LogoManager />}
+            {activeTab === 'assets' && <SiteAssetsManager />}
             {activeTab === 'settings' && <div>Configurações em desenvolvimento...</div>}
         </div>
       </main>

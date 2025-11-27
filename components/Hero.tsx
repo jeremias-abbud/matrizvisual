@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const Hero: React.FC = () => {
+  const { assets } = useSiteAssets();
+
   const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     const targetId = href.replace('#', '');
@@ -28,10 +32,10 @@ const Hero: React.FC = () => {
       {/* Main Content Wrapper */}
       <div className="flex-grow flex items-center justify-center container mx-auto px-6 relative z-10 py-4">
         <div className="text-center w-full max-w-4xl mx-auto">
-            {/* Hero Logo */}
+            {/* Hero Logo - Dynamic */}
             <div className="mb-6 flex justify-center animate-fade-in-down">
             <img 
-                src="/logo.png" 
+                src={assets.logo_main} 
                 alt="Matriz Visual Emblem" 
                 className="h-28 md:h-40 w-auto object-contain drop-shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:scale-105 transition-transform duration-700"
             />

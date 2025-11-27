@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const About: React.FC = () => {
+  const { assets } = useSiteAssets();
+
   return (
     <section id="about" className="py-16 md:py-20 bg-matriz-dark border-y border-white/5 relative overflow-hidden scroll-mt-28">
         {/* Decorative giant text */}
@@ -15,12 +19,12 @@ const About: React.FC = () => {
              {/* Abstract grid composition */}
              <div className="relative z-10 grid grid-cols-2 gap-4">
                  <img 
-                    src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop" 
+                    src={assets.about_img_1} 
                     alt="Digital Art Abstract" 
                     className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10" 
                  />
                  <img 
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop" 
+                    src={assets.about_img_2} 
                     alt="Cyberpunk Tech Workspace" 
                     className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10 mt-12" 
                  />
