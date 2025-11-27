@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft } from 'lucide-react';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 
@@ -157,12 +157,13 @@ const LogoManager: React.FC = () => {
   const saveOrder = async () => {
     setUploading(true);
     
-    // Create updates array
+    // CORREÇÃO CRÍTICA: Enviar o objeto completo, não apenas o ID.
+    // Evita erro de constraints (campo não nulo) no Supabase durante o upsert.
     const updates = logos.map((logo, index) => ({
-        id: logo.id,
-        display_order: index + 1 // 1-based index
+        ...logo, // Espalha todas as propriedades existentes
+        display_order: index + 1 
     }));
-
+    
     try {
         const { error } = await supabase.from('logos').upsert(updates, { onConflict: 'id' });
         

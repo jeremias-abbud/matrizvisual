@@ -144,9 +144,11 @@ const ProjectManager: React.FC = () => {
   const saveOrder = async () => {
     setUploading(true);
     
-    // Create updates array
+    // CORREÇÃO CRÍTICA: Enviar o objeto completo, não apenas o ID.
+    // O upsert precisa de todos os campos não-nulos para validar a linha,
+    // mesmo que estejamos atualizando apenas a ordem.
     const updates = projects.map((proj, index) => ({
-        id: proj.id,
+        ...proj, // Espalha todas as propriedades existentes (title, category, etc)
         display_order: index + 1
     }));
 
@@ -160,7 +162,7 @@ const ProjectManager: React.FC = () => {
         // fetchProjects(); 
     } catch (err) {
         console.error(err);
-        alert('Erro ao salvar a ordem.');
+        alert('Erro ao salvar a ordem. Verifique o console.');
     } finally {
         setUploading(false);
     }
