@@ -17,7 +17,7 @@ const Services: React.FC = () => {
     <section id="services" className="py-24 bg-matriz-dark relative scroll-mt-28">
       <div className="container mx-auto px-6">
         <div className="mb-16 text-center">
-            <h2 className="font-display text-4xl font-bold mb-4 text-white">Nossas <span className="text-matriz-purple">Especialidades</span></h2>
+            <h2 className="font-display text-4xl font-bold mb-4 text-white">Como Podemos <span className="text-matriz-purple">Ajudar</span></h2>
             <div className="w-24 h-1 bg-matriz-purple mx-auto"></div>
         </div>
 

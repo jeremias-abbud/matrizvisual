@@ -95,8 +95,12 @@ const Contact: React.FC = () => {
       <div className="border-t border-white/10 bg-black py-8">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-display font-bold text-lg text-white">MATRIZ</span>
-            <span className="text-xs text-gray-500">© 2024. Todos os direitos reservados.</span>
+             <img 
+               src="/logo.png" 
+               alt="Matriz Visual" 
+               className="h-10 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity"
+             />
+            <span className="text-xs text-gray-500 ml-4">© 2024. Todos os direitos reservados.</span>
           </div>
           
           <div className="flex space-x-6">

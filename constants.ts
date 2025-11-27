@@ -103,26 +103,26 @@ export const PROJECTS: Project[] = [
 export const SERVICES: Service[] = [
   {
     id: 's1',
-    title: 'Design Gráfico',
-    description: 'Criação de logotipos, identidades visuais marcantes e materiais publicitários que comunicam a essência da sua marca.',
+    title: 'Logos e Identidade',
+    description: 'Dê uma cara profissional para o seu negócio. Criamos seu logotipo e materiais para passar confiança aos seus clientes.',
     iconName: 'Palette'
   },
   {
     id: 's2',
-    title: 'Desenvolvimento Web',
-    description: 'Sites modernos, rápidos e responsivos. Do institucional ao e-commerce, criamos sua presença digital.',
+    title: 'Sites e Lojas Virtuais',
+    description: 'Tenha sua empresa aberta 24h. Criamos sites fáceis de usar, que funcionam no celular e ajudam você a vender mais.',
     iconName: 'Monitor'
   },
   {
     id: 's3',
-    title: 'Edição de Vídeo',
-    description: 'Produção audiovisual, motion graphics e edição profissional para comerciais, YouTube e redes sociais.',
+    title: 'Vídeos para Redes',
+    description: 'Vídeos curtos e dinâmicos para Reels e TikTok. A melhor forma de mostrar seus produtos e atrair atenção.',
     iconName: 'Video'
   },
   {
     id: 's4',
-    title: 'Marketing Visual',
-    description: 'Estratégias visuais para alavancar suas campanhas e aumentar o engajamento do seu público.',
+    title: 'Artes para Instagram',
+    description: 'Não sabe o que postar? Criamos pacotes de artes prontas para deixar seu feed bonito e organizado.',
     iconName: 'Rocket'
   }
 ];

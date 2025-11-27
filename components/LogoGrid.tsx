@@ -6,9 +6,9 @@ const LogoGrid: React.FC = () => {
     <section className="py-20 bg-matriz-black relative border-b border-white/5">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
-           <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Identidade</span>
+           <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Galeria de Logotipos</span>
            <h3 className="font-display text-2xl md:text-3xl font-bold text-white mt-2">
-             Marcas que <span className="text-gray-500">Transformamos</span>
+             Logos e Marcas que <span className="text-gray-500">Criamos</span>
            </h3>
         </div>
 
