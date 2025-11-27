@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft, Star } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft } from 'lucide-react';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 
@@ -12,7 +12,6 @@ interface Logo {
   url: string;
   industry?: string;
   display_order: number;
-  is_featured?: boolean;
 }
 
 const LogoManager: React.FC = () => {
@@ -30,7 +29,6 @@ const LogoManager: React.FC = () => {
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [isFeatured, setIsFeatured] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -59,25 +57,10 @@ const LogoManager: React.FC = () => {
     }
   };
 
-  const handleToggleFeatured = async (logo: Logo) => {
-    const { data, error } = await supabase
-        .from('logos')
-        .update({ is_featured: !logo.is_featured })
-        .eq('id', logo.id)
-        .select();
-    
-    if (!error && data) {
-        setLogos(prev => prev.map(p => p.id === logo.id ? data[0] : p));
-    } else {
-        alert('Erro ao atualizar destaque.');
-    }
-  }
-
   const handleEdit = (logo: Logo) => {
     setEditingId(logo.id);
     setName(logo.name);
     setIndustry(logo.industry || '');
-    setIsFeatured(logo.is_featured || false);
     setImageFile(null); 
     setShowForm(true);
   };
@@ -87,7 +70,6 @@ const LogoManager: React.FC = () => {
     setName('');
     setIndustry('');
     setImageFile(null);
-    setIsFeatured(false);
     setEditingId(null);
   };
 
@@ -104,7 +86,6 @@ const LogoManager: React.FC = () => {
         const updates: any = { 
             name,
             industry: industry || null,
-            is_featured: isFeatured,
         };
         if (imageUrl) updates.url = imageUrl; 
 
@@ -136,7 +117,6 @@ const LogoManager: React.FC = () => {
             industry: industry || null,
             url: imageUrl,
             display_order: maxOrder + 1,
-            is_featured: isFeatured,
         }]).select();
 
         if (!error && data) {
@@ -293,11 +273,6 @@ const LogoManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-black/30 border border-white/5 rounded">
-                  <input id="isFeatured" type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} className="h-5 w-5 bg-black border-white/20 rounded text-matriz-purple focus:ring-matriz-purple" />
-                  <label htmlFor="isFeatured" className="text-white font-bold text-sm select-none">Marcar como Destaque na página inicial</label>
-              </div>
-
               <button 
                 type="submit" 
                 disabled={uploading}
@@ -335,9 +310,6 @@ const LogoManager: React.FC = () => {
                   </div>
                   {!isReordering && (
                       <div className="flex items-center gap-1">
-                        <button onClick={() => handleToggleFeatured(logo)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title="Marcar como Destaque">
-                             {logo.is_featured ? <Star size={18} className="text-yellow-400" fill="currentColor" /> : <Star size={18} className="text-gray-600 hover:text-white" />}
-                        </button>
                         <button onClick={() => handleEdit(logo)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
                         <button onClick={() => handleDelete(logo.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
                       </div>

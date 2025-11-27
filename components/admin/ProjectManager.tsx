@@ -20,7 +20,6 @@ interface Project {
   video_url?: string;
   gallery?: string[];
   display_order?: number;
-  is_featured?: boolean;
 }
 
 const ProjectManager: React.FC = () => {
@@ -44,7 +43,6 @@ const ProjectManager: React.FC = () => {
     tags: '',
     videoUrl: '',
     gallery: '',
-    isFeatured: false,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -72,20 +70,6 @@ const ProjectManager: React.FC = () => {
     }
   };
 
-  const handleToggleFeatured = async (project: Project) => {
-    const { data, error } = await supabase
-        .from('projects')
-        .update({ is_featured: !project.is_featured })
-        .eq('id', project.id)
-        .select();
-    
-    if (!error && data) {
-        setProjects(prev => prev.map(p => p.id === project.id ? data[0] : p));
-    } else {
-        alert('Erro ao atualizar destaque.');
-    }
-  }
-
   const handleEdit = (project: Project) => {
     setEditingProject(project);
     setFormData({
@@ -98,7 +82,6 @@ const ProjectManager: React.FC = () => {
       tags: project.tags?.join(', ') || '',
       videoUrl: project.video_url || '',
       gallery: project.gallery?.join(', ') || '',
-      isFeatured: project.is_featured || false,
     });
     setImageFile(null);
     setShowForm(true);
@@ -117,7 +100,6 @@ const ProjectManager: React.FC = () => {
       tags: '',
       videoUrl: '',
       gallery: '',
-      isFeatured: false,
     });
     setImageFile(null);
   };
@@ -151,7 +133,6 @@ const ProjectManager: React.FC = () => {
             tags: tagsArray,
             video_url: formData.videoUrl || null,
             gallery: galleryArray.length > 0 ? galleryArray : null,
-            is_featured: formData.isFeatured,
         };
         if (imageUrl) {
             updates.image_url = imageUrl;
@@ -191,7 +172,6 @@ const ProjectManager: React.FC = () => {
             video_url: formData.videoUrl || null,
             gallery: galleryArray.length > 0 ? galleryArray : null,
             display_order: maxOrder + 1,
-            is_featured: formData.isFeatured,
         }]).select();
 
         if (!error && data) {
@@ -322,10 +302,6 @@ const ProjectManager: React.FC = () => {
                     </div>
                 </div>
               </div>
-              <div className="md:col-span-2 flex items-center gap-3 p-3 bg-black/30 border border-white/5 rounded">
-                  <input id="isFeatured" type="checkbox" checked={formData.isFeatured} onChange={e => setFormData({...formData, isFeatured: e.target.checked})} className="h-5 w-5 bg-black border-white/20 rounded text-matriz-purple focus:ring-matriz-purple" />
-                  <label htmlFor="isFeatured" className="text-white font-bold text-sm select-none">Marcar como Destaque na página inicial</label>
-              </div>
               <div className="md:col-span-2 pt-4">
                 <button type="submit" disabled={uploading} className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50">
                     {uploading ? 'Salvando...' : (editingProject ? 'Atualizar Projeto' : 'Publicar Projeto')}
@@ -342,11 +318,9 @@ const ProjectManager: React.FC = () => {
         <div className="space-y-3">
             <div className="hidden md:grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-1 text-center">#</div>
-                <div className="col-span-2">Imagem</div>
-                <div className="col-span-3">Título</div>
-                <div className="col-span-3">Categoria / Indústria</div>
-                <div className="col-span-1 text-center">Destaque</div>
-                <div className="col-span-2 text-right">Ações</div>
+                <div className="col-span-3">Imagem</div>
+                <div className="col-span-5">Título</div>
+                <div className="col-span-3 text-right">Ações</div>
             </div>
             
             {projects.map((project, index) => (
@@ -377,11 +351,7 @@ const ProjectManager: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    <div className="border-t border-white/5 pt-3 flex justify-between items-center">
-                         <button onClick={() => handleToggleFeatured(project)} className={`flex items-center gap-2 text-xs font-bold rounded px-3 py-1.5 transition-colors ${project.is_featured ? 'bg-yellow-400/10 text-yellow-400' : 'text-gray-500 hover:bg-white/10'}`} title="Marcar como Destaque">
-                            <Star size={14} fill={project.is_featured ? 'currentColor' : 'none'} /> 
-                            {project.is_featured ? 'DESTAQUE' : 'NÃO DESTACADO'}
-                        </button>
+                    <div className="border-t border-white/5 pt-3 flex justify-end items-center">
                         {!isReordering && (
                         <div className="flex justify-end gap-2">
                             <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
@@ -396,22 +366,16 @@ const ProjectManager: React.FC = () => {
                     <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
                         {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
                     </div>
-                    <div className="col-span-2 h-12 w-full overflow-hidden rounded bg-black">
+                    <div className="col-span-3 h-12 w-full overflow-hidden rounded bg-black">
                         <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
                     </div>
-                    <div className="col-span-3 text-white font-bold truncate">{project.title}</div>
-                    <div className="col-span-3">
-                        <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 block w-fit mb-1">
-                            {project.category}
-                        </span>
-                        {project.industry && (<span className="text-xs text-gray-500 block truncate">{project.industry}</span>)}
+                    <div className="col-span-5">
+                      <p className="text-white font-bold truncate">{project.title}</p>
+                      <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 mt-1 inline-block">
+                          {project.category}
+                      </span>
                     </div>
-                    <div className="col-span-1 flex justify-center">
-                        <button onClick={() => handleToggleFeatured(project)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title="Marcar como Destaque">
-                             {project.is_featured ? <Star size={18} className="text-yellow-400" fill="currentColor" /> : <Star size={18} className="text-gray-600 hover:text-white" />}
-                        </button>
-                    </div>
-                    <div className="col-span-2 flex justify-end gap-2">
+                    <div className="col-span-3 flex justify-end gap-2">
                         {!isReordering && (<>
                             <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
                             <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>

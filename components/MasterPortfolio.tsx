@@ -1,19 +1,17 @@
 
 
-
 import React, { useState } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
 import WebShowcase from './WebShowcase';
-import FeaturedLogos from './FeaturedLogos';
 import { ProjectCategory } from '../types';
-import { LayoutGrid, PenTool, Monitor, Video, Grid, Star } from 'lucide-react';
+import { LayoutGrid, PenTool, Monitor, Video, Grid } from 'lucide-react';
 
 const MasterPortfolio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'logos' | 'sites' | 'design' | 'video'>('all');
 
   const tabs = [
-    { id: 'all', label: 'Destaques', icon: <Star size={16} /> },
+    { id: 'all', label: 'Todos', icon: <LayoutGrid size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
@@ -58,15 +56,7 @@ const MasterPortfolio: React.FC = () => {
         {/* Content Area - Conditional Rendering */}
         <div className="animate-fade-in min-h-[500px]">
             {activeTab === 'all' && (
-                <>
-                    <div className="flex items-center gap-4 mb-8">
-                        <LayoutGrid className="text-matriz-purple" size={24} />
-                        <h3 className="font-display text-2xl font-bold text-white">Projetos em Destaque</h3>
-                        <div className="flex-grow h-px bg-white/10"></div>
-                    </div>
-                    <Portfolio headless featuredOnly />
-                    <FeaturedLogos />
-                </>
+                <Portfolio headless forcedCategory={ProjectCategory.ALL} />
             )}
 
             {activeTab === 'logos' && (

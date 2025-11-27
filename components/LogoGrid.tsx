@@ -1,14 +1,9 @@
 
 
-
-
-
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter, Star } from 'lucide-react';
+import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
-import { ProjectCategory } from '../types';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 interface LogoItem {
@@ -17,7 +12,6 @@ interface LogoItem {
   url: string;
   industry?: string;
   createdAt?: number;
-  is_featured?: boolean;
 }
 
 interface LogoGridProps {
@@ -45,7 +39,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
 
         const { data, error } = await supabase
           .from('logos')
-          .select('id, name, url, created_at, industry, is_featured')
+          .select('id, name, url, created_at, industry')
           .order('display_order', { ascending: true });
 
         if (error) throw error;
@@ -56,7 +50,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
             url: item.url,
             industry: item.industry,
             createdAt: new Date(item.created_at).getTime(),
-            is_featured: item.is_featured,
         }));
 
         if (normalizedProjects.length > 0) {
@@ -182,12 +175,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     >
                     <div className="absolute inset-0 bg-matriz-purple/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
-                    {logo.is_featured && (
-                       <div className="absolute top-2 left-2 bg-yellow-400 text-black p-1.5 rounded-full shadow-lg z-10" title="Logotipo em Destaque">
-                           <Star size={12} fill="currentColor" />
-                       </div>
-                    )}
-
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                         <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-lg">
                             <ZoomIn size={16} />

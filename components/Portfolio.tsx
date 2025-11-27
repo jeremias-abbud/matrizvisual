@@ -13,10 +13,9 @@ const ITEMS_PER_PAGE = 6;
 interface PortfolioProps {
   headless?: boolean;
   forcedCategory?: ProjectCategory;
-  featuredOnly?: boolean; // Nova prop para Destaques
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, featuredOnly = false }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -55,7 +54,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             longDescription: item.long_description,
             gallery: item.gallery,
             videoUrl: item.video_url,
-            isFeatured: item.is_featured, // Mapeia o novo campo
           }));
           setProjects(formattedData);
         } else {
@@ -85,11 +83,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
 
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [activeCategory, activeIndustry, featuredOnly]);
+  }, [activeCategory, activeIndustry]);
   
-  const baseProjects = featuredOnly ? projects.filter(p => p.isFeatured) : projects;
-
-  const filteredProjects = baseProjects.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
     const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
     return matchCategory && matchIndustry;
@@ -217,12 +213,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                         : 'object-cover'
                     }`}
                     />
-
-                    {project.isFeatured && (
-                       <div className="absolute top-3 left-3 bg-yellow-400 text-black p-1.5 rounded-full shadow-lg z-10" title="Projeto em Destaque">
-                           <Star size={12} fill="currentColor" />
-                       </div>
-                    )}
                     
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
                         {getTypeIcon(project.category)}
@@ -362,11 +352,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             {selectedProject.industry}
                             </span>
                         )}
-                        {selectedProject.isFeatured && (
-                           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-400 text-black text-xs font-bold uppercase tracking-widest rounded-sm">
-                               <Star size={12} fill="currentColor" /> DESTAQUE
-                           </span>
-                        )}
                     </div>
                     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
                 </div>
@@ -383,11 +368,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
                             {selectedProject.industry}
                             </span>
-                        )}
-                        {selectedProject.isFeatured && (
-                           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-400 text-black text-xs font-bold uppercase tracking-widest rounded-sm">
-                               <Star size={12} fill="currentColor" /> DESTAQUE
-                           </span>
                         )}
                     </div>
                     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
