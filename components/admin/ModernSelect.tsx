@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ChevronDown, Search, Check, X } from 'lucide-react';
 
@@ -44,7 +43,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`w-full bg-black border ${isOpen ? 'border-matriz-purple' : 'border-white/10'} p-3 text-left text-sm rounded transition-all flex justify-between items-center hover:bg-white/5 focus:outline-none`}
+        className={`w-full bg-black border ${isOpen ? 'border-matriz-purple' : 'border-white/10'} p-3 text-left text-sm rounded transition-all flex justify-between items-center hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-matriz-purple/50`}
       >
         <span className={value ? 'text-white font-medium' : 'text-gray-500'}>
           {value || placeholder}
@@ -79,13 +78,13 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
                   placeholder="Buscar..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded pl-10 pr-4 py-3 text-white text-sm focus:border-matriz-purple outline-none"
+                  className="w-full bg-black/50 border border-white/10 rounded pl-10 pr-4 py-3 text-white text-sm focus:border-matriz-purple outline-none focus:ring-2 focus:ring-matriz-purple/50"
                 />
               </div>
             </div>
 
             {/* Options List */}
-            <div className="overflow-y-auto flex-1 p-2 custom-scrollbar">
+            <div className="overflow-y-auto flex-1 p-2 custom-scrollbar bg-matriz-dark">
               {filteredOptions.length > 0 ? (
                 <div className="space-y-1">
                     {/* Option to clear if not required */}
@@ -107,7 +106,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
                       className={`w-full text-left px-4 py-3 rounded transition-colors flex justify-between items-center group ${
                         value === option 
                           ? 'bg-matriz-purple text-white font-bold' 
-                          : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                          : 'text-gray-300 hover:bg-matriz-purple/20'
                       }`}
                     >
                       <span className="text-sm">{option}</span>
