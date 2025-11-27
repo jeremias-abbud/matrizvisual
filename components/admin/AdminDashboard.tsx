@@ -5,7 +5,7 @@ import Login from './Login';
 import ProjectManager from './ProjectManager';
 import LogoManager from './LogoManager';
 import SiteAssetsManager from './SiteAssetsManager';
-import { LogOut, LayoutGrid, Image, Settings, Palette } from 'lucide-react';
+import { LogOut, LayoutGrid, Image, Settings, Palette, ArrowLeft } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -30,6 +30,10 @@ const AdminDashboard: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/'; // Redirect to home
+  };
+
+  const handleExit = () => {
+    window.location.hash = ''; // Just clear the hash to go back to main site
   };
 
   if (checkingAuth) return <div className="min-h-screen bg-matriz-black flex items-center justify-center text-white">Carregando...</div>;
@@ -77,12 +81,20 @@ const AdminDashboard: React.FC = () => {
         </nav>
 
         <div className="p-4 border-t border-white/10">
-            <div className="text-xs text-gray-500 mb-2 truncate px-2">{session.user.email}</div>
+            <div className="text-xs text-gray-500 mb-3 truncate px-2 text-center">{session.user.email}</div>
+            
+            <button 
+                onClick={handleExit}
+                className="w-full flex items-center gap-2 px-4 py-2 text-white bg-white/5 hover:bg-white/10 rounded transition-colors mb-2 text-sm font-bold border border-white/5"
+            >
+                <ArrowLeft size={18} /> Voltar ao Site
+            </button>
+
             <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded transition-colors text-sm"
             >
-                <LogOut size={18} /> Sair
+                <LogOut size={18} /> Sair (Logout)
             </button>
         </div>
       </aside>
