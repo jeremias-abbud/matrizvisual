@@ -1,13 +1,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
-import { LOGOS as MOCK_LOGOS } from '../constants'; // Fallback
+import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
 
 interface LogoItem {
   id: string;
   name: string;
   url: string;
+  industry?: string;
+  createdAt?: number;
 }
 
 const LogoGrid: React.FC = () => {
@@ -16,6 +18,9 @@ const LogoGrid: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState<number | null>(null);
+  
+  // Filter State
+  const [activeIndustry, setActiveIndustry] = useState<string>('');
 
   useEffect(() => {
     async function fetchLogos() {
@@ -33,31 +38,32 @@ const LogoGrid: React.FC = () => {
         // 2. Buscar da tabela de Projetos (filtrando por Logotipos)
         const { data: projectsData, error: projectsError } = await supabase
           .from('projects')
-          .select('id, title, image_url, created_at')
+          .select('id, title, image_url, created_at, industry')
           .eq('category', 'Logotipos') // Garante que pegamos projetos da categoria certa
           .order('created_at', { ascending: false });
 
         if (projectsError) throw projectsError;
 
         // 3. Normalizar e Unificar as listas
-        const normalizedLogos = (logosData || []).map((item: any) => ({
+        const normalizedLogos: LogoItem[] = (logosData || []).map((item: any) => ({
             id: item.id,
             name: item.name,
             url: item.url,
+            industry: item.industry,
             createdAt: new Date(item.created_at).getTime()
         }));
 
-        const normalizedProjects = (projectsData || []).map((item: any) => ({
+        const normalizedProjects: LogoItem[] = (projectsData || []).map((item: any) => ({
             id: item.id,
             name: item.title,
             url: item.image_url,
+            industry: item.industry,
             createdAt: new Date(item.created_at).getTime()
         }));
 
         // Combinar e ordenar por mais recente
         const combinedLogos = [...normalizedLogos, ...normalizedProjects]
-            .sort((a, b) => b.createdAt - a.createdAt)
-            .map(({ id, name, url }) => ({ id, name, url }));
+            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
         if (combinedLogos.length > 0) {
           setLogos(combinedLogos);
@@ -74,8 +80,13 @@ const LogoGrid: React.FC = () => {
     fetchLogos();
   }, []);
   
-  const visibleLogos = logos.slice(0, visibleCount);
-  const hasMore = visibleCount < logos.length;
+  // Filter Logic
+  const filteredLogos = logos.filter(logo => {
+    return activeIndustry === '' || logo.industry === activeIndustry;
+  });
+  
+  const visibleLogos = filteredLogos.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredLogos.length;
   const canShowLess = visibleCount > INITIAL_COUNT;
 
   const handleLoadMore = () => {
@@ -103,16 +114,16 @@ const LogoGrid: React.FC = () => {
   const nextLogo = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (selectedLogoIndex !== null) {
-      setSelectedLogoIndex((prev) => (prev !== null ? (prev + 1) % logos.length : null));
+      setSelectedLogoIndex((prev) => (prev !== null ? (prev + 1) % filteredLogos.length : null));
     }
-  }, [selectedLogoIndex, logos.length]);
+  }, [selectedLogoIndex, filteredLogos.length]);
 
   const prevLogo = useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
     if (selectedLogoIndex !== null) {
-      setSelectedLogoIndex((prev) => (prev !== null ? (prev - 1 + logos.length) % logos.length : null));
+      setSelectedLogoIndex((prev) => (prev !== null ? (prev - 1 + filteredLogos.length) % filteredLogos.length : null));
     }
-  }, [selectedLogoIndex, logos.length]);
+  }, [selectedLogoIndex, filteredLogos.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -131,8 +142,8 @@ const LogoGrid: React.FC = () => {
   return (
     <section className="py-16 md:py-20 bg-matriz-black relative border-b border-white/5 scroll-mt-28" id="logos">
       <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
-           <div>
+        <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
+           <div className="w-full lg:w-auto">
              <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Identidade Visual</span>
              <h3 className="font-display text-3xl md:text-4xl font-bold text-white mt-2">
                Galeria de <span className="text-gray-500">Logotipos</span>
@@ -141,6 +152,26 @@ const LogoGrid: React.FC = () => {
                Cada logotipo é criado para ser único. Confira nossa coleção de marcas desenvolvidas para empreendedores que desejam se destacar no mercado.
              </p>
            </div>
+
+           {/* Industry Filter Dropdown */}
+           <div className="w-full lg:w-auto relative group min-w-[240px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                    <Filter size={14} />
+                </div>
+                <select 
+                    value={activeIndustry}
+                    onChange={(e) => setActiveIndustry(e.target.value)}
+                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                >
+                    <option value="">Todos os Ramos</option>
+                    {INDUSTRIES.map(ind => (
+                        <option key={ind} value={ind}>{ind}</option>
+                    ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                    <ChevronLeft size={14} className="-rotate-90" />
+                </div>
+             </div>
         </div>
 
         {loading ? (
@@ -174,12 +205,28 @@ const LogoGrid: React.FC = () => {
                         loading="lazy"
                     />
                     
-                    <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold">{logo.name}</span>
+                    <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2">
+                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate">{logo.name}</span>
+                        {logo.industry && (
+                            <span className="text-[8px] uppercase tracking-wide text-gray-500 block truncate">{logo.industry}</span>
+                        )}
                     </div>
                     </div>
                 ))}
                 </div>
+
+                {!loading && filteredLogos.length === 0 && (
+                    <div className="text-center py-12 bg-white/5 border border-white/5 rounded-sm">
+                        <Filter size={32} className="mx-auto text-gray-600 mb-2" />
+                        <p className="text-gray-500 text-sm">Nenhum logotipo encontrado neste ramo.</p>
+                        <button 
+                            onClick={() => setActiveIndustry('')}
+                            className="mt-2 text-matriz-purple font-bold uppercase text-xs hover:underline"
+                        >
+                            Limpar Filtro
+                        </button>
+                    </div>
+                )}
                 
                 {/* Load More / Less Buttons */}
                 {(hasMore || canShowLess) && (
@@ -214,7 +261,7 @@ const LogoGrid: React.FC = () => {
       </div>
 
       {/* Lightbox Modal */}
-      {selectedLogoIndex !== null && logos.length > 0 && (
+      {selectedLogoIndex !== null && filteredLogos.length > 0 && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
             {/* Backdrop */}
             <div 
@@ -237,8 +284,8 @@ const LogoGrid: React.FC = () => {
                 <div className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center">
                     <img 
                         key={selectedLogoIndex} // Force re-render for animation
-                        src={logos[selectedLogoIndex].url} 
-                        alt={logos[selectedLogoIndex].name} 
+                        src={filteredLogos[selectedLogoIndex].url} 
+                        alt={filteredLogos[selectedLogoIndex].name} 
                         className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] animate-fade-in"
                     />
                 </div>
@@ -246,11 +293,18 @@ const LogoGrid: React.FC = () => {
                 {/* Caption */}
                 <div className="mt-8 text-center">
                     <h3 className="font-display text-2xl md:text-3xl font-bold text-white">
-                        {logos[selectedLogoIndex].name}
+                        {filteredLogos[selectedLogoIndex].name}
                     </h3>
-                    <span className="text-matriz-purple text-xs uppercase tracking-[0.3em] font-bold mt-2 block">
-                        Design de Marca
-                    </span>
+                    <div className="flex flex-col items-center gap-1 mt-2">
+                        <span className="text-matriz-purple text-xs uppercase tracking-[0.3em] font-bold block">
+                            Design de Marca
+                        </span>
+                        {filteredLogos[selectedLogoIndex].industry && (
+                             <span className="text-gray-500 text-[10px] uppercase tracking-widest bg-white/5 px-2 py-1 rounded">
+                                {filteredLogos[selectedLogoIndex].industry}
+                             </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* Navigation Buttons */}
