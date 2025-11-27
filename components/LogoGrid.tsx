@@ -5,8 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
-// FIX: Corrected import to use 'PROJECTS' aliased as 'MOCK_PROJECTS' as it is exported from constants.ts
-import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
 import { ProjectCategory } from '../types';
 import { smoothScrollTo } from '../src/lib/scroll';
 
@@ -30,14 +29,11 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
   const [selectedLogoIndex, setSelectedLogoIndex] = useState<number | null>(null);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
 
-  const getMockLogos = () => MOCK_PROJECTS
-      .filter(p => p.category === ProjectCategory.LOGO)
-      .map(p => ({
-          id: p.id,
-          name: p.title,
-          url: p.imageUrl,
-          industry: p.industry
-      }));
+  const getMockLogos = () => MOCK_LOGOS.map(p => ({
+    id: p.id,
+    name: p.name,
+    url: p.url,
+  }));
 
   useEffect(() => {
     async function fetchLogos() {
@@ -45,17 +41,16 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
         setLoading(true);
 
         const { data, error } = await supabase
-          .from('projects')
-          .select('id, title, image_url, created_at, industry')
-          .eq('category', 'Logotipos')
+          .from('logos')
+          .select('id, name, url, created_at, industry')
           .order('display_order', { ascending: true });
 
         if (error) throw error;
 
         const normalizedProjects: LogoItem[] = (data || []).map((item: any) => ({
             id: item.id,
-            name: item.title,
-            url: item.image_url,
+            name: item.name,
+            url: item.url,
             industry: item.industry,
             createdAt: new Date(item.created_at).getTime()
         }));
@@ -66,7 +61,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
           setLogos(getMockLogos());
         }
       } catch (err) {
-        console.error('Error fetching logos from projects:', err);
+        console.error('Error fetching logos from logos table:', err);
         setLogos(getMockLogos());
       } finally {
         setLoading(false);

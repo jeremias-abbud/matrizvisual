@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft } from 'lucide-react';
@@ -88,13 +89,14 @@ const LogoManager: React.FC = () => {
         };
         if (imageUrl) updates.url = imageUrl; 
 
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('logos')
             .update(updates)
-            .eq('id', editingId);
+            .eq('id', editingId)
+            .select();
 
-        if (!error) {
-            setLogos(prev => prev.map(l => l.id === editingId ? { ...l, ...updates } : l));
+        if (!error && data) {
+            setLogos(prev => prev.map(l => l.id === editingId ? data[0] : l));
             resetForm();
         } else {
             alert('Erro ao atualizar logo.');
@@ -157,10 +159,8 @@ const LogoManager: React.FC = () => {
   const saveOrder = async () => {
     setUploading(true);
     
-    // CORREÇÃO CRÍTICA: Enviar o objeto completo, não apenas o ID.
-    // Evita erro de constraints (campo não nulo) no Supabase durante o upsert.
     const updates = logos.map((logo, index) => ({
-        ...logo, // Espalha todas as propriedades existentes
+        ...logo, 
         display_order: index + 1 
     }));
     
@@ -181,7 +181,10 @@ const LogoManager: React.FC = () => {
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-display font-bold text-white">Gerenciar Logotipos</h2>
+        <div>
+            <h2 className="text-2xl font-display font-bold text-white">Gerenciar Logotipos (Antigo)</h2>
+            <p className="text-sm text-gray-500 mt-1">Gerencie os logos da galeria antiga. Para novos logos, use o "Portfólio Geral".</p>
+        </div>
         
         <div className="flex gap-3">
              {isReordering ? (
