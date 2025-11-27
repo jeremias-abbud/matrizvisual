@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
@@ -7,6 +6,7 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { assets, styles } = useSiteAssets();
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,19 +37,33 @@ const Navbar: React.FC = () => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-2' : 'bg-transparent py-4'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center h-full">
-        {/* Logo Image - Dynamic Size via Inline Styles */}
+        {/* Logo Image - Wrapper for Loading State */}
         <a 
           href="#home" 
-          className="flex items-center gap-2 group cursor-pointer h-full py-1" 
+          className="flex items-center gap-2 group cursor-pointer h-full py-1 relative" 
           onClick={(e) => handleNavClick(e, '#home')}
         >
+           {/* Skeleton Loader (visible while loading) */}
+           {!isLogoLoaded && (
+             <div 
+               className="bg-white/10 animate-pulse rounded-sm"
+               style={{ 
+                 height: window.innerWidth < 768 ? (styles.logo_height_mobile || '4rem') : (styles.logo_height_desktop || '6rem'),
+                 width: '100px' // Approximate width to reserve space
+               }}
+             ></div>
+           )}
+
            <img 
              src={assets.logo_main} 
              alt="Matriz Visual" 
+             onLoad={() => setIsLogoLoaded(true)}
              style={{ 
                height: window.innerWidth < 768 ? (styles.logo_height_mobile || '4rem') : (styles.logo_height_desktop || '6rem')
              }}
-             className="w-auto object-contain transition-all duration-300 hover:opacity-90"
+             className={`w-auto object-contain transition-all duration-500 hover:opacity-90 ${
+               isLogoLoaded ? 'opacity-100' : 'opacity-0 absolute top-0 left-0'
+             }`}
            />
         </a>
 

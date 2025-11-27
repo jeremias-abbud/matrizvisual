@@ -1,10 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const Hero: React.FC = () => {
   const { assets, styles } = useSiteAssets();
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
 
   const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -31,18 +31,32 @@ const Hero: React.FC = () => {
 
       {/* Main Content Wrapper */}
       <div className="flex-grow flex items-center justify-center container mx-auto px-6 relative z-10 py-4">
-        <div className="text-center w-full max-w-4xl mx-auto">
-            {/* Hero Logo - Dynamic Size & Glow */}
-            <div className="mb-6 flex justify-center animate-fade-in-down">
-            <img 
-                src={assets.logo_main} 
-                alt="Matriz Visual Emblem" 
-                style={{ 
-                    height: window.innerWidth < 768 ? '8rem' : '10rem', // Hero logo usually larger
-                    filter: styles.logo_glow ? 'drop-shadow(0 0 30px rgba(139,92,246,0.5))' : 'none'
-                }}
-                className="w-auto object-contain transition-transform duration-700 hover:scale-105"
-            />
+        <div className="text-center w-full max-w-4xl mx-auto flex flex-col items-center">
+            {/* Hero Logo - Dynamic Size & Glow with Loading State */}
+            <div className="mb-6 flex justify-center animate-fade-in-down relative min-h-[8rem] md:min-h-[10rem]">
+                {/* Skeleton for Hero Logo */}
+                {!isLogoLoaded && (
+                    <div 
+                        className="bg-white/5 animate-pulse rounded-full"
+                        style={{ 
+                            height: window.innerWidth < 768 ? '8rem' : '10rem',
+                            width: window.innerWidth < 768 ? '8rem' : '10rem',
+                        }}
+                    ></div>
+                )}
+                
+                <img 
+                    src={assets.logo_main} 
+                    alt="Matriz Visual Emblem" 
+                    onLoad={() => setIsLogoLoaded(true)}
+                    style={{ 
+                        height: window.innerWidth < 768 ? '8rem' : '10rem', 
+                        filter: styles.logo_glow ? 'drop-shadow(0 0 30px rgba(139,92,246,0.5))' : 'none'
+                    }}
+                    className={`w-auto object-contain transition-all duration-700 hover:scale-105 ${
+                        isLogoLoaded ? 'opacity-100' : 'opacity-0 absolute'
+                    }`}
+                />
             </div>
 
             {/* Status Indicator Badge */}
@@ -56,7 +70,7 @@ const Hero: React.FC = () => {
             </span>
             </div>
             
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down delay-200">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down delay-200 w-full">
             DESTAQUE <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-matriz-silver via-white to-matriz-silver drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                 SUA MARCA
@@ -67,21 +81,21 @@ const Hero: React.FC = () => {
             Profissionalismo para vender mais. Transformamos o visual da sua empresa em uma ferramenta de negócios poderosa.
             </p>
 
-            <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500">
+            <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500 w-full">
             <a 
                 href="#portfolio" 
                 onClick={(e) => handleScrollClick(e, '#portfolio')}
                 className="group relative px-8 py-4 bg-matriz-purple text-white font-bold tracking-widest uppercase overflow-hidden cursor-pointer"
             >
                 <div className="absolute inset-0 w-0 bg-white transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
-                <span className="relative flex items-center gap-2">
+                <span className="relative flex items-center justify-center gap-2">
                 Ver Portfólio <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
             </a>
             <a 
                 href="#contact" 
                 onClick={(e) => handleScrollClick(e, '#contact')}
-                className="px-8 py-4 border border-matriz-gray text-white hover:border-matriz-silver transition-colors duration-300 font-bold tracking-widest uppercase bg-transparent cursor-pointer"
+                className="px-8 py-4 border border-matriz-gray text-white hover:border-matriz-silver transition-colors duration-300 font-bold tracking-widest uppercase bg-transparent cursor-pointer text-center"
             >
                 Pedir Orçamento
             </a>
