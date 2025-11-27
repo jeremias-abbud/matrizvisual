@@ -108,13 +108,10 @@ const Contact: React.FC = () => {
                 href="https://wa.me/5531986752884" 
                 target="_blank"
                 rel="noreferrer"
-                className="group relative inline-flex items-center gap-3 px-6 py-3 bg-green-500/5 border border-green-500/30 text-green-500 font-bold uppercase tracking-widest text-sm hover:bg-green-500 hover:text-black hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300 rounded-sm"
+                className="group relative inline-flex items-center gap-3 px-6 py-3 bg-green-900/20 border border-green-500/50 text-green-500 font-bold uppercase tracking-widest text-sm hover:bg-green-600 hover:text-white hover:border-green-600 hover:shadow-[0_0_25px_rgba(34,197,94,0.6)] transition-all duration-300 rounded-sm overflow-hidden"
             >
-                <MessageCircle size={20} className="group-hover:scale-110 transition-transform duration-300" />
-                <span>Chamar no WhatsApp</span>
-                
-                {/* Shine effect overlay */}
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none skew-y-12"></div>
+                <MessageCircle size={20} className="relative z-10 group-hover:animate-bounce" />
+                <span className="relative z-10">Chamar no WhatsApp</span>
             </a>
           </div>
         </div>

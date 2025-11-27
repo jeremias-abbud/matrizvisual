@@ -15,13 +15,13 @@ const About: React.FC = () => {
              {/* Abstract grid composition */}
              <div className="relative z-10 grid grid-cols-2 gap-4">
                  <img 
-                    src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600&auto=format&fit=crop" 
-                    alt="Ambiente Criativo Tech" 
+                    src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop" 
+                    alt="Digital Art Abstract" 
                     className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10" 
                  />
                  <img 
-                    src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=600&auto=format&fit=crop" 
-                    alt="Estratégia e Colaboração" 
+                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop" 
+                    alt="Cyberpunk Tech Workspace" 
                     className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10 mt-12" 
                  />
              </div>
