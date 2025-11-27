@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
@@ -19,15 +20,47 @@ const LogoGrid: React.FC = () => {
   useEffect(() => {
     async function fetchLogos() {
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+
+        // 1. Buscar da tabela específica de Logos
+        const { data: logosData, error: logosError } = await supabase
           .from('logos')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (logosError) throw logosError;
 
-        if (data && data.length > 0) {
-          setLogos(data);
+        // 2. Buscar da tabela de Projetos (filtrando por Logotipos)
+        const { data: projectsData, error: projectsError } = await supabase
+          .from('projects')
+          .select('id, title, image_url, created_at')
+          .eq('category', 'Logotipos') // Garante que pegamos projetos da categoria certa
+          .order('created_at', { ascending: false });
+
+        if (projectsError) throw projectsError;
+
+        // 3. Normalizar e Unificar as listas
+        const normalizedLogos = (logosData || []).map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            url: item.url,
+            createdAt: new Date(item.created_at).getTime()
+        }));
+
+        const normalizedProjects = (projectsData || []).map((item: any) => ({
+            id: item.id,
+            name: item.title,
+            url: item.image_url,
+            createdAt: new Date(item.created_at).getTime()
+        }));
+
+        // Combinar e ordenar por mais recente
+        const combinedLogos = [...normalizedLogos, ...normalizedProjects]
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .map(({ id, name, url }) => ({ id, name, url }));
+
+        if (combinedLogos.length > 0) {
+          setLogos(combinedLogos);
         } else {
           setLogos(MOCK_LOGOS);
         }
@@ -192,10 +225,10 @@ const LogoGrid: React.FC = () => {
             {/* Content */}
             <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center">
                 
-                {/* Close Button */}
+                {/* Close Button - Fixed Position on Screen */}
                 <button 
                     onClick={closeModal}
-                    className="absolute top-4 right-4 md:-top-10 md:-right-10 text-white/50 hover:text-white transition-colors bg-white/10 hover:bg-matriz-purple p-2 rounded-full"
+                    className="fixed top-6 right-6 z-[110] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10"
                 >
                     <X size={32} />
                 </button>
@@ -223,13 +256,13 @@ const LogoGrid: React.FC = () => {
                 {/* Navigation Buttons */}
                 <button 
                     onClick={prevLogo}
-                    className="absolute left-0 md:-left-20 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
+                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
                 >
                     <ChevronLeft size={48} />
                 </button>
                 <button 
                     onClick={nextLogo}
-                    className="absolute right-0 md:-right-20 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
+                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
                 >
                     <ChevronRight size={48} />
                 </button>
