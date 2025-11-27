@@ -27,8 +27,17 @@ const Hero: React.FC = () => {
 
       <div className="container mx-auto px-6 relative z-10 text-center">
         
+        {/* Hero Logo */}
+        <div className="mb-6 flex justify-center animate-fade-in-down">
+          <img 
+            src="/logo.png" 
+            alt="Matriz Visual Emblem" 
+            className="h-28 md:h-40 w-auto object-contain drop-shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:scale-105 transition-transform duration-700"
+          />
+        </div>
+
         {/* Status Indicator Badge */}
-        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md animate-fade-in hover:border-matriz-purple/50 transition-colors cursor-default group">
+        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md animate-fade-in delay-100 hover:border-matriz-purple/50 transition-colors cursor-default group">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -38,18 +47,18 @@ const Hero: React.FC = () => {
           </span>
         </div>
         
-        <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down">
+        <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down delay-200">
           CRIATIVIDADE <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-matriz-silver via-white to-matriz-silver drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
             SEM LIMITES
           </span>
         </h1>
 
-        <p className="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in delay-100">
+        <p className="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in delay-300">
           Elevamos sua marca através de Design de alto impacto, Sites performáticos e Produções Audiovisuais cinematográficas.
         </p>
 
-        <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-200">
+        <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500">
           <a 
             href="#portfolio" 
             onClick={(e) => handleScrollClick(e, '#portfolio')}
