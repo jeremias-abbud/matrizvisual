@@ -16,10 +16,11 @@ interface LogoItem {
 
 interface LogoGridProps {
   headless?: boolean;
+  limit?: number; // Nova propriedade para limitar a quantidade
 }
 
-const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
-  const INITIAL_COUNT = 8;
+const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
+  const INITIAL_COUNT = limit || 8; // Usa o limite se fornecido
   const [logos, setLogos] = useState<LogoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
@@ -37,10 +38,17 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
       try {
         setLoading(true);
 
-        const { data, error } = await supabase
+        let query = supabase
           .from('logos')
           .select('id, name, url, created_at, industry')
           .order('display_order', { ascending: true });
+        
+        // Aplica o limite se a prop for passada
+        if (limit) {
+          query = query.limit(limit);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -65,13 +73,14 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
       }
     }
     fetchLogos();
-  }, []);
+  }, [limit]); // Adiciona limit como dependência
   
   const filteredLogos = logos.filter(logo => {
     return activeIndustry === '' || logo.industry === activeIndustry;
   });
   
-  const visibleLogos = filteredLogos.slice(0, visibleCount);
+  // Se houver um limite, os logos visíveis são todos os filtrados (pois já foram limitados na query)
+  const visibleLogos = limit ? filteredLogos : filteredLogos.slice(0, visibleCount);
   const hasMore = visibleCount < filteredLogos.length;
   const canShowLess = visibleCount > INITIAL_COUNT;
 
@@ -139,26 +148,29 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
           </div>
         )}
 
-        <div className={`flex justify-end mb-8 ${headless ? 'w-full' : ''}`}>
-           <div className="w-full md:w-auto relative group min-w-[240px]">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                    <Filter size={14} />
-                </div>
-                <select 
-                    value={activeIndustry}
-                    onChange={(e) => setActiveIndustry(e.target.value)}
-                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
-                >
-                    <option value="">Todos os Ramos</option>
-                    {INDUSTRIES.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
-                    ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-                    <ChevronLeft size={14} className="-rotate-90" />
-                </div>
-             </div>
-        </div>
+        {/* O filtro é ocultado quando há um limite para não confundir o usuário */}
+        {!limit && (
+           <div className={`flex justify-end mb-8 ${headless ? 'w-full' : ''}`}>
+             <div className="w-full md:w-auto relative group min-w-[240px]">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                      <Filter size={14} />
+                  </div>
+                  <select 
+                      value={activeIndustry}
+                      onChange={(e) => setActiveIndustry(e.target.value)}
+                      className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                  >
+                      <option value="">Todos os Ramos</option>
+                      {INDUSTRIES.map(ind => (
+                          <option key={ind} value={ind}>{ind}</option>
+                      ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                      <ChevronLeft size={14} className="-rotate-90" />
+                  </div>
+               </div>
+          </div>
+        )}
 
         {loading ? (
             <div className="flex justify-center py-20">
@@ -211,7 +223,8 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     </div>
                 )}
                 
-                {(hasMore || canShowLess) && (
+                {/* Oculta botões de paginação quando há limite */}
+                {!limit && (hasMore || canShowLess) && (
                 <div className="mt-12 flex justify-center gap-4 animate-fade-in">
                     {hasMore && (
                         <button 

@@ -4,14 +4,16 @@ import React, { useState } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
 import WebShowcase from './WebShowcase';
+import AllProjectsShowcase from './AllProjectsShowcase'; // Novo componente da vitrine
 import { ProjectCategory } from '../types';
-import { LayoutGrid, PenTool, Monitor, Video, Grid } from 'lucide-react';
+import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles } from 'lucide-react';
 
 const MasterPortfolio: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'all' | 'logos' | 'sites' | 'design' | 'video'>('all');
+  // O padrão agora é a 'overview' (Visão Geral)
+  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'design' | 'video'>('overview');
 
   const tabs = [
-    { id: 'all', label: 'Todos', icon: <LayoutGrid size={16} /> },
+    { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
@@ -40,6 +42,7 @@ const MasterPortfolio: React.FC = () => {
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
+                    data-tab-id={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all duration-300 font-bold uppercase text-xs tracking-widest ${
                         activeTab === tab.id
@@ -55,8 +58,8 @@ const MasterPortfolio: React.FC = () => {
 
         {/* Content Area - Conditional Rendering */}
         <div className="animate-fade-in min-h-[500px]">
-            {activeTab === 'all' && (
-                <Portfolio headless forcedCategory={ProjectCategory.ALL} />
+            {activeTab === 'overview' && (
+                <AllProjectsShowcase />
             )}
 
             {activeTab === 'logos' && (

@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
@@ -16,9 +17,10 @@ interface WebProject {
 
 interface WebShowcaseProps {
   headless?: boolean;
+  limit?: number; // Nova propriedade de limite
 }
 
-const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false }) => {
+const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) => {
   const [projects, setProjects] = useState<WebProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -29,10 +31,16 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false }) => {
   useEffect(() => {
     async function fetchWebProjects() {
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from('web_showcase')
                 .select('*')
-                .order('created_at', { ascending: true });
+                .order('created_at', { ascending: false }); // Ordenar por mais recente
+            
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
 
@@ -58,7 +66,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false }) => {
         }
     }
     fetchWebProjects();
-  }, []);
+  }, [limit]); // Adiciona limit como dependência
 
   // Filter Logic
   const filteredProjects = projects.filter(proj => {
@@ -109,27 +117,29 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false }) => {
           </div>
         )}
 
-        {/* Filter - Always Visible but positioned differently if headless */}
-        <div className={`flex justify-end mb-8 ${headless ? 'w-full' : 'absolute top-0 right-6'}`}>
-            <div className="w-full lg:w-auto relative group min-w-[240px]">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                    <Filter size={14} />
+        {/* Oculta filtro quando há limite */}
+        {!limit && (
+            <div className={`flex justify-end mb-8 ${headless ? 'w-full' : 'absolute top-0 right-6'}`}>
+                <div className="w-full lg:w-auto relative group min-w-[240px]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                        <Filter size={14} />
+                    </div>
+                    <select 
+                        value={activeIndustry}
+                        onChange={(e) => setActiveIndustry(e.target.value)}
+                        className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                    >
+                        <option value="">Todos os Ramos</option>
+                        {INDUSTRIES.map(ind => (
+                            <option key={ind} value={ind}>{ind}</option>
+                        ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <ChevronLeft size={14} className="-rotate-90" />
+                    </div>
                 </div>
-                <select 
-                    value={activeIndustry}
-                    onChange={(e) => setActiveIndustry(e.target.value)}
-                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
-                >
-                    <option value="">Todos os Ramos</option>
-                    {INDUSTRIES.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
-                    ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-                    <ChevronLeft size={14} className="-rotate-90" />
-                </div>
-             </div>
-        </div>
+            </div>
+        )}
 
         {filteredProjects.length === 0 ? (
              <div className="text-center py-20 bg-white/5 border border-white/5 rounded-sm">
