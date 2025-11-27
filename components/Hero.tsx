@@ -26,8 +26,16 @@ const Hero: React.FC = () => {
       </div>
 
       <div className="container mx-auto px-6 relative z-10 text-center">
-        <div className="inline-block mb-4 px-3 py-1 border border-matriz-purple/50 rounded-full bg-matriz-purple/10 backdrop-blur-sm animate-fade-in">
-            <span className="text-matriz-purple text-xs uppercase tracking-[0.2em] font-bold">Futuro Visual</span>
+        
+        {/* Status Indicator Badge */}
+        <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md animate-fade-in hover:border-matriz-purple/50 transition-colors cursor-default group">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          </span>
+          <span className="text-gray-300 text-xs font-medium tracking-[0.2em] uppercase group-hover:text-white transition-colors">
+            Disponível para Projetos
+          </span>
         </div>
         
         <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down">
@@ -62,14 +70,25 @@ const Hero: React.FC = () => {
         </div>
       </div>
       
-      {/* Scroll indicator */}
+      {/* Enhanced Scroll indicator (Cyber Mouse) */}
       <a 
         href="#services" 
         onClick={(e) => handleScrollClick(e, '#services')}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity animate-bounce-slow cursor-pointer z-10"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-10 group cursor-pointer"
+        aria-label="Rolar para baixo"
       >
-        <span className="text-[10px] uppercase tracking-widest">Scroll</span>
-        <div className="w-[1px] h-12 bg-gradient-to-b from-white to-transparent"></div>
+        <span className="text-[10px] uppercase tracking-[0.2em] text-white/30 group-hover:text-matriz-purple transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
+            Scroll
+        </span>
+        
+        <div className="w-[30px] h-[50px] rounded-full border-2 border-white/20 flex justify-center p-2 box-border bg-black/20 backdrop-blur-sm group-hover:border-matriz-purple group-hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all duration-300">
+          <div className="w-1 h-2 bg-matriz-purple rounded-full animate-scroll"></div>
+        </div>
+        
+        <div className="flex flex-col -space-y-1.5 animate-bounce opacity-50 group-hover:opacity-100 transition-opacity">
+            <div className="w-2 h-2 border-b border-r border-white/50 group-hover:border-matriz-purple rotate-45"></div>
+            <div className="w-2 h-2 border-b border-r border-white/30 group-hover:border-matriz-purple/50 rotate-45"></div>
+        </div>
       </a>
     </section>
   );
