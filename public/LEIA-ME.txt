@@ -1,7 +1,7 @@
 IMPORTANTE:
 
-Por favor, coloque o arquivo do seu logotipo nomeado como "logo.png" dentro desta pasta (public).
+O arquivo "logo.png" DEVE estar nesta pasta (public).
+Não apague este arquivo se ele existir.
 
-O caminho final deve ser: /public/logo.png
-
-Isso garantirá que o site consiga carregar a imagem corretamente.
+Se o logo sumiu, por favor, coloque o seu arquivo "logo.png" aqui novamente.
+O site depende dele para exibir a marca no Header e na seção Hero.
