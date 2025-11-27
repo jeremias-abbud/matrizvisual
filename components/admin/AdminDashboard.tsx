@@ -1,15 +1,16 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../src/lib/supabase';
 import Login from './Login';
 import ProjectManager from './ProjectManager';
-import LogoManager from './LogoManager';
+// import LogoManager from './LogoManager'; // Removido
 import SiteAssetsManager from './SiteAssetsManager';
-import { LogOut, LayoutGrid, Image, Settings, Palette, ArrowLeft } from 'lucide-react';
+import { LogOut, LayoutGrid, Settings, Palette, ArrowLeft } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'projects' | 'logos' | 'assets' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'assets' | 'settings'>('projects');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -59,16 +60,10 @@ const AdminDashboard: React.FC = () => {
                 <LayoutGrid size={20} /> Portfólio
             </button>
             <button 
-                onClick={() => setActiveTab('logos')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'logos' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
-            >
-                <Image size={20} /> Logotipos
-            </button>
-            <button 
                 onClick={() => setActiveTab('assets')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'assets' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
             >
-                <Palette size={20} /> Imagens do Site
+                <Palette size={20} /> Visual do Site
             </button>
             {/* 
             <button 
@@ -85,14 +80,14 @@ const AdminDashboard: React.FC = () => {
             
             <button 
                 onClick={handleExit}
-                className="w-full flex items-center gap-2 px-4 py-2 text-white bg-white/5 hover:bg-white/10 rounded transition-colors mb-2 text-sm font-bold border border-white/5"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-white bg-white/5 hover:bg-white/10 rounded transition-colors mb-2 text-sm font-bold border border-white/5"
             >
                 <ArrowLeft size={18} /> Voltar ao Site
             </button>
 
             <button 
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded transition-colors text-sm"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-400 hover:bg-red-500/10 rounded transition-colors text-sm"
             >
                 <LogOut size={18} /> Sair (Logout)
             </button>
@@ -103,7 +98,6 @@ const AdminDashboard: React.FC = () => {
       <main className="flex-1 overflow-y-auto max-h-screen bg-black/50">
         <div className="p-8">
             {activeTab === 'projects' && <ProjectManager />}
-            {activeTab === 'logos' && <LogoManager />}
             {activeTab === 'assets' && <SiteAssetsManager />}
             {activeTab === 'settings' && <div>Configurações em desenvolvimento...</div>}
         </div>

@@ -1,7 +1,8 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Star } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
@@ -19,6 +20,7 @@ interface Project {
   video_url?: string;
   gallery?: string[];
   display_order?: number;
+  is_featured?: boolean;
 }
 
 const ProjectManager: React.FC = () => {
@@ -27,12 +29,10 @@ const ProjectManager: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   
-  // Reorder State
   const [isReordering, setIsReordering] = useState(false);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   
-  // Form State
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -41,9 +41,10 @@ const ProjectManager: React.FC = () => {
     description: '',
     longDescription: '',
     client: '',
-    tags: '', // comma separated string for input
+    tags: '',
     videoUrl: '',
-    gallery: '', // comma separated string for input
+    gallery: '',
+    isFeatured: false,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -71,6 +72,20 @@ const ProjectManager: React.FC = () => {
     }
   };
 
+  const handleToggleFeatured = async (project: Project) => {
+    const { data, error } = await supabase
+        .from('projects')
+        .update({ is_featured: !project.is_featured })
+        .eq('id', project.id)
+        .select();
+    
+    if (!error && data) {
+        setProjects(prev => prev.map(p => p.id === project.id ? data[0] : p));
+    } else {
+        alert('Erro ao atualizar destaque.');
+    }
+  }
+
   const handleEdit = (project: Project) => {
     setEditingProject(project);
     setFormData({
@@ -83,6 +98,7 @@ const ProjectManager: React.FC = () => {
       tags: project.tags?.join(', ') || '',
       videoUrl: project.video_url || '',
       gallery: project.gallery?.join(', ') || '',
+      isFeatured: project.is_featured || false,
     });
     setImageFile(null);
     setShowForm(true);
@@ -100,7 +116,8 @@ const ProjectManager: React.FC = () => {
       client: '',
       tags: '',
       videoUrl: '',
-      gallery: ''
+      gallery: '',
+      isFeatured: false,
     });
     setImageFile(null);
   };
@@ -124,7 +141,6 @@ const ProjectManager: React.FC = () => {
     const longDesc = formData.longDescription || formData.description;
     
     if (editingProject) {
-        // UPDATE logic
         const updates: any = {
             title: formData.title,
             category: formData.category,
@@ -134,7 +150,8 @@ const ProjectManager: React.FC = () => {
             client: formData.client,
             tags: tagsArray,
             video_url: formData.videoUrl || null,
-            gallery: galleryArray.length > 0 ? galleryArray : null
+            gallery: galleryArray.length > 0 ? galleryArray : null,
+            is_featured: formData.isFeatured,
         };
         if (imageUrl) {
             updates.image_url = imageUrl;
@@ -154,7 +171,6 @@ const ProjectManager: React.FC = () => {
             console.error(error);
         }
     } else {
-        // INSERT logic
         if (!imageUrl && !formData.videoUrl) {
             alert('Para um novo projeto, adicione uma imagem de capa ou um link de vídeo.');
             setUploading(false);
@@ -174,7 +190,8 @@ const ProjectManager: React.FC = () => {
             image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project',
             video_url: formData.videoUrl || null,
             gallery: galleryArray.length > 0 ? galleryArray : null,
-            display_order: maxOrder + 1
+            display_order: maxOrder + 1,
+            is_featured: formData.isFeatured,
         }]).select();
 
         if (!error && data) {
@@ -264,7 +281,7 @@ const ProjectManager: React.FC = () => {
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
               <div>
-                <ModernSelect label="Categoria (Serviço)" value={formData.category} onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} options={Object.values(ProjectCategory)} required />
+                <ModernSelect label="Categoria (Serviço)" value={formData.category} onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL)} required />
               </div>
               <div>
                 <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
@@ -305,6 +322,10 @@ const ProjectManager: React.FC = () => {
                     </div>
                 </div>
               </div>
+              <div className="md:col-span-2 flex items-center gap-3 p-3 bg-black/30 border border-white/5 rounded">
+                  <input id="isFeatured" type="checkbox" checked={formData.isFeatured} onChange={e => setFormData({...formData, isFeatured: e.target.checked})} className="h-5 w-5 bg-black border-white/20 rounded text-matriz-purple focus:ring-matriz-purple" />
+                  <label htmlFor="isFeatured" className="text-white font-bold text-sm select-none">Marcar como Destaque na página inicial</label>
+              </div>
               <div className="md:col-span-2 pt-4">
                 <button type="submit" disabled={uploading} className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50">
                     {uploading ? 'Salvando...' : (editingProject ? 'Atualizar Projeto' : 'Publicar Projeto')}
@@ -322,35 +343,41 @@ const ProjectManager: React.FC = () => {
             <div className="hidden md:grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-2">Imagem</div>
-                <div className="col-span-4">Título</div>
+                <div className="col-span-3">Título</div>
                 <div className="col-span-3">Categoria / Indústria</div>
+                <div className="col-span-1 text-center">Destaque</div>
                 <div className="col-span-2 text-right">Ações</div>
             </div>
             
             {projects.map((project, index) => (
                 <div 
                     key={project.id} 
-                    className={`grid grid-cols-12 gap-4 bg-black/40 border border-white/5 p-3 rounded items-center transition-colors ${
+                    className={`grid grid-cols-1 md:grid-cols-12 gap-4 bg-black/40 border border-white/5 p-3 rounded items-center transition-colors ${
                         isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' : 'hover:bg-white/5'
                     } ${
                         isReordering && draggedItemIndex === index ? 'opacity-50 border-dashed border-matriz-purple' : ''
                     }`}
                     draggable={isReordering} onDragStart={() => handleDragStart(index)} onDragEnter={() => handleDragEnter(index)} onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
                 >
-                    <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
+                    <div className="col-span-12 md:col-span-1 text-center text-gray-500 font-mono text-xs">
                         {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
                     </div>
-                    <div className="col-span-2 h-12 w-20 overflow-hidden rounded bg-black">
+                    <div className="col-span-4 md:col-span-2 h-12 w-full md:w-20 overflow-hidden rounded bg-black">
                         <img src={project.image_url} alt="" className="w-full h-full object-cover" />
                     </div>
-                    <div className="col-span-4 text-white font-bold truncate">{project.title}</div>
-                    <div className="col-span-3">
+                    <div className="col-span-8 md:col-span-3 text-white font-bold truncate">{project.title}</div>
+                    <div className="col-span-6 md:col-span-3">
                         <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 block w-fit mb-1">
                             {project.category}
                         </span>
                         {project.industry && (<span className="text-xs text-gray-500 block truncate">{project.industry}</span>)}
                     </div>
-                    <div className="col-span-2 flex justify-end gap-2">
+                    <div className="col-span-6 md:col-span-1 flex justify-center">
+                        <button onClick={() => handleToggleFeatured(project)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title="Marcar como Destaque">
+                             {project.is_featured ? <Star size={18} className="text-yellow-400" fill="currentColor" /> : <Star size={18} className="text-gray-600 hover:text-white" />}
+                        </button>
+                    </div>
+                    <div className="col-span-12 md:col-span-2 flex justify-end gap-2">
                         {!isReordering && (<>
                             <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
                             <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>

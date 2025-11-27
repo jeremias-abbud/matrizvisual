@@ -1,4 +1,5 @@
 
+
 export enum ProjectCategory {
   ALL = 'Todos',
   LOGO = 'Logotipos',
@@ -21,6 +22,7 @@ export interface Project {
   client?: string;
   date?: string;
   videoUrl?: string; // YouTube/Vimeo/MP4 URL
+  isFeatured?: boolean; // Novo campo para Destaques
 }
 
 export interface Service {

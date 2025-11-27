@@ -1,8 +1,12 @@
 
+
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
-import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
+// FIX: Corrected import to use 'PROJECTS' aliased as 'MOCK_PROJECTS' as it is exported from constants.ts
+import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { ProjectCategory } from '../../types';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 interface LogoItem {
@@ -14,7 +18,7 @@ interface LogoItem {
 }
 
 interface LogoGridProps {
-  headless?: boolean; // Se true, remove cabeçalhos e paddings para uso embutido
+  headless?: boolean;
 }
 
 const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
@@ -23,42 +27,31 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState<number | null>(null);
-  
-  // Filter State
   const [activeIndustry, setActiveIndustry] = useState<string>('');
+
+  const getMockLogos = () => MOCK_PROJECTS
+      .filter(p => p.category === ProjectCategory.LOGO)
+      .map(p => ({
+          id: p.id,
+          name: p.title,
+          url: p.imageUrl,
+          industry: p.industry
+      }));
 
   useEffect(() => {
     async function fetchLogos() {
       try {
         setLoading(true);
 
-        // 1. Buscar da tabela específica de Logos
-        const { data: logosData, error: logosError } = await supabase
-          .from('logos')
-          .select('*')
-          .order('display_order', { ascending: true }); // Use display_order
-
-        if (logosError) throw logosError;
-
-        // 2. Buscar da tabela de Projetos (filtrando por Logotipos)
-        const { data: projectsData, error: projectsError } = await supabase
+        const { data, error } = await supabase
           .from('projects')
           .select('id, title, image_url, created_at, industry')
-          .eq('category', 'Logotipos') // Garante que pegamos projetos da categoria certa
-          .order('display_order', { ascending: true }); // Use display_order
+          .eq('category', 'Logotipos')
+          .order('display_order', { ascending: true });
 
-        if (projectsError) throw projectsError;
+        if (error) throw error;
 
-        // 3. Normalizar e Unificar as listas
-        const normalizedLogos: LogoItem[] = (logosData || []).map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            url: item.url,
-            industry: item.industry,
-            createdAt: new Date(item.created_at).getTime()
-        }));
-
-        const normalizedProjects: LogoItem[] = (projectsData || []).map((item: any) => ({
+        const normalizedProjects: LogoItem[] = (data || []).map((item: any) => ({
             id: item.id,
             name: item.title,
             url: item.image_url,
@@ -66,19 +59,14 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
             createdAt: new Date(item.created_at).getTime()
         }));
 
-        // Combinar (e manter ordem relativa se necessário, ou ordenar por algo)
-        // Como o display_order é por tabela, ao juntar pode ficar estranho se não normalizar
-        // Por simplicidade, juntamos logos primeiro, depois projetos
-        const combinedLogos = [...normalizedLogos, ...normalizedProjects];
-
-        if (combinedLogos.length > 0) {
-          setLogos(combinedLogos);
+        if (normalizedProjects.length > 0) {
+          setLogos(normalizedProjects);
         } else {
-          setLogos(MOCK_LOGOS);
+          setLogos(getMockLogos());
         }
       } catch (err) {
-        console.error('Error fetching logos:', err);
-        setLogos(MOCK_LOGOS);
+        console.error('Error fetching logos from projects:', err);
+        setLogos(getMockLogos());
       } finally {
         setLoading(false);
       }
@@ -86,7 +74,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
     fetchLogos();
   }, []);
   
-  // Filter Logic
   const filteredLogos = logos.filter(logo => {
     return activeIndustry === '' || logo.industry === activeIndustry;
   });
@@ -101,7 +88,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
 
   const handleShowLess = (e: React.MouseEvent) => {
     setVisibleCount(INITIAL_COUNT);
-    // Use the reliable smooth scroll utility
     smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#logos');
   };
 
@@ -129,7 +115,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
     }
   }, [selectedLogoIndex, filteredLogos.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (selectedLogoIndex === null) return;
@@ -147,7 +132,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
     <section className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black relative border-b border-white/5 scroll-mt-28'}`} id="logos">
       <div className={`${headless ? '' : 'container mx-auto px-6'}`}>
         
-        {/* Render Header Only if NOT Headless */}
         {!headless && (
           <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
              <div className="w-full lg:w-auto">
@@ -162,7 +146,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
           </div>
         )}
 
-        {/* Filter Bar (Visible in Headless mode too, but styled differently if needed) */}
         <div className={`flex justify-end mb-8 ${headless ? 'w-full' : ''}`}>
            <div className="w-full md:w-auto relative group min-w-[240px]">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
@@ -197,21 +180,17 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     onClick={() => openModal(index)}
                     className="group relative aspect-square bg-matriz-dark border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-white/5 animate-fade-in cursor-pointer"
                     >
-                    {/* Glow Effect on Hover */}
                     <div className="absolute inset-0 bg-matriz-purple/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
-                    {/* Icon Overlay */}
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                         <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-lg">
                             <ZoomIn size={16} />
                         </div>
                     </div>
 
-                    {/* Logo Image */}
                     <img 
                         src={logo.url} 
                         alt={logo.name} 
-                        // REMOVED GRAYSCALE, added drop-shadow
                         className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
                     />
@@ -239,7 +218,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     </div>
                 )}
                 
-                {/* Load More / Less Buttons */}
                 {(hasMore || canShowLess) && (
                 <div className="mt-12 flex justify-center gap-4 animate-fade-in">
                     {hasMore && (
@@ -271,19 +249,15 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
         )}
       </div>
 
-      {/* Lightbox Modal */}
       {selectedLogoIndex !== null && filteredLogos.length > 0 && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
-            {/* Backdrop */}
             <div 
                 className="absolute inset-0 bg-black/95 backdrop-blur-xl"
                 onClick={closeModal}
             ></div>
 
-            {/* Content */}
             <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center">
                 
-                {/* Close Button - Fixed Position on Screen */}
                 <button 
                     onClick={closeModal}
                     className="fixed top-6 right-6 z-[110] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10"
@@ -291,17 +265,15 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     <X size={32} />
                 </button>
 
-                {/* Main Image Container */}
                 <div className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center">
                     <img 
-                        key={selectedLogoIndex} // Force re-render for animation
+                        key={selectedLogoIndex}
                         src={filteredLogos[selectedLogoIndex].url} 
                         alt={filteredLogos[selectedLogoIndex].name} 
                         className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] animate-fade-in"
                     />
                 </div>
 
-                {/* Caption */}
                 <div className="mt-8 text-center">
                     <h3 className="font-display text-2xl md:text-3xl font-bold text-white">
                         {filteredLogos[selectedLogoIndex].name}
@@ -318,7 +290,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
                     </div>
                 </div>
 
-                {/* Navigation Buttons */}
                 <button 
                     onClick={prevLogo}
                     className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"

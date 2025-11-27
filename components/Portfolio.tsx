@@ -1,9 +1,10 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { Project, ProjectCategory } from '../types';
-import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette, Filter } from 'lucide-react';
+import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette, Filter, Star } from 'lucide-react';
 import { getEmbedUrl } from '../src/lib/videoHelper';
 import { smoothScrollTo } from '../src/lib/scroll';
 
@@ -12,19 +13,18 @@ const ITEMS_PER_PAGE = 6;
 interface PortfolioProps {
   headless?: boolean;
   forcedCategory?: ProjectCategory;
+  featuredOnly?: boolean; // Nova prop para Destaques
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory }) => {
-  // If forcedCategory is present, activeCategory is fixed to it
+const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, featuredOnly = false }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
-  const [activeIndustry, setActiveIndustry] = useState<string>(''); // Filtro de Indústria
+  const [activeIndustry, setActiveIndustry] = useState<string>('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
-  // Update active category when forcedCategory prop changes
   useEffect(() => {
     if (forcedCategory) {
       setActiveCategory(forcedCategory);
@@ -37,17 +37,16 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .order('display_order', { ascending: true }); // Updated to display_order
+          .order('display_order', { ascending: true });
 
         if (error) throw error;
 
         if (data && data.length > 0) {
-           // Map DB columns to frontend types
            const formattedData = data.map((item: any) => ({
             id: item.id,
             title: item.title,
             category: item.category as ProjectCategory,
-            industry: item.industry, // Mapeando o novo campo
+            industry: item.industry,
             imageUrl: item.image_url,
             description: item.description,
             tags: item.tags,
@@ -55,7 +54,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
             date: item.date,
             longDescription: item.long_description,
             gallery: item.gallery,
-            videoUrl: item.video_url
+            videoUrl: item.video_url,
+            isFeatured: item.is_featured, // Mapeia o novo campo
           }));
           setProjects(formattedData);
         } else {
@@ -71,7 +71,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     fetchProjects();
   }, []);
 
-  // Disable body scroll when modal is open and reset image index
   useEffect(() => {
     if (selectedProject) {
       setCurrentImageIndex(0);
@@ -84,19 +83,19 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     };
   }, [selectedProject]);
 
-  // Reset visible count when category or industry changes
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [activeCategory, activeIndustry]);
+  }, [activeCategory, activeIndustry, featuredOnly]);
+  
+  const baseProjects = featuredOnly ? projects.filter(p => p.isFeatured) : projects;
 
-  // Filter Logic: Category AND Industry
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = baseProjects.filter(project => {
     const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
     const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
     return matchCategory && matchIndustry;
   });
 
-  const visibleProjects = filteredProjects.slice(0, visibleCount);
+  const visibleProjects = filteredProjects.length > 0 ? filteredProjects.slice(0, visibleCount) : [];
   const hasMore = visibleCount < filteredProjects.length;
   const canShowLess = visibleCount > ITEMS_PER_PAGE;
 
@@ -106,11 +105,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
 
   const handleShowLess = (e: React.MouseEvent) => {
     setVisibleCount(ITEMS_PER_PAGE);
-    // Use the reliable smooth scroll utility
     smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#portfolio');
   };
 
-  // ProjectCategory enum already includes 'Todos' (ALL), so we just use Object.values
   const categories = Object.values(ProjectCategory);
 
   const nextImage = (e?: React.MouseEvent) => {
@@ -127,7 +124,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     }
   };
 
-  // Helper to get type icon
   const getTypeIcon = (category: ProjectCategory) => {
     switch (category) {
       case ProjectCategory.VIDEO:
@@ -145,7 +141,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     <section id="portfolio" className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black scroll-mt-28 relative'}`}>
       <div className={`${headless ? '' : 'container mx-auto px-6'}`}>
         
-        {/* Header Only if NOT headless */}
         {!headless && (
           <div className="flex flex-col xl:flex-row justify-between items-end mb-10 gap-6">
             <div className="w-full xl:w-auto">
@@ -155,10 +150,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
           </div>
         )}
 
-        {/* Filters Section */}
         <div className={`flex flex-col md:flex-row gap-6 w-full items-start md:items-end mb-10 ${headless ? 'justify-end' : ''}`}>
              
-             {/* Show category Tabs ONLY if not forced by parent */}
              {!forcedCategory && (
                <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
                   {categories.map((category) => (
@@ -177,7 +170,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                </div>
              )}
 
-             {/* Secondary Industry Filter (Dropdown) */}
              <div className="relative group min-w-[200px]">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                     <Filter size={14} />
@@ -198,7 +190,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
              </div>
         </div>
 
-        {/* Counters */}
         <div className="mb-6 text-gray-500 text-sm flex justify-between items-center border-b border-white/5 pb-2">
            <span>
              {activeIndustry ? <span className="text-matriz-purple font-bold mr-1">{activeIndustry}</span> : 'Todos os Ramos'}
@@ -214,27 +205,29 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {visibleProjects.map((project) => (
                 <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => setSelectedProject(project)}>
-                {/* Image Container */}
                 <div className="aspect-video overflow-hidden relative bg-matriz-dark">
                     <img 
                     src={project.imageUrl} 
                     alt={project.title} 
                     loading="lazy"
                     decoding="async"
-                    // REMOVED GRAYSCALE, KEPT HOVER SCALE
                     className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${
                         project.category === ProjectCategory.LOGO 
                         ? 'object-contain p-10 bg-black/50' 
                         : 'object-cover'
                     }`}
                     />
+
+                    {project.isFeatured && (
+                       <div className="absolute top-3 left-3 bg-yellow-400 text-black p-1.5 rounded-full shadow-lg z-10" title="Projeto em Destaque">
+                           <Star size={12} fill="currentColor" />
+                       </div>
+                    )}
                     
-                    {/* Format Indicator (Center) */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
                         {getTypeIcon(project.category)}
                     </div>
 
-                    {/* Overlay Content */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                     <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                         <div className="flex justify-between items-end mb-2">
@@ -260,7 +253,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                     </div>
                 </div>
                 
-                {/* Border Glow Effect */}
                 <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
             ))}
@@ -281,7 +273,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
           </div>
         )}
 
-        {/* Load More / Less Buttons */}
         {!loading && (hasMore || canShowLess) && (
           <div className="mt-12 flex justify-center gap-4 animate-fade-in">
             {hasMore && (
@@ -311,7 +302,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
         )}
       </div>
 
-      {/* Project Details Modal */}
       {selectedProject && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div 
@@ -328,7 +318,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
               <X size={24} />
             </button>
 
-            {/* Hero Media (Video or Image) */}
             <div className="w-full h-64 md:h-96 relative bg-matriz-black flex items-center justify-center overflow-hidden">
                 {selectedProject.videoUrl ? (
                      <div className="w-full h-full relative z-20">
@@ -343,7 +332,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                      </div>
                 ) : (
                     <>
-                        {/* Background Blur for logos */}
                         {selectedProject.category === ProjectCategory.LOGO && (
                             <img 
                                 src={selectedProject.imageUrl} 
@@ -353,7 +341,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                         <img 
                             src={selectedProject.imageUrl} 
                             alt={selectedProject.title} 
-                            // REMOVED GRAYSCALE
                             className={`w-full h-full relative z-10 ${
                                 selectedProject.category === ProjectCategory.LOGO 
                                 ? 'object-contain p-12' 
@@ -366,7 +353,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
               
               {!selectedProject.videoUrl && (
                   <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full z-30">
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex gap-2 mb-3 items-center">
                         <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
                         {selectedProject.category}
                         </span>
@@ -375,16 +362,20 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                             {selectedProject.industry}
                             </span>
                         )}
+                        {selectedProject.isFeatured && (
+                           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-400 text-black text-xs font-bold uppercase tracking-widest rounded-sm">
+                               <Star size={12} fill="currentColor" /> DESTAQUE
+                           </span>
+                        )}
                     </div>
                     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
                 </div>
               )}
             </div>
             
-            {/* Title Block for Video Projects (since overlay is hidden) */}
             {selectedProject.videoUrl && (
                 <div className="p-6 md:px-10 md:pt-10 md:pb-0">
-                    <div className="flex gap-2 mb-3">
+                    <div className="flex gap-2 mb-3 items-center">
                         <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
                         {selectedProject.category}
                         </span>
@@ -392,6 +383,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                             <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
                             {selectedProject.industry}
                             </span>
+                        )}
+                        {selectedProject.isFeatured && (
+                           <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-yellow-400 text-black text-xs font-bold uppercase tracking-widest rounded-sm">
+                               <Star size={12} fill="currentColor" /> DESTAQUE
+                           </span>
                         )}
                     </div>
                     <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
@@ -401,7 +397,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
             <div className="p-6 md:p-10">
               <div className="flex flex-col lg:flex-row gap-10">
                 
-                {/* Main Content */}
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     Sobre o Projeto
@@ -410,13 +405,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                     {selectedProject.longDescription || selectedProject.description}
                   </p>
 
-                  {/* Enhanced Gallery Carousel (If gallery exists AND it's not just the cover image already shown, OR if it's video project show gallery) */}
                   {selectedProject.gallery && selectedProject.gallery.length > 0 && (
                     <div className="space-y-4">
                       <h3 className="text-lg font-bold text-white mb-2">Galeria do Projeto</h3>
                       
                       <div className="relative group bg-black border border-white/10 rounded-sm overflow-hidden select-none">
-                        {/* Main Image Display */}
                         <div className="aspect-video w-full relative bg-matriz-dark/50 flex items-center justify-center">
                           <img 
                             src={selectedProject.gallery[currentImageIndex]} 
@@ -426,11 +419,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                                 ? 'object-contain p-8' 
                                 : 'object-contain'
                             }`}
-                            key={currentImageIndex} // Key forces re-render animation
+                            key={currentImageIndex}
                           />
                         </div>
 
-                        {/* Navigation Controls */}
                         {selectedProject.gallery.length > 1 && (
                           <>
                             <button 
@@ -452,13 +444,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                           </>
                         )}
                         
-                        {/* Image Counter */}
                          <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1 text-xs text-white rounded-full border border-white/10">
                            {currentImageIndex + 1} / {selectedProject.gallery.length}
                          </div>
                       </div>
 
-                      {/* Thumbnails */}
                       <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar pt-2">
                         {selectedProject.gallery.map((img, idx) => (
                           <button
@@ -484,7 +474,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
                   )}
                 </div>
 
-                {/* Sidebar Info */}
                 <div className="lg:w-80 space-y-8">
                   <div className="bg-white/5 p-6 rounded-sm border border-white/5">
                     <div className="space-y-4">

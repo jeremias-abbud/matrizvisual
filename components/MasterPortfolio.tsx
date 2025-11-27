@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
@@ -55,7 +56,7 @@ const MasterPortfolio: React.FC = () => {
         {/* Content Area - Conditional Rendering */}
         <div className="animate-fade-in min-h-[500px]">
             {activeTab === 'all' && (
-                <Portfolio headless />
+                <Portfolio headless featuredOnly />
             )}
 
             {activeTab === 'logos' && (
