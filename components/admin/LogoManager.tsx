@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft, Star } from 'lucide-react';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 
@@ -12,6 +12,7 @@ interface Logo {
   url: string;
   industry?: string;
   display_order: number;
+  is_featured?: boolean;
 }
 
 const LogoManager: React.FC = () => {
@@ -29,6 +30,7 @@ const LogoManager: React.FC = () => {
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isFeatured, setIsFeatured] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -57,10 +59,25 @@ const LogoManager: React.FC = () => {
     }
   };
 
+  const handleToggleFeatured = async (logo: Logo) => {
+    const { data, error } = await supabase
+        .from('logos')
+        .update({ is_featured: !logo.is_featured })
+        .eq('id', logo.id)
+        .select();
+    
+    if (!error && data) {
+        setLogos(prev => prev.map(p => p.id === logo.id ? data[0] : p));
+    } else {
+        alert('Erro ao atualizar destaque.');
+    }
+  }
+
   const handleEdit = (logo: Logo) => {
     setEditingId(logo.id);
     setName(logo.name);
     setIndustry(logo.industry || '');
+    setIsFeatured(logo.is_featured || false);
     setImageFile(null); 
     setShowForm(true);
   };
@@ -70,6 +87,7 @@ const LogoManager: React.FC = () => {
     setName('');
     setIndustry('');
     setImageFile(null);
+    setIsFeatured(false);
     setEditingId(null);
   };
 
@@ -85,7 +103,8 @@ const LogoManager: React.FC = () => {
     if (editingId) {
         const updates: any = { 
             name,
-            industry: industry || null
+            industry: industry || null,
+            is_featured: isFeatured,
         };
         if (imageUrl) updates.url = imageUrl; 
 
@@ -116,7 +135,8 @@ const LogoManager: React.FC = () => {
             name,
             industry: industry || null,
             url: imageUrl,
-            display_order: maxOrder + 1
+            display_order: maxOrder + 1,
+            is_featured: isFeatured,
         }]).select();
 
         if (!error && data) {
@@ -273,6 +293,11 @@ const LogoManager: React.FC = () => {
                 </div>
               </div>
 
+              <div className="flex items-center gap-3 p-3 bg-black/30 border border-white/5 rounded">
+                  <input id="isFeatured" type="checkbox" checked={isFeatured} onChange={e => setIsFeatured(e.target.checked)} className="h-5 w-5 bg-black border-white/20 rounded text-matriz-purple focus:ring-matriz-purple" />
+                  <label htmlFor="isFeatured" className="text-white font-bold text-sm select-none">Marcar como Destaque na página inicial</label>
+              </div>
+
               <button 
                 type="submit" 
                 disabled={uploading}
@@ -288,51 +313,36 @@ const LogoManager: React.FC = () => {
       {loading ? (
         <div className="text-white">Carregando...</div>
       ) : (
-        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 ${isReordering ? 'bg-white/5 p-4 rounded border border-dashed border-white/20' : ''}`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isReordering ? 'bg-white/5 p-4 rounded border border-dashed border-white/20' : ''}`}>
           {logos.map((logo, index) => (
             <div 
                 key={logo.id} 
-                className={`bg-white/5 border border-white/10 rounded p-4 relative group transition-all ${isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10 scale-95' : ''}`}
+                className={`bg-black/40 border border-white/5 rounded p-3 transition-all ${isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' : ''}`}
                 draggable={isReordering}
                 onDragStart={() => handleDragStart(index)}
                 onDragEnter={() => handleDragEnter(index)}
                 onDragEnd={handleDragEnd}
                 onDragOver={(e) => e.preventDefault()} // Necessary to allow dropping
             >
-              {!isReordering && (
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button 
-                        onClick={() => handleEdit(logo)}
-                        className="bg-blue-600 p-1.5 rounded text-white hover:bg-blue-500 transition-colors"
-                        title="Editar"
-                    >
-                        <Edit2 size={14} />
-                    </button>
-                    <button 
-                        onClick={() => handleDelete(logo.id)}
-                        className="bg-red-600 p-1.5 rounded text-white hover:bg-red-500 transition-colors"
-                        title="Excluir"
-                    >
-                        <Trash2 size={14} />
-                    </button>
+              <div className="flex items-center gap-3">
+                  {isReordering && <GripVertical size={20} className="text-matriz-purple flex-shrink-0" />}
+                  <div className="w-16 h-16 bg-black/20 rounded border border-white/5 flex-shrink-0 flex items-center justify-center p-1">
+                     <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain" />
                   </div>
-              )}
-
-              {isReordering && (
-                  <div className="absolute top-2 left-2 z-20 bg-matriz-purple text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
-                      {index + 1}
+                  <div className="flex-1 min-w-0">
+                      <p className="text-white font-bold truncate">{logo.name}</p>
+                      {logo.industry && <p className="text-gray-500 text-xs truncate">{logo.industry}</p>}
                   </div>
-              )}
-              
-              <div className="aspect-square flex items-center justify-center mb-2 bg-black/20 rounded border border-white/5 pointer-events-none">
-                <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain p-2" />
+                  {!isReordering && (
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => handleToggleFeatured(logo)} className="p-2 rounded-full hover:bg-white/10 transition-colors" title="Marcar como Destaque">
+                             {logo.is_featured ? <Star size={18} className="text-yellow-400" fill="currentColor" /> : <Star size={18} className="text-gray-600 hover:text-white" />}
+                        </button>
+                        <button onClick={() => handleEdit(logo)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(logo.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                      </div>
+                  )}
               </div>
-              <p className="text-center text-white text-sm font-bold truncate select-none">{logo.name}</p>
-              {logo.industry && (
-                  <p className="text-center text-gray-500 text-[10px] uppercase truncate mt-1 px-1 bg-white/5 rounded select-none">
-                      {logo.industry}
-                  </p>
-              )}
             </div>
           ))}
         </div>
