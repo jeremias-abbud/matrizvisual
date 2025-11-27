@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const Hero: React.FC = () => {
-  const { assets } = useSiteAssets();
+  const { assets, styles } = useSiteAssets();
 
   const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -19,7 +19,7 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section id="home" className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-28 scroll-mt-28 gap-8">
+    <section id="home" className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-28 scroll-mt-28 gap-12">
       {/* Abstract Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matriz-purple/20 rounded-full blur-[128px]"></div>
@@ -32,12 +32,16 @@ const Hero: React.FC = () => {
       {/* Main Content Wrapper */}
       <div className="flex-grow flex items-center justify-center container mx-auto px-6 relative z-10 py-4">
         <div className="text-center w-full max-w-4xl mx-auto">
-            {/* Hero Logo - Dynamic */}
+            {/* Hero Logo - Dynamic Size & Glow */}
             <div className="mb-6 flex justify-center animate-fade-in-down">
             <img 
                 src={assets.logo_main} 
                 alt="Matriz Visual Emblem" 
-                className="h-28 md:h-40 w-auto object-contain drop-shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:scale-105 transition-transform duration-700"
+                style={{ 
+                    height: window.innerWidth < 768 ? '8rem' : '10rem', // Hero logo usually larger
+                    filter: styles.logo_glow ? 'drop-shadow(0 0 30px rgba(139,92,246,0.5))' : 'none'
+                }}
+                className="w-auto object-contain transition-transform duration-700 hover:scale-105"
             />
             </div>
 
@@ -48,7 +52,7 @@ const Hero: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
             <span className="text-gray-300 text-xs font-medium tracking-[0.2em] uppercase group-hover:text-white transition-colors">
-                Agenda Aberta para Projetos
+                Disponível para Projetos
             </span>
             </div>
             
@@ -60,7 +64,7 @@ const Hero: React.FC = () => {
             </h1>
 
             <p className="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in delay-300">
-            Design profissional, Sites modernos e Vídeos que vendem. Tudo o que você precisa para crescer e passar confiança na internet.
+            Profissionalismo para vender mais. Transformamos o visual da sua empresa em uma ferramenta de negócios poderosa.
             </p>
 
             <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500">

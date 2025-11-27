@@ -6,7 +6,7 @@ import { useSiteAssets } from '../src/hooks/useSiteAssets';
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { assets } = useSiteAssets();
+  const { assets, styles } = useSiteAssets();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,17 +17,12 @@ const Navbar: React.FC = () => {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault(); // Prevent URL change and default jump
+    e.preventDefault(); 
     setIsOpen(false);
-    
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
-    
     if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -40,9 +35,9 @@ const Navbar: React.FC = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-2 h-20' : 'bg-transparent py-4 h-24'}`}>
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-2' : 'bg-transparent py-4'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center h-full">
-        {/* Logo Image - Dynamic from DB with Fallback */}
+        {/* Logo Image - Dynamic Size via Inline Styles */}
         <a 
           href="#home" 
           className="flex items-center gap-2 group cursor-pointer h-full py-1" 
@@ -51,7 +46,10 @@ const Navbar: React.FC = () => {
            <img 
              src={assets.logo_main} 
              alt="Matriz Visual" 
-             className="h-full w-auto object-contain transition-opacity duration-300 hover:opacity-90"
+             style={{ 
+               height: window.innerWidth < 768 ? (styles.logo_height_mobile || '4rem') : (styles.logo_height_desktop || '6rem')
+             }}
+             className="w-auto object-contain transition-all duration-300 hover:opacity-90"
            />
         </a>
 

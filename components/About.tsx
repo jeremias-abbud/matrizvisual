@@ -4,7 +4,12 @@ import { CheckCircle2 } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const About: React.FC = () => {
-  const { assets } = useSiteAssets();
+  const { assets, styles } = useSiteAssets();
+
+  // Se styles.about_grayscale for true, aplica grayscale, senão nada.
+  const imgClasses = `w-full h-64 object-cover rounded-sm transition-all duration-500 border border-white/10 ${
+    styles.about_grayscale ? 'grayscale hover:grayscale-0' : ''
+  }`;
 
   return (
     <section id="about" className="py-16 md:py-20 bg-matriz-dark border-y border-white/5 relative overflow-hidden scroll-mt-28">
@@ -14,19 +19,19 @@ const About: React.FC = () => {
         </div>
 
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="relative">
              {/* Abstract grid composition */}
              <div className="relative z-10 grid grid-cols-2 gap-4">
                  <img 
                     src={assets.about_img_1} 
                     alt="Digital Art Abstract" 
-                    className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10" 
+                    className={imgClasses}
                  />
                  <img 
                     src={assets.about_img_2} 
                     alt="Cyberpunk Tech Workspace" 
-                    className="w-full h-64 object-cover rounded-sm grayscale hover:grayscale-0 transition-all duration-500 border border-white/10 mt-12" 
+                    className={`${imgClasses} mt-12`}
                  />
              </div>
              <div className="absolute -top-4 -left-4 w-24 h-24 border-t-2 border-l-2 border-matriz-purple"></div>
@@ -35,13 +40,13 @@ const About: React.FC = () => {
 
           <div>
             <h2 className="font-display text-4xl font-bold mb-6 text-white">
-              Transformamos ideias <br/> <span className="text-matriz-purple">em resultados.</span>
+              Somos parceiros <br/> <span className="text-matriz-purple">do seu negócio.</span>
             </h2>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Sabemos que empreender é um desafio. Por isso, a Matriz Visual existe para ser parceira do seu negócio. Não entregamos apenas "artes bonitas", entregamos ferramentas para você vender mais.
+              Sabemos que empreender é um desafio. Por isso, a Matriz Visual existe para ser parceira do seu negócio. Não entregamos apenas "artes bonitas", entregamos ferramentas para você atrair clientes.
             </p>
             <p className="text-gray-400 mb-8 leading-relaxed">
-              Seja um site que funciona rápido no celular, um logotipo que passa credibilidade ou vídeos que engajam no Instagram, nosso foco é ajudar sua empresa a crescer de forma sólida e profissional.
+              Seja um site que funciona rápido no celular, um logotipo que passa credibilidade ou vídeos que engajam no Instagram, nosso foco é ajudar sua empresa a crescer de forma sólida.
             </p>
 
             <div className="space-y-4">
