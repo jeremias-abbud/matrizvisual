@@ -5,6 +5,7 @@ import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallbac
 import { Project, ProjectCategory } from '../types';
 import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette, Filter } from 'lucide-react';
 import { getEmbedUrl } from '../src/lib/videoHelper';
+import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -36,7 +37,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('display_order', { ascending: true }); // Updated to display_order
 
         if (error) throw error;
 
@@ -103,12 +104,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     setVisibleCount(prev => prev + ITEMS_PER_PAGE);
   };
 
-  const handleShowLess = () => {
+  const handleShowLess = (e: React.MouseEvent) => {
     setVisibleCount(ITEMS_PER_PAGE);
-    const section = document.getElementById('portfolio');
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Use the reliable smooth scroll utility
+    smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#portfolio');
   };
 
   // ProjectCategory enum already includes 'Todos' (ALL), so we just use Object.values

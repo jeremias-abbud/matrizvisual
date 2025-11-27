@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
+import { smoothScrollTo } from '../src/lib/scroll';
 
 const Hero: React.FC = () => {
   const { assets, styles } = useSiteAssets();
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
-
-  const handleScrollClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const targetId = href.replace('#', '');
-    const element = document.getElementById(targetId);
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
-  };
 
   return (
     <section id="home" className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-28 scroll-mt-28 gap-12">
@@ -84,7 +73,7 @@ const Hero: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500 w-full">
             <a 
                 href="#portfolio" 
-                onClick={(e) => handleScrollClick(e, '#portfolio')}
+                onClick={(e) => smoothScrollTo(e, '#portfolio')}
                 className="group relative px-8 py-4 bg-matriz-purple text-white font-bold tracking-widest uppercase overflow-hidden cursor-pointer"
             >
                 <div className="absolute inset-0 w-0 bg-white transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
@@ -94,7 +83,7 @@ const Hero: React.FC = () => {
             </a>
             <a 
                 href="#contact" 
-                onClick={(e) => handleScrollClick(e, '#contact')}
+                onClick={(e) => smoothScrollTo(e, '#contact')}
                 className="px-8 py-4 border border-matriz-gray text-white hover:border-matriz-silver transition-colors duration-300 font-bold tracking-widest uppercase bg-transparent cursor-pointer text-center"
             >
                 Pedir Orçamento
@@ -107,7 +96,7 @@ const Hero: React.FC = () => {
       <div className="relative z-10 pb-8 md:pb-12 shrink-0 w-full flex justify-center">
         <a 
             href="#services" 
-            onClick={(e) => handleScrollClick(e, '#services')}
+            onClick={(e) => smoothScrollTo(e, '#services')}
             className="flex flex-col items-center gap-2 group cursor-pointer"
             aria-label="Rolar para baixo"
         >

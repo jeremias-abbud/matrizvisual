@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
+import { smoothScrollTo } from '../src/lib/scroll';
 
 interface LogoItem {
   id: string;
@@ -35,7 +36,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
         const { data: logosData, error: logosError } = await supabase
           .from('logos')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('display_order', { ascending: true }); // Use display_order
 
         if (logosError) throw logosError;
 
@@ -44,7 +45,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
           .from('projects')
           .select('id, title, image_url, created_at, industry')
           .eq('category', 'Logotipos') // Garante que pegamos projetos da categoria certa
-          .order('created_at', { ascending: false });
+          .order('display_order', { ascending: true }); // Use display_order
 
         if (projectsError) throw projectsError;
 
@@ -65,9 +66,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
             createdAt: new Date(item.created_at).getTime()
         }));
 
-        // Combinar e ordenar por mais recente
-        const combinedLogos = [...normalizedLogos, ...normalizedProjects]
-            .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        // Combinar (e manter ordem relativa se necessário, ou ordenar por algo)
+        // Como o display_order é por tabela, ao juntar pode ficar estranho se não normalizar
+        // Por simplicidade, juntamos logos primeiro, depois projetos
+        const combinedLogos = [...normalizedLogos, ...normalizedProjects];
 
         if (combinedLogos.length > 0) {
           setLogos(combinedLogos);
@@ -97,12 +99,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
     setVisibleCount(prev => prev + 8);
   };
 
-  const handleShowLess = () => {
+  const handleShowLess = (e: React.MouseEvent) => {
     setVisibleCount(INITIAL_COUNT);
-    const section = document.getElementById('logos');
-    if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    // Use the reliable smooth scroll utility
+    smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#logos');
   };
 
   const openModal = (index: number) => {
