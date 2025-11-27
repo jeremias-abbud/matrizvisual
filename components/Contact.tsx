@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const Contact: React.FC = () => {
-  const { assets } = useSiteAssets();
+  const { assetsMap } = useSiteAssets();
   
-  // Form State
+  const footerLogo = assetsMap.logo_footer;
+  const logoStyles = footerLogo?.style_config || {};
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -167,9 +168,10 @@ ${formData.details}`;
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-center items-center gap-6 text-center">
           <div className="flex flex-col md:flex-row items-center gap-2">
              <img 
-               src={assets.logo_main} 
+               src={footerLogo?.image_url} 
                alt="Matriz Visual" 
-               className="h-8 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+               style={{ height: logoStyles.height || '2rem' }}
+               className="w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
              />
             <span className="text-xs text-gray-500 md:ml-4 mt-2 md:mt-0">© {new Date().getFullYear()}. Todos os direitos reservados.</span>
           </div>

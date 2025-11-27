@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export interface SiteAsset {
@@ -9,75 +8,74 @@ export interface SiteAsset {
   style_config?: any; // JSONB do banco
 }
 
-// Configuração padrão (Fallback)
-const DEFAULT_ASSETS: Record<string, string> = {
-  logo_main: '/logo.png',
-  favicon: '/logo.png',
-  about_img_1: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop',
-  about_img_2: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop',
-  social_share: '/social-share.jpg',
-};
-
-// Estilos Padrão
-const DEFAULT_STYLES = {
-  logo_height_desktop: '6rem',
-  logo_height_mobile: '4rem',
-  logo_glow: false,
-  about_grayscale: true,
+// Configuração padrão (Fallback) se o banco falhar
+const FALLBACK_ASSETS: Record<string, SiteAsset> = {
+  logo_navbar: { key: 'logo_navbar', label: 'Logo (Barra de Navegação)', image_url: '/logo.png', style_config: { height_desktop: '4rem', height_mobile: '3rem' } },
+  logo_hero: { key: 'logo_hero', label: 'Logo (Seção Principal/Hero)', image_url: '/logo.png', style_config: { height_desktop: '10rem', height_mobile: '8rem', glow: true } },
+  logo_footer: { key: 'logo_footer', label: 'Logo (Rodapé)', image_url: '/logo.png', style_config: { height: '2rem' } },
+  favicon: { key: 'favicon', label: 'Ícone da Aba (Favicon)', image_url: '/logo.png' },
+  about_img_1: { key: 'about_img_1', label: 'Imagem Sobre Nós (Esquerda/Topo)', image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop' },
+  about_img_2: { key: 'about_img_2', label: 'Imagem Sobre Nós (Direita/Baixo)', image_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop' },
+  social_share: { key: 'social_share', label: 'Imagem de Compartilhamento (Social)', image_url: '/social-share.jpg' },
 };
 
 export const useSiteAssets = () => {
-  const [assets, setAssets] = useState<Record<string, string>>(DEFAULT_ASSETS);
-  const [styles, setStyles] = useState<Record<string, any>>(DEFAULT_STYLES);
+  const [assetsMap, setAssetsMap] = useState<Record<string, SiteAsset>>(FALLBACK_ASSETS);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
 
   // Efeito para aplicar o Favicon dinamicamente
   useEffect(() => {
-    if (assets.favicon) {
-      const link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']") || document.createElement('link');
-      link.type = 'image/png';
-      link.rel = 'icon';
-      link.href = assets.favicon;
-      document.getElementsByTagName('head')[0].appendChild(link);
+    const faviconUrl = assetsMap.favicon?.image_url;
+    if (faviconUrl) {
+      let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+      link.href = faviconUrl;
     }
-  }, [assets.favicon]);
+  }, [assetsMap.favicon]);
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
+    setLoading(true);
     try {
       const { data, error } = await supabase.from('site_assets').select('*');
       
       if (error) {
-        console.error('Error fetching assets:', error);
+        console.error('Error fetching assets, using fallback:', error);
+        setAssetsMap(FALLBACK_ASSETS); // Usa o fallback em caso de erro
         return;
       }
 
       if (data && data.length > 0) {
-        // Converte o array do banco em mapas de URL e Styles
-        const assetMap: Record<string, string> = { ...DEFAULT_ASSETS };
-        const styleMap: Record<string, any> = { ...DEFAULT_STYLES };
-
-        data.forEach((item: SiteAsset) => {
-          assetMap[item.key] = item.image_url;
-          
-          // Merge styles se existirem para aquela chave
-          if (item.style_config) {
-            Object.assign(styleMap, item.style_config);
-          }
-        });
-
-        setAssets(assetMap);
-        setStyles(styleMap);
+        // Converte o array do banco em um mapa para acesso fácil (ex: assetsMap['logo_navbar'])
+        const newAssetsMap = data.reduce((acc, item) => {
+          acc[item.key] = {
+            ...item,
+            // Garante que style_config seja sempre um objeto para evitar erros
+            style_config: item.style_config || {},
+          };
+          return acc;
+        }, {} as Record<string, SiteAsset>);
+        
+        // Garante que todos os fallbacks existam se não vierem do banco
+        const finalMap = { ...FALLBACK_ASSETS, ...newAssetsMap };
+        setAssetsMap(finalMap);
+      } else {
+         setAssetsMap(FALLBACK_ASSETS); // Usa fallback se o banco estiver vazio
       }
     } catch (err) {
-      console.error('Error in useSiteAssets:', err);
+      console.error('Critical error in useSiteAssets:', err);
+      setAssetsMap(FALLBACK_ASSETS); // Usa fallback em caso de erro crítico
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  return { assets, styles, loading, refreshAssets: fetchAssets };
+  useEffect(() => {
+    fetchAssets();
+  }, [fetchAssets]);
+
+  return { assetsMap, loading, refreshAssets: fetchAssets };
 };

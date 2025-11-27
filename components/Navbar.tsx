@@ -6,8 +6,11 @@ import { smoothScrollTo } from '../src/lib/scroll';
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { assets, styles } = useSiteAssets();
+  const { assetsMap } = useSiteAssets();
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+
+  const navbarLogo = assetsMap.logo_navbar;
+  const logoStyles = navbarLogo?.style_config || {};
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,32 +36,30 @@ const Navbar: React.FC = () => {
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-2' : 'bg-transparent py-4'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center h-full">
-        {/* Logo Image - Wrapper for Loading State */}
         <a 
           href="#home" 
           className="flex items-center gap-2 group cursor-pointer h-full py-1 relative" 
           onClick={(e) => handleNavClick(e, '#home')}
+          style={{ 
+            height: window.innerWidth < 768 
+              ? (logoStyles.height_mobile || '3rem') 
+              : (logoStyles.height_desktop || '4rem'),
+          }}
         >
-           {/* Skeleton Loader (visible while loading) */}
+           {/* Skeleton Loader */}
            {!isLogoLoaded && (
              <div 
-               className="bg-white/10 animate-pulse rounded-sm"
-               style={{ 
-                 height: window.innerWidth < 768 ? (styles.logo_height_mobile || '4rem') : (styles.logo_height_desktop || '6rem'),
-                 width: '100px' // Approximate width to reserve space
-               }}
+               className="bg-white/10 animate-pulse rounded-sm h-full"
+               style={{ width: '120px' }} // Approximate width
              ></div>
            )}
 
            <img 
-             src={assets.logo_main} 
+             src={navbarLogo?.image_url} 
              alt="Matriz Visual" 
              onLoad={() => setIsLogoLoaded(true)}
-             style={{ 
-               height: window.innerWidth < 768 ? (styles.logo_height_mobile || '4rem') : (styles.logo_height_desktop || '6rem')
-             }}
-             className={`w-auto object-contain transition-all duration-500 hover:opacity-90 ${
-               isLogoLoaded ? 'opacity-100' : 'opacity-0 absolute top-0 left-0'
+             className={`h-full w-auto object-contain transition-all duration-500 hover:opacity-90 ${
+               isLogoLoaded ? 'opacity-100' : 'opacity-0 absolute'
              }`}
            />
         </a>

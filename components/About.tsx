@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const About: React.FC = () => {
-  const { assets } = useSiteAssets();
+  const { assetsMap } = useSiteAssets();
 
-  // REMOVED GRAYSCALE LOGIC. Images are colored by default with hover glow.
+  const aboutImg1 = assetsMap.about_img_1;
+  const aboutImg2 = assetsMap.about_img_2;
+
   const imgClasses = `w-full h-64 object-cover rounded-sm transition-all duration-500 border border-white/10 hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:border-matriz-purple/50`;
 
   return (
@@ -22,12 +23,12 @@ const About: React.FC = () => {
              {/* Abstract grid composition */}
              <div className="relative z-10 grid grid-cols-2 gap-4">
                  <img 
-                    src={assets.about_img_1} 
+                    src={aboutImg1?.image_url} 
                     alt="Digital Art Abstract" 
                     className={imgClasses}
                  />
                  <img 
-                    src={assets.about_img_2} 
+                    src={aboutImg2?.image_url} 
                     alt="Cyberpunk Tech Workspace" 
                     className={`${imgClasses} mt-12`}
                  />
