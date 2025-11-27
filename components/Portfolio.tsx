@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PROJECTS } from '../constants';
 import { Project, ProjectCategory } from '../types';
-import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Image as ImageIcon } from 'lucide-react';
+import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -73,8 +73,10 @@ const Portfolio: React.FC = () => {
         return <PlayCircle className="text-white drop-shadow-md" size={48} />;
       case ProjectCategory.WEB:
         return <Globe className="text-white drop-shadow-md" size={48} />;
+      case ProjectCategory.LOGO:
+        return <Palette className="text-white drop-shadow-md" size={48} />;
       default:
-        return null; // Clean look for design, or could use ImageIcon
+        return null; // Clean look for design
     }
   };
 

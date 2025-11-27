@@ -1,5 +1,6 @@
 export enum ProjectCategory {
   ALL = 'Todos',
+  LOGO = 'Logotipos',
   DESIGN = 'Design Gráfico',
   WEB = 'Web Sites',
   VIDEO = 'Vídeos & Motion'

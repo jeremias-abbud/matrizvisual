@@ -6,7 +6,7 @@ export const PROJECTS: Project[] = [
   {
     id: '1',
     title: 'Marca CyberTech',
-    category: ProjectCategory.DESIGN,
+    category: ProjectCategory.LOGO,
     imageUrl: 'https://picsum.photos/800/600?random=1',
     description: 'Criação de identidade visual moderna para empresa de tecnologia, transmitindo inovação.',
     tags: ['Logo', 'Cartão de Visita', 'Cores'],
@@ -104,7 +104,7 @@ export const PROJECTS: Project[] = [
   {
     id: '7',
     title: 'Café Aroma Gourmet',
-    category: ProjectCategory.DESIGN,
+    category: ProjectCategory.LOGO,
     imageUrl: 'https://picsum.photos/800/600?random=7',
     description: 'Rebranding completo para cafeteria artesanal, incluindo cardápios e embalagens.',
     tags: ['Embalagem', 'Identidade Visual', 'Impresso'],
@@ -140,7 +140,7 @@ export const PROJECTS: Project[] = [
   {
     id: '10',
     title: 'Advocacia Silva & Santos',
-    category: ProjectCategory.DESIGN,
+    category: ProjectCategory.LOGO,
     imageUrl: 'https://picsum.photos/800/600?random=10',
     description: 'Identidade sóbria e elegante para escritório de advocacia tradicional.',
     tags: ['Corporativo', 'Papelaria', 'Logo'],
@@ -176,7 +176,7 @@ export const PROJECTS: Project[] = [
   {
     id: '13',
     title: 'Barbearia Viking',
-    category: ProjectCategory.DESIGN,
+    category: ProjectCategory.LOGO,
     imageUrl: 'https://picsum.photos/800/600?random=13',
     description: 'Identidade visual rústica e masculina para rede de barbearias.',
     tags: ['Logo', 'Fachada', 'Instagram'],
@@ -260,7 +260,7 @@ export const PROJECTS: Project[] = [
   {
     id: '20',
     title: 'Tech Solutions Rebrand',
-    category: ProjectCategory.DESIGN,
+    category: ProjectCategory.LOGO,
     imageUrl: 'https://picsum.photos/800/600?random=20',
     description: 'Modernização de marca para consultoria de TI.',
     tags: ['Rebranding', 'B2B', 'Tech'],
@@ -274,7 +274,7 @@ export const PROJECTS: Project[] = [
 export const SERVICES: Service[] = [
   {
     id: 's1',
-    title: 'Logos e Marcas',
+    title: 'Logotipos',
     description: 'Sua empresa precisa passar confiança. Criamos logotipos profissionais que destacam você da concorrência.',
     iconName: 'Palette'
   },

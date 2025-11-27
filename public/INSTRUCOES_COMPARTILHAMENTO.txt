@@ -1,0 +1,12 @@
+PARA A IMAGEM DE COMPARTILHAMENTO (WHATSAPP/LINKEDIN) APARECER CORRETAMENTE:
+
+1. Crie uma imagem com as seguintes características:
+   - Formato: JPG
+   - Tamanho recomendado: 1200px de largura por 630px de altura.
+   - Conteúdo: Fundo sólido (preto ou roxo escuro) com o logo da Matriz Visual no centro. Evite fundo transparente.
+
+2. Salve esta imagem com o nome exato: social-share.jpg
+
+3. Coloque o arquivo social-share.jpg dentro desta pasta (public).
+
+Assim que você fizer isso e publicar o site, o link mostrará essa imagem automaticamente nas redes sociais.
