@@ -74,10 +74,12 @@ const Portfolio: React.FC = () => {
           {filteredProjects.map((project) => (
             <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col">
               {/* Image Container */}
-              <div className="aspect-video overflow-hidden relative">
+              <div className="aspect-video overflow-hidden relative bg-matriz-dark">
                 <img 
                   src={project.imageUrl} 
                   alt={project.title} 
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0"
                 />
                 
@@ -215,7 +217,13 @@ const Portfolio: React.FC = () => {
                                 : 'border-transparent opacity-40 hover:opacity-80'
                             }`}
                           >
-                            <img src={img} alt="" className="w-full h-full object-cover" />
+                            <img 
+                              src={img} 
+                              alt="" 
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover" 
+                            />
                           </button>
                         ))}
                       </div>

@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-3' : 'bg-transparent py-5'}`}>
+    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled || isOpen ? 'bg-matriz-black/95 backdrop-blur-md border-b border-white/10 py-2' : 'bg-transparent py-4'}`}>
       <div className="container mx-auto px-6 flex justify-between items-center">
         {/* Logo Image */}
         <a 
@@ -48,7 +48,7 @@ const Navbar: React.FC = () => {
            <img 
              src="/logo.png" 
              alt="Matriz Visual" 
-             className="h-10 md:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-90"
+             className="h-14 md:h-20 w-auto object-contain transition-opacity duration-300 hover:opacity-90"
            />
         </a>
 
