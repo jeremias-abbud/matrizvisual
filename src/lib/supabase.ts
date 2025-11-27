@@ -1,38 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Hardcoded fallbacks provided by user to ensure connection works even if .env fails to load
-const FALLBACK_URL = 'https://jnogzzroccgoerjgmdtw.supabase.co';
-const FALLBACK_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impub2d6enJvY2Nnb2VyamdtZHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyNTQ2ODEsImV4cCI6MjA3OTgzMDY4MX0.CKaaOIfd5CnPsCW_7cLXuRk9w94aE19dfxYww7mGKV8';
+// Configuração direta com as credenciais fornecidas
+const SUPABASE_URL = 'https://jnogzzroccgoerjgmdtw.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_eGx9KBwWN2UBURj7BE_F9A_znn0eHeF';
 
-const getSupabaseConfig = () => {
-  let url = FALLBACK_URL;
-  let key = FALLBACK_KEY;
-
-  try {
-    // Safely attempt to read from Vite environment variables
-    if (import.meta && import.meta.env) {
-      if (import.meta.env.VITE_SUPABASE_URL) url = import.meta.env.VITE_SUPABASE_URL;
-      if (import.meta.env.VITE_SUPABASE_ANON_KEY) key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    }
-  } catch (e) {
-    // Ignore errors and use fallbacks
-    console.warn('Could not read import.meta.env, using fallback credentials');
-  }
-
-  return { url, key };
-};
-
-const config = getSupabaseConfig();
-
-if (!config.url || !config.key) {
-  console.error('Supabase credentials missing. Check your configuration.');
-}
-
-export const supabase = createClient(config.url, config.key);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
- * Uploads a file to Supabase Storage bucket 'portfolio-images'
- * Returns the public URL of the uploaded file.
+ * Faz upload de um arquivo para o Bucket 'portfolio-images' do Supabase
+ * Retorna a URL pública do arquivo.
  */
 export const uploadImage = async (file: File): Promise<string | null> => {
   try {
@@ -55,7 +31,6 @@ export const uploadImage = async (file: File): Promise<string | null> => {
     return data.publicUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
-    alert('Erro ao fazer upload da imagem. Verifique se você criou o Bucket no Supabase.');
     return null;
   }
 };
