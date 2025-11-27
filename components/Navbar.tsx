@@ -46,7 +46,7 @@ const Navbar: React.FC = () => {
           onClick={(e) => handleNavClick(e, '#home')}
         >
            <img 
-             src="/logo.jpg" 
+             src="/logo.png" 
              alt="Matriz Visual" 
              className="h-10 md:h-14 w-auto object-contain transition-opacity duration-300 hover:opacity-90"
            />
