@@ -1,17 +1,17 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
 
 const Contact: React.FC = () => {
   return (
     <footer id="contact" className="bg-matriz-black border-t border-white/10 scroll-mt-28">
       {/* Contact Section */}
-      <div className="py-24 container mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <div className="py-16 md:py-20 container mx-auto px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           
           {/* Info */}
           <div>
-            <h2 className="font-display text-4xl font-bold text-white mb-2">Vamos criar algo <br/><span className="text-matriz-purple">Extraordinário?</span></h2>
-            <p className="text-gray-400 mb-10">Conte-nos sobre seu projeto. Estamos prontos para materializar suas ideias.</p>
+            <h2 className="font-display text-4xl font-bold text-white mb-2">Quer atrair mais <br/><span className="text-matriz-purple">Clientes?</span></h2>
+            <p className="text-gray-400 mb-8">Mande uma mensagem e conte o que você precisa. Vamos encontrar a melhor solução para o seu orçamento.</p>
             
             <div className="space-y-6">
               <div className="flex items-start gap-4">
@@ -29,8 +29,8 @@ const Contact: React.FC = () => {
                   <Phone size={24} />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold">Telefone</h4>
-                  <p className="text-gray-400">+55 (11) 99999-9999</p>
+                  <h4 className="text-white font-bold">WhatsApp / Telefone</h4>
+                  <p className="text-gray-400">+55 (31) 98675-2884</p>
                 </div>
               </div>
               
@@ -39,8 +39,8 @@ const Contact: React.FC = () => {
                   <MapPin size={24} />
                 </div>
                 <div>
-                  <h4 className="text-white font-bold">Localização</h4>
-                  <p className="text-gray-400">São Paulo, SP - Brasil</p>
+                  <h4 className="text-white font-bold">Atendimento</h4>
+                  <p className="text-gray-400">Brasil (Online)</p>
                 </div>
               </div>
             </div>
@@ -58,33 +58,33 @@ const Contact: React.FC = () => {
                   <input type="text" className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="Seu nome" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-gray-500">Empresa</label>
+                  <label className="text-xs uppercase tracking-widest text-gray-500">Nome da Empresa</label>
                   <input type="text" className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="Sua empresa" />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-gray-500">Email</label>
-                <input type="email" className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="seu@email.com" />
+                <label className="text-xs uppercase tracking-widest text-gray-500">Email ou WhatsApp</label>
+                <input type="text" className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="Seu contato" />
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-gray-500">Serviço de Interesse</label>
+                <label className="text-xs uppercase tracking-widest text-gray-500">O que você precisa?</label>
                 <select className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors">
-                  <option>Design Gráfico</option>
-                  <option>Desenvolvimento Web</option>
-                  <option>Vídeo & Motion</option>
-                  <option>Outro</option>
+                  <option>Criar um Logotipo/Identidade</option>
+                  <option>Criar um Site</option>
+                  <option>Vídeos para Redes Sociais</option>
+                  <option>Pacote Completo</option>
                 </select>
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest text-gray-500">Mensagem</label>
-                <textarea rows={4} className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="Descreva seu projeto..."></textarea>
+                <label className="text-xs uppercase tracking-widest text-gray-500">Detalhes do pedido</label>
+                <textarea rows={4} className="w-full bg-black/50 border border-white/10 p-3 text-white focus:border-matriz-purple outline-none transition-colors" placeholder="Me conte um pouco sobre sua ideia..."></textarea>
               </div>
               
               <button type="submit" className="w-full py-4 bg-matriz-purple hover:bg-purple-600 text-white font-bold uppercase tracking-widest transition-colors duration-300">
-                Enviar Mensagem
+                Solicitar Orçamento Grátis
               </button>
             </form>
           </div>
@@ -93,7 +93,7 @@ const Contact: React.FC = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10 bg-black py-8">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
              <img 
                src="/logo.png" 
@@ -104,9 +104,18 @@ const Contact: React.FC = () => {
           </div>
           
           <div className="flex space-x-6">
-            <a href="#" className="text-gray-500 hover:text-white transition-colors"><Instagram size={20} /></a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors"><Linkedin size={20} /></a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors"><Twitter size={20} /></a>
+            <a 
+                href="https://wa.me/5531986752884" 
+                target="_blank"
+                rel="noreferrer"
+                className="group relative inline-flex items-center gap-3 px-6 py-3 bg-green-500/5 border border-green-500/30 text-green-500 font-bold uppercase tracking-widest text-sm hover:bg-green-500 hover:text-black hover:border-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all duration-300 rounded-sm"
+            >
+                <MessageCircle size={20} className="group-hover:scale-110 transition-transform duration-300" />
+                <span>Chamar no WhatsApp</span>
+                
+                {/* Shine effect overlay */}
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none skew-y-12"></div>
+            </a>
           </div>
         </div>
       </div>

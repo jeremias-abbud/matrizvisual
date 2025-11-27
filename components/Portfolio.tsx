@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { PROJECTS } from '../constants';
 import { Project, ProjectCategory } from '../types';
-import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Image as ImageIcon } from 'lucide-react';
+
+const ITEMS_PER_PAGE = 6;
 
 const Portfolio: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(ProjectCategory.ALL);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   // Disable body scroll when modal is open and reset image index
   useEffect(() => {
@@ -21,9 +24,30 @@ const Portfolio: React.FC = () => {
     };
   }, [selectedProject]);
 
+  // Reset visible count when category changes
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+  }, [activeCategory]);
+
   const filteredProjects = activeCategory === ProjectCategory.ALL
     ? PROJECTS
     : PROJECTS.filter(project => project.category === activeCategory);
+
+  const visibleProjects = filteredProjects.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredProjects.length;
+  const canShowLess = visibleCount > ITEMS_PER_PAGE;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + ITEMS_PER_PAGE);
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(ITEMS_PER_PAGE);
+    const section = document.getElementById('portfolio');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // ProjectCategory enum already includes 'Todos' (ALL), so we just use Object.values
   const categories = Object.values(ProjectCategory);
@@ -42,10 +66,22 @@ const Portfolio: React.FC = () => {
     }
   };
 
+  // Helper to get type icon
+  const getTypeIcon = (category: ProjectCategory) => {
+    switch (category) {
+      case ProjectCategory.VIDEO:
+        return <PlayCircle className="text-white drop-shadow-md" size={48} />;
+      case ProjectCategory.WEB:
+        return <Globe className="text-white drop-shadow-md" size={48} />;
+      default:
+        return null; // Clean look for design, or could use ImageIcon
+    }
+  };
+
   return (
-    <section id="portfolio" className="py-24 bg-matriz-black scroll-mt-28 relative">
+    <section id="portfolio" className="py-16 md:py-20 bg-matriz-black scroll-mt-28 relative">
       <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
           <div>
             <span className="text-matriz-purple uppercase tracking-widest text-sm font-bold">Nosso Trabalho</span>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-2">Portfólio</h2>
@@ -69,10 +105,15 @@ const Portfolio: React.FC = () => {
           </div>
         </div>
 
+        {/* Counters */}
+        <div className="mb-6 text-gray-500 text-sm text-right">
+          Exibindo {visibleProjects.length} de {filteredProjects.length} projetos
+        </div>
+
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProjects.map((project) => (
-            <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col">
+          {visibleProjects.map((project) => (
+            <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => setSelectedProject(project)}>
               {/* Image Container */}
               <div className="aspect-video overflow-hidden relative bg-matriz-dark">
                 <img 
@@ -83,6 +124,11 @@ const Portfolio: React.FC = () => {
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0"
                 />
                 
+                {/* Format Indicator (Center) */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                    {getTypeIcon(project.category)}
+                </div>
+
                  {/* Overlay Content */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                   <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
@@ -93,7 +139,6 @@ const Portfolio: React.FC = () => {
                     <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
                     
                     <button 
-                      onClick={() => setSelectedProject(project)}
                       className="mt-2 inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider"
                     >
                       Ver Detalhes <ArrowRight size={16} />
@@ -111,6 +156,35 @@ const Portfolio: React.FC = () => {
         {filteredProjects.length === 0 && (
           <div className="text-center py-20 animate-fade-in">
             <p className="text-gray-500">Nenhum projeto encontrado nesta categoria.</p>
+          </div>
+        )}
+
+        {/* Load More / Less Buttons */}
+        {(hasMore || canShowLess) && (
+          <div className="mt-12 flex justify-center gap-4 animate-fade-in">
+            {hasMore && (
+              <button 
+                onClick={handleLoadMore}
+                className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden"
+              >
+                <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
+                  <Plus size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                  Carregar Mais
+                </div>
+              </button>
+            )}
+            
+            {canShowLess && (
+              <button 
+                onClick={handleShowLess}
+                className="group relative px-8 py-4 border border-white/10 bg-transparent hover:bg-white/10 hover:border-white text-gray-300 hover:text-white transition-all duration-300 overflow-hidden"
+              >
+                <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
+                  <Minus size={18} className="group-hover:scale-75 transition-transform duration-500" />
+                  Ver Menos
+                </div>
+              </button>
+            )}
           </div>
         )}
       </div>
