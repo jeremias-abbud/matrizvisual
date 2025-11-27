@@ -268,6 +268,43 @@ export const PROJECTS: Project[] = [
     date: 'Agosto 2024',
     longDescription: 'Removemos elementos antigos e simplificamos o logo para funcionar melhor em telas digitais e ícones de app.',
     gallery: ['https://picsum.photos/800/600?random=2001', 'https://picsum.photos/800/600?random=2002']
+  },
+  // Mais logos para popular a aba
+  {
+    id: '21',
+    title: 'Alpha Fitness',
+    category: ProjectCategory.LOGO,
+    imageUrl: 'https://picsum.photos/800/600?random=21',
+    description: 'Identidade energética para rede de academias.',
+    tags: ['Fitness', 'Esporte', 'Marca'],
+    client: 'Alpha Fit',
+    date: 'Setembro 2024',
+    longDescription: 'Cores vibrantes e formas dinâmicas que sugerem movimento e força.',
+    gallery: ['https://picsum.photos/800/600?random=2101', 'https://picsum.photos/800/600?random=2102']
+  },
+  {
+    id: '22',
+    title: 'Boutique Flor',
+    category: ProjectCategory.LOGO,
+    imageUrl: 'https://picsum.photos/800/600?random=22',
+    description: 'Logo delicado e feminino para loja de roupas.',
+    tags: ['Moda', 'Feminino', 'Minimalista'],
+    client: 'Ana Flor',
+    date: 'Outubro 2024',
+    longDescription: 'Traços finos e tipografia serifada para transmitir elegância e exclusividade.',
+    gallery: ['https://picsum.photos/800/600?random=2201', 'https://picsum.photos/800/600?random=2202']
+  },
+  {
+    id: '23',
+    title: 'Pizza Express',
+    category: ProjectCategory.LOGO,
+    imageUrl: 'https://picsum.photos/800/600?random=23',
+    description: 'Redesign de marca para delivery de pizza.',
+    tags: ['Food', 'Delivery', 'Redesign'],
+    client: 'Pizza Express',
+    date: 'Novembro 2024',
+    longDescription: 'Um logo divertido e apetitoso, otimizado para aplicativos de entrega.',
+    gallery: ['https://picsum.photos/800/600?random=2301', 'https://picsum.photos/800/600?random=2302']
   }
 ];
 
@@ -286,7 +323,7 @@ export const SERVICES: Service[] = [
   },
   {
     id: 's3',
-    title: 'Vídeos que Vendem',
+    title: 'Vídeos',
     description: 'Vídeos curtos e chamativos para Reels, TikTok e anúncios. A melhor forma de mostrar seus produtos hoje.',
     iconName: 'Video'
   },

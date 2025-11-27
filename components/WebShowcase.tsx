@@ -1,18 +1,72 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
-import { FEATURED_WEB_PROJECTS } from '../constants';
+import { supabase } from '../src/lib/supabase';
+import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS } from '../constants'; // Fallback
+
+interface WebProject {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  tech: string[];
+  liveUrl: string;
+}
 
 const WebShowcase: React.FC = () => {
+  const [projects, setProjects] = useState<WebProject[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
-  const activeProject = FEATURED_WEB_PROJECTS[activeIndex];
+
+  useEffect(() => {
+    async function fetchWebProjects() {
+        try {
+            const { data, error } = await supabase
+                .from('web_showcase')
+                .select('*')
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            if (data && data.length > 0) {
+                 const formattedData = data.map((item: any) => ({
+                    id: item.id,
+                    title: item.title,
+                    description: item.description,
+                    imageUrl: item.image_url,
+                    tech: item.tech,
+                    liveUrl: item.live_url
+                 }));
+                 setProjects(formattedData);
+            } else {
+                setProjects(MOCK_PROJECTS);
+            }
+        } catch (err) {
+            console.error('Error fetching web showcase:', err);
+            setProjects(MOCK_PROJECTS);
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchWebProjects();
+  }, []);
+
+  const activeProject = projects[activeIndex];
 
   const nextProject = () => {
-    setActiveIndex((prev) => (prev + 1) % FEATURED_WEB_PROJECTS.length);
+    setActiveIndex((prev) => (prev + 1) % projects.length);
   };
 
   const prevProject = () => {
-    setActiveIndex((prev) => (prev - 1 + FEATURED_WEB_PROJECTS.length) % FEATURED_WEB_PROJECTS.length);
+    setActiveIndex((prev) => (prev - 1 + projects.length) % projects.length);
   };
+
+  if (loading || projects.length === 0) {
+      return (
+        <section className="py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden flex justify-center items-center h-96">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-matriz-purple"></div>
+        </section>
+      )
+  }
 
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden">
@@ -21,9 +75,9 @@ const WebShowcase: React.FC = () => {
       
       <div className="container mx-auto px-6 relative z-10">
         <div className="mb-10 lg:mb-12">
-          <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Sites Profissionais</span>
+          <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Galeria de Sites</span>
           <h2 className="font-display text-4xl font-bold text-white mt-2">
-            Sites Modernos <span className="text-gray-500">que Vendem</span>
+            Sites Profissionais <span className="text-gray-500">Modernos</span>
           </h2>
         </div>
 
@@ -44,7 +98,7 @@ const WebShowcase: React.FC = () => {
                   {activeProject.title}
                 </h3>
                 <span className="text-xs text-gray-500 uppercase tracking-widest">
-                  {activeIndex + 1} / {FEATURED_WEB_PROJECTS.length}
+                  {activeIndex + 1} / {projects.length}
                 </span>
               </div>
 
@@ -80,7 +134,7 @@ const WebShowcase: React.FC = () => {
 
           {/* DESKTOP LIST (Hidden on mobile) */}
           <div className="hidden lg:flex lg:w-1/3 flex-col gap-4 order-1">
-            {FEATURED_WEB_PROJECTS.map((project, index) => (
+            {projects.map((project, index) => (
               <button
                 key={project.id}
                 onClick={() => setActiveIndex(index)}

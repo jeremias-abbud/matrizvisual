@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { PROJECTS } from '../constants';
+import { supabase } from '../src/lib/supabase';
+import { PROJECTS as MOCK_PROJECTS } from '../constants'; // Fallback
 import { Project, ProjectCategory } from '../types';
 import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette } from 'lucide-react';
 
@@ -7,9 +8,49 @@ const ITEMS_PER_PAGE = 6;
 
 const Portfolio: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(ProjectCategory.ALL);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+           // Map DB columns to frontend types (snake_case to camelCase)
+           const formattedData = data.map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            category: item.category as ProjectCategory,
+            imageUrl: item.image_url,
+            description: item.description,
+            tags: item.tags,
+            client: item.client,
+            date: item.date,
+            longDescription: item.long_description,
+            gallery: item.gallery
+          }));
+          setProjects(formattedData);
+        } else {
+          setProjects(MOCK_PROJECTS);
+        }
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setProjects(MOCK_PROJECTS);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProjects();
+  }, []);
 
   // Disable body scroll when modal is open and reset image index
   useEffect(() => {
@@ -30,8 +71,8 @@ const Portfolio: React.FC = () => {
   }, [activeCategory]);
 
   const filteredProjects = activeCategory === ProjectCategory.ALL
-    ? PROJECTS
-    : PROJECTS.filter(project => project.category === activeCategory);
+    ? projects
+    : projects.filter(project => project.category === activeCategory);
 
   const visibleProjects = filteredProjects.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProjects.length;
@@ -112,57 +153,66 @@ const Portfolio: React.FC = () => {
           Exibindo {visibleProjects.length} de {filteredProjects.length} projetos
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {visibleProjects.map((project) => (
-            <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => setSelectedProject(project)}>
-              {/* Image Container */}
-              <div className="aspect-video overflow-hidden relative bg-matriz-dark">
-                <img 
-                  src={project.imageUrl} 
-                  alt={project.title} 
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0"
-                />
-                
-                {/* Format Indicator (Center) */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                    {getTypeIcon(project.category)}
-                </div>
-
-                 {/* Overlay Content */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider mb-2 block">
-                      {project.category}
-                    </span>
-                    <h3 className="text-xl font-display font-bold text-white mb-2">{project.title}</h3>
-                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
-                    
-                    <button 
-                      className="mt-2 inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider"
-                    >
-                      Ver Detalhes <ArrowRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Border Glow Effect */}
-              <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        {loading ? (
+             <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-matriz-purple"></div>
             </div>
-          ))}
-        </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {visibleProjects.map((project) => (
+                <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => setSelectedProject(project)}>
+                {/* Image Container */}
+                <div className="aspect-video overflow-hidden relative bg-matriz-dark">
+                    <img 
+                    src={project.imageUrl} 
+                    alt={project.title} 
+                    loading="lazy"
+                    decoding="async"
+                    className={`w-full h-full transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0 ${
+                        project.category === ProjectCategory.LOGO 
+                        ? 'object-contain p-10 bg-black/50' 
+                        : 'object-cover'
+                    }`}
+                    />
+                    
+                    {/* Format Indicator (Center) */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                        {getTypeIcon(project.category)}
+                    </div>
+
+                    {/* Overlay Content */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider mb-2 block">
+                        {project.category}
+                        </span>
+                        <h3 className="text-xl font-display font-bold text-white mb-2">{project.title}</h3>
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
+                        
+                        <button 
+                        className="mt-2 inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider"
+                        >
+                        Ver Detalhes <ArrowRight size={16} />
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                
+                {/* Border Glow Effect */}
+                <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                </div>
+            ))}
+            </div>
+        )}
         
-        {filteredProjects.length === 0 && (
+        {!loading && filteredProjects.length === 0 && (
           <div className="text-center py-20 animate-fade-in">
             <p className="text-gray-500">Nenhum projeto encontrado nesta categoria.</p>
           </div>
         )}
 
         {/* Load More / Less Buttons */}
-        {(hasMore || canShowLess) && (
+        {!loading && (hasMore || canShowLess) && (
           <div className="mt-12 flex justify-center gap-4 animate-fade-in">
             {hasMore && (
               <button 
@@ -203,25 +253,36 @@ const Portfolio: React.FC = () => {
             
             <button 
               onClick={() => setSelectedProject(null)}
-              className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10"
+              className="absolute top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10"
             >
               <X size={24} />
             </button>
 
             {/* Hero Image */}
-            <div className="w-full h-64 md:h-96 relative">
+            <div className="w-full h-64 md:h-96 relative bg-matriz-black flex items-center justify-center overflow-hidden">
+               {/* Background Blur for logos */}
+               {selectedProject.category === ProjectCategory.LOGO && (
+                  <img 
+                    src={selectedProject.imageUrl} 
+                    className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-150"
+                  />
+               )}
               <img 
                 src={selectedProject.imageUrl} 
                 alt={selectedProject.title} 
-                className="w-full h-full object-cover"
+                className={`w-full h-full relative z-10 ${
+                    selectedProject.category === ProjectCategory.LOGO 
+                    ? 'object-contain p-12' 
+                    : 'object-cover'
+                }`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-matriz-dark to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-matriz-dark via-transparent to-transparent z-20"></div>
               
-              <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full">
+              <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full z-30">
                 <span className="inline-block px-3 py-1 mb-3 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
                   {selectedProject.category}
                 </span>
-                <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2">{selectedProject.title}</h2>
+                <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
               </div>
             </div>
 
@@ -248,7 +309,11 @@ const Portfolio: React.FC = () => {
                           <img 
                             src={selectedProject.gallery[currentImageIndex]} 
                             alt={`Gallery image ${currentImageIndex + 1}`} 
-                            className="w-full h-full object-contain animate-fade-in"
+                            className={`w-full h-full animate-fade-in ${
+                                selectedProject.category === ProjectCategory.LOGO 
+                                ? 'object-contain p-8' 
+                                : 'object-contain'
+                            }`}
                             key={currentImageIndex} // Key forces re-render animation
                           />
                         </div>
@@ -287,7 +352,7 @@ const Portfolio: React.FC = () => {
                           <button
                             key={idx}
                             onClick={() => setCurrentImageIndex(idx)}
-                            className={`relative flex-shrink-0 w-24 h-16 rounded-sm overflow-hidden border-2 transition-all ${
+                            className={`relative flex-shrink-0 w-24 h-16 rounded-sm overflow-hidden border-2 transition-all bg-black ${
                               currentImageIndex === idx 
                                 ? 'border-matriz-purple opacity-100 ring-2 ring-matriz-purple/20' 
                                 : 'border-transparent opacity-40 hover:opacity-80'
@@ -298,7 +363,7 @@ const Portfolio: React.FC = () => {
                               alt="" 
                               loading="lazy"
                               decoding="async"
-                              className="w-full h-full object-cover" 
+                              className={`w-full h-full ${selectedProject.category === ProjectCategory.LOGO ? 'object-contain p-1' : 'object-cover'}`}
                             />
                           </button>
                         ))}
