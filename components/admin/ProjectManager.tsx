@@ -13,9 +13,11 @@ interface Project {
   industry?: string;
   image_url: string;
   description: string;
+  long_description: string;
   client: string;
   tags: string[];
   video_url?: string;
+  gallery?: string[];
   display_order?: number;
 }
 
@@ -31,14 +33,17 @@ const ProjectManager: React.FC = () => {
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   
   // Form State
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     category: ProjectCategory.LOGO,
     industry: '',
     description: '',
+    longDescription: '',
     client: '',
     tags: '', // comma separated string for input
-    videoUrl: ''
+    videoUrl: '',
+    gallery: '', // comma separated string for input
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -47,7 +52,6 @@ const ProjectManager: React.FC = () => {
   }, []);
 
   const fetchProjects = async () => {
-    // Ordenar por display_order (ASC) para respeitar a ordem visual definida
     const { data } = await supabase
         .from('projects')
         .select('*')
@@ -67,71 +71,132 @@ const ProjectManager: React.FC = () => {
     }
   };
 
+  const handleEdit = (project: Project) => {
+    setEditingProject(project);
+    setFormData({
+      title: project.title,
+      category: project.category as ProjectCategory,
+      industry: project.industry || '',
+      description: project.description || '',
+      longDescription: project.long_description || project.description || '',
+      client: project.client || '',
+      tags: project.tags?.join(', ') || '',
+      videoUrl: project.video_url || '',
+      gallery: project.gallery?.join(', ') || '',
+    });
+    setImageFile(null);
+    setShowForm(true);
+  };
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingProject(null);
+    setFormData({
+      title: '',
+      category: ProjectCategory.LOGO,
+      industry: '',
+      description: '',
+      longDescription: '',
+      client: '',
+      tags: '',
+      videoUrl: '',
+      gallery: ''
+    });
+    setImageFile(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile && !formData.videoUrl) return alert('Selecione uma imagem principal ou um link de vídeo');
-    
     setUploading(true);
-    let imageUrl = '';
-    
+
+    let imageUrl: string | null = null;
     if (imageFile) {
-        imageUrl = await uploadImage(imageFile) || '';
-    } else {
-        if (!imageUrl && !formData.videoUrl) {
+        imageUrl = await uploadImage(imageFile);
+        if (!imageUrl) {
              alert('Erro no upload da imagem');
              setUploading(false);
              return;
         }
     }
     
-    if (imageUrl || formData.videoUrl) {
-      const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t !== '');
+    const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+    const galleryArray = formData.gallery.split(',').map(url => url.trim()).filter(Boolean);
+    const longDesc = formData.longDescription || formData.description;
+    
+    if (editingProject) {
+        // UPDATE logic
+        const updates: any = {
+            title: formData.title,
+            category: formData.category,
+            industry: formData.industry || null,
+            description: formData.description,
+            long_description: longDesc,
+            client: formData.client,
+            tags: tagsArray,
+            video_url: formData.videoUrl || null,
+            gallery: galleryArray.length > 0 ? galleryArray : null
+        };
+        if (imageUrl) {
+            updates.image_url = imageUrl;
+        }
+
+        const { data, error } = await supabase
+            .from('projects')
+            .update(updates)
+            .eq('id', editingProject.id)
+            .select();
+
+        if (!error && data) {
+            setProjects(prev => prev.map(p => p.id === editingProject.id ? data[0] : p));
+            resetForm();
+        } else {
+            alert('Erro ao atualizar projeto.');
+            console.error(error);
+        }
+    } else {
+        // INSERT logic
+        if (!imageUrl && !formData.videoUrl) {
+            alert('Para um novo projeto, adicione uma imagem de capa ou um link de vídeo.');
+            setUploading(false);
+            return;
+        }
       
-      // Calcular a próxima ordem (último + 1)
-      const maxOrder = projects.length > 0 ? Math.max(...projects.map(p => p.display_order || 0)) : 0;
+        const maxOrder = projects.length > 0 ? Math.max(...projects.map(p => p.display_order || 0)) : 0;
 
-      const { data, error } = await supabase.from('projects').insert([{
-        title: formData.title,
-        category: formData.category,
-        industry: formData.industry || null, // Salva null se vazio
-        description: formData.description,
-        client: formData.client,
-        tags: tagsArray,
-        image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project', // Placeholder se for só video
-        video_url: formData.videoUrl || null,
-        long_description: formData.description,
-        display_order: maxOrder + 1
-      }]).select();
+        const { data, error } = await supabase.from('projects').insert([{
+            title: formData.title,
+            category: formData.category,
+            industry: formData.industry || null,
+            description: formData.description,
+            long_description: longDesc,
+            client: formData.client,
+            tags: tagsArray,
+            image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project',
+            video_url: formData.videoUrl || null,
+            gallery: galleryArray.length > 0 ? galleryArray : null,
+            display_order: maxOrder + 1
+        }]).select();
 
-      if (!error && data) {
-        setProjects([...projects, data[0]]); // Adiciona no final
-        setShowForm(false);
-        setFormData({ title: '', category: ProjectCategory.LOGO, industry: '', description: '', client: '', tags: '', videoUrl: '' });
-        setImageFile(null);
-      } else {
-        alert('Erro ao salvar projeto.');
-        console.error(error);
-      }
+        if (!error && data) {
+            setProjects([...projects, data[0]]);
+            resetForm();
+        } else {
+            alert('Erro ao salvar projeto.');
+            console.error(error);
+        }
     }
     setUploading(false);
   };
 
-  // --- DRAG AND DROP LOGIC ---
   const handleDragStart = (index: number) => {
     setDraggedItemIndex(index);
   };
 
   const handleDragEnter = (index: number) => {
     if (draggedItemIndex === null || draggedItemIndex === index) return;
-    
     const newProjects = [...projects];
-    const draggedItem = newProjects[draggedItemIndex];
-    
-    // Remove from old pos
-    newProjects.splice(draggedItemIndex, 1);
-    // Insert at new pos
+    const draggedItem = newProjects.splice(draggedItemIndex, 1)[0];
     newProjects.splice(index, 0, draggedItem);
-    
     setProjects(newProjects);
     setDraggedItemIndex(index);
     setHasOrderChanged(true);
@@ -143,23 +208,15 @@ const ProjectManager: React.FC = () => {
 
   const saveOrder = async () => {
     setUploading(true);
-    
-    // CORREÇÃO CRÍTICA: Enviar o objeto completo, não apenas o ID.
-    // O upsert precisa de todos os campos não-nulos para validar a linha,
-    // mesmo que estejamos atualizando apenas a ordem.
     const updates = projects.map((proj, index) => ({
-        ...proj, // Espalha todas as propriedades existentes (title, category, etc)
+        ...proj,
         display_order: index + 1
     }));
-
     try {
         const { error } = await supabase.from('projects').upsert(updates, { onConflict: 'id' });
-        
         if (error) throw error;
         setHasOrderChanged(false);
         setIsReordering(false);
-        // Opcional: Recarregar para garantir sincronia
-        // fetchProjects(); 
     } catch (err) {
         console.error(err);
         alert('Erro ao salvar a ordem. Verifique o console.');
@@ -172,37 +229,20 @@ const ProjectManager: React.FC = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-display font-bold text-white">Gerenciar Portfólio</h2>
-        
         <div className="flex gap-3">
              {isReordering ? (
                  <>
-                    <button 
-                        onClick={() => { setIsReordering(false); fetchProjects(); /* Reset */ }}
-                        className="flex items-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase"
-                        disabled={uploading}
-                    >
-                        Cancelar
-                    </button>
-                    <button 
-                        onClick={saveOrder}
-                        disabled={!hasOrderChanged || uploading}
-                        className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}
-                    >
+                    <button onClick={() => { setIsReordering(false); fetchProjects(); }} className="flex items-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase" disabled={uploading}>Cancelar</button>
+                    <button onClick={saveOrder} disabled={!hasOrderChanged || uploading} className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}>
                         <Save size={18} /> {uploading ? 'Salvando...' : 'Salvar Ordem'}
                     </button>
                  </>
              ) : (
                 <>
-                    <button 
-                        onClick={() => setIsReordering(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase"
-                    >
+                    <button onClick={() => setIsReordering(true)} className="flex items-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase">
                         <GripVertical size={18} /> Reordenar
                     </button>
-                    <button 
-                        onClick={() => setShowForm(true)}
-                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
-                    >
+                    <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors">
                         <Plus size={18} /> Adicionar Projeto
                     </button>
                 </>
@@ -214,110 +254,60 @@ const ProjectManager: React.FC = () => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 overflow-y-auto">
           <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-2xl w-full my-10 relative">
             <div className="flex justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Novo Projeto</h3>
-              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white"><X /></button>
+              <h3 className="text-xl font-bold text-white">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
+              <button onClick={resetForm} className="text-gray-400 hover:text-white"><X /></button>
             </div>
             
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Título do Projeto</label>
-                <input 
-                  type="text" 
-                  value={formData.title}
-                  onChange={e => setFormData({...formData, title: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                  required
-                />
+                <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
-
               <div>
-                <ModernSelect 
-                  label="Categoria (Serviço)"
-                  value={formData.category}
-                  onChange={(val) => setFormData({...formData, category: val as ProjectCategory})}
-                  options={Object.values(ProjectCategory)}
-                  required
-                />
+                <ModernSelect label="Categoria (Serviço)" value={formData.category} onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} options={Object.values(ProjectCategory)} required />
               </div>
-
               <div>
-                <ModernSelect 
-                  label="Ramo de Negócio"
-                  value={formData.industry}
-                  onChange={(val) => setFormData({...formData, industry: val})}
-                  options={INDUSTRIES}
-                  placeholder="Selecione o Ramo"
-                />
+                <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
               </div>
-
               <div>
                 <label className="block text-gray-400 text-xs uppercase mb-1">Cliente</label>
-                <input 
-                  type="text" 
-                  value={formData.client}
-                  onChange={e => setFormData({...formData, client: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                />
+                <input type="text" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Link de Vídeo (YouTube/Vimeo)</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: https://www.youtube.com/watch?v=..."
-                  value={formData.videoUrl}
-                  onChange={e => setFormData({...formData, videoUrl: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                />
+                <input type="text" placeholder="Ex: https://www.youtube.com/watch?v=..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
-
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta</label>
-                <textarea 
-                  value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                  rows={3}
-                  required
-                />
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card)</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
               </div>
-
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (para o detalhe)</label>
+                <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={4} />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Tags (separadas por vírgula)</label>
-                <input 
-                  type="text" 
-                  placeholder="Ex: Branding, Social Media, 2024"
-                  value={formData.tags}
-                  onChange={e => setFormData({...formData, tags: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                />
+                <input type="text" placeholder="Ex: Branding, Social Media, 2024" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
-              
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">Galeria (URLs separadas por vírgula)</label>
+                <textarea placeholder="Ex: https://..., https://..." value={formData.gallery} onChange={e => setFormData({...formData, gallery: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={3} />
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">
-                    Imagem Capa {formData.videoUrl && '(Opcional mas recomendado)'}
+                    {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
                 </label>
                 <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative">
-                    <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={e => setImageFile(e.target.files?.[0] || null)}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                         <Upload size={24} />
                         <span className="text-sm">{imageFile ? imageFile.name : 'Clique para enviar imagem'}</span>
                     </div>
                 </div>
               </div>
-
               <div className="md:col-span-2 pt-4">
-                <button 
-                    type="submit" 
-                    disabled={uploading}
-                    className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50"
-                >
-                    {uploading ? 'Enviando...' : 'Publicar Projeto'}
+                <button type="submit" disabled={uploading} className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50">
+                    {uploading ? 'Salvando...' : (editingProject ? 'Atualizar Projeto' : 'Publicar Projeto')}
                 </button>
               </div>
             </form>
@@ -329,8 +319,7 @@ const ProjectManager: React.FC = () => {
         <div className="text-white">Carregando...</div>
       ) : (
         <div className="space-y-2">
-            {/* Header */}
-            <div className="grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
+            <div className="hidden md:grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-2">Imagem</div>
                 <div className="col-span-4">Título</div>
@@ -338,22 +327,15 @@ const ProjectManager: React.FC = () => {
                 <div className="col-span-2 text-right">Ações</div>
             </div>
             
-            {/* List */}
             {projects.map((project, index) => (
                 <div 
                     key={project.id} 
                     className={`grid grid-cols-12 gap-4 bg-black/40 border border-white/5 p-3 rounded items-center transition-colors ${
-                        isReordering 
-                        ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' 
-                        : 'hover:bg-white/5'
+                        isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' : 'hover:bg-white/5'
                     } ${
                         isReordering && draggedItemIndex === index ? 'opacity-50 border-dashed border-matriz-purple' : ''
                     }`}
-                    draggable={isReordering}
-                    onDragStart={() => handleDragStart(index)}
-                    onDragEnter={() => handleDragEnter(index)}
-                    onDragEnd={handleDragEnd}
-                    onDragOver={(e) => e.preventDefault()}
+                    draggable={isReordering} onDragStart={() => handleDragStart(index)} onDragEnter={() => handleDragEnter(index)} onDragEnd={handleDragEnd} onDragOver={(e) => e.preventDefault()}
                 >
                     <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
                         {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
@@ -366,22 +348,13 @@ const ProjectManager: React.FC = () => {
                         <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 block w-fit mb-1">
                             {project.category}
                         </span>
-                        {project.industry && (
-                            <span className="text-xs text-gray-500 block truncate">
-                                {project.industry}
-                            </span>
-                        )}
+                        {project.industry && (<span className="text-xs text-gray-500 block truncate">{project.industry}</span>)}
                     </div>
                     <div className="col-span-2 flex justify-end gap-2">
-                        {!isReordering && (
-                            <button 
-                                onClick={() => handleDelete(project.id)}
-                                className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"
-                                title="Excluir"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        )}
+                        {!isReordering && (<>
+                            <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
+                            <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                        </>)}
                     </div>
                 </div>
             ))}
