@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2 } from 'lucide-react';
+import { INDUSTRIES } from '../../constants';
 
 interface Logo {
   id: string;
   name: string;
   url: string;
+  industry?: string;
 }
 
 const LogoManager: React.FC = () => {
@@ -17,6 +19,7 @@ const LogoManager: React.FC = () => {
   
   // Form State
   const [name, setName] = useState('');
+  const [industry, setIndustry] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -44,6 +47,7 @@ const LogoManager: React.FC = () => {
   const handleEdit = (logo: Logo) => {
     setEditingId(logo.id);
     setName(logo.name);
+    setIndustry(logo.industry || '');
     setImageFile(null); // Reset file input, user might not want to change image
     setShowForm(true);
   };
@@ -51,6 +55,7 @@ const LogoManager: React.FC = () => {
   const resetForm = () => {
     setShowForm(false);
     setName('');
+    setIndustry('');
     setImageFile(null);
     setEditingId(null);
   };
@@ -67,7 +72,10 @@ const LogoManager: React.FC = () => {
 
     if (editingId) {
         // --- UPDATE MODE ---
-        const updates: any = { name };
+        const updates: any = { 
+            name,
+            industry: industry || null
+        };
         if (imageUrl) updates.url = imageUrl; // Only update URL if a new image was uploaded
 
         const { error } = await supabase
@@ -92,6 +100,7 @@ const LogoManager: React.FC = () => {
 
         const { data, error } = await supabase.from('logos').insert([{
             name,
+            industry: industry || null,
             url: imageUrl
         }]).select();
 
@@ -120,7 +129,7 @@ const LogoManager: React.FC = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-md w-full">
+          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-md w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-white">
                 {editingId ? 'Editar Logotipo' : 'Novo Logotipo'}
@@ -138,6 +147,20 @@ const LogoManager: React.FC = () => {
                   className="w-full bg-black border border-white/10 p-2 text-white rounded"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 text-xs uppercase mb-1">Ramo de Negócio (Opcional)</label>
+                <select 
+                  value={industry}
+                  onChange={e => setIndustry(e.target.value)}
+                  className="w-full bg-black border border-white/10 p-2 text-white rounded custom-scrollbar"
+                >
+                    <option value="">-- Selecione ou deixe em branco --</option>
+                    {INDUSTRIES.map(ind => (
+                        <option key={ind} value={ind}>{ind}</option>
+                    ))}
+                </select>
               </div>
               
               <div>
@@ -197,6 +220,11 @@ const LogoManager: React.FC = () => {
                 <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain p-2" />
               </div>
               <p className="text-center text-white text-sm font-bold truncate">{logo.name}</p>
+              {logo.industry && (
+                  <p className="text-center text-gray-500 text-[10px] uppercase truncate mt-1 px-1 bg-white/5 rounded">
+                      {logo.industry}
+                  </p>
+              )}
             </div>
           ))}
         </div>
