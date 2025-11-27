@@ -1,4 +1,21 @@
+
 import { Project, ProjectCategory, Service } from './types';
+
+export const INDUSTRIES = [
+  'Alimentação & Bebidas',
+  'Saúde & Bem-estar',
+  'Tecnologia & Inovação',
+  'Construção & Arquitetura',
+  'Moda & Vestuário',
+  'Beleza & Estética',
+  'Educação & Cursos',
+  'Varejo & E-commerce',
+  'Direito & Advocacia',
+  'Serviços Gerais',
+  'Entretenimento & Eventos',
+  'Automotivo',
+  'Imobiliário'
+];
 
 // Placeholder data - In the future, this will be fetched from Supabase
 export const PROJECTS: Project[] = [
@@ -7,6 +24,7 @@ export const PROJECTS: Project[] = [
     id: '1',
     title: 'Marca CyberTech',
     category: ProjectCategory.LOGO,
+    industry: 'Tecnologia & Inovação',
     imageUrl: 'https://picsum.photos/800/600?random=1',
     description: 'Criação de identidade visual moderna para empresa de tecnologia, transmitindo inovação.',
     tags: ['Logo', 'Cartão de Visita', 'Cores'],
@@ -23,6 +41,7 @@ export const PROJECTS: Project[] = [
     id: '2',
     title: 'Loja Future Wear',
     category: ProjectCategory.WEB,
+    industry: 'Moda & Vestuário',
     imageUrl: 'https://picsum.photos/800/600?random=2',
     description: 'Loja virtual completa, fácil de navegar e comprar pelo celular.',
     tags: ['Site de Vendas', 'Celular', 'Pagamentos'],
@@ -39,6 +58,7 @@ export const PROJECTS: Project[] = [
     id: '3',
     title: 'Comercial Bolt Energy',
     category: ProjectCategory.VIDEO,
+    industry: 'Alimentação & Bebidas',
     imageUrl: 'https://picsum.photos/800/600?random=3',
     description: 'Vídeo dinâmico para lançamento de produto no Instagram e TikTok.',
     tags: ['Vídeo Comercial', 'Redes Sociais', 'Edição'],
@@ -55,6 +75,7 @@ export const PROJECTS: Project[] = [
     id: '4',
     title: 'Site Institucional FinApp',
     category: ProjectCategory.WEB,
+    industry: 'Tecnologia & Inovação',
     imageUrl: 'https://picsum.photos/800/600?random=4',
     description: 'Página de apresentação profissional para aplicativo financeiro.',
     tags: ['Site Institucional', 'Google', 'Conversão'],
@@ -71,6 +92,7 @@ export const PROJECTS: Project[] = [
     id: '5',
     title: 'Pacote Redes Sociais',
     category: ProjectCategory.DESIGN,
+    industry: 'Entretenimento & Eventos',
     imageUrl: 'https://picsum.photos/800/600?random=5',
     description: 'Criação de identidade visual padronizada para Instagram e YouTube.',
     tags: ['Instagram', 'YouTube', 'Posts'],
@@ -87,6 +109,7 @@ export const PROJECTS: Project[] = [
     id: '6',
     title: 'Vinheta Animada',
     category: ProjectCategory.VIDEO,
+    industry: 'Tecnologia & Inovação',
     imageUrl: 'https://picsum.photos/800/600?random=6',
     description: 'Animação de logotipo para abertura de vídeos no YouTube.',
     tags: ['Animação', 'Intro', 'Logo Animado'],
@@ -105,6 +128,7 @@ export const PROJECTS: Project[] = [
     id: '7',
     title: 'Café Aroma Gourmet',
     category: ProjectCategory.LOGO,
+    industry: 'Alimentação & Bebidas',
     imageUrl: 'https://picsum.photos/800/600?random=7',
     description: 'Rebranding completo para cafeteria artesanal, incluindo cardápios e embalagens.',
     tags: ['Embalagem', 'Identidade Visual', 'Impresso'],
@@ -117,6 +141,7 @@ export const PROJECTS: Project[] = [
     id: '8',
     title: 'App Delivery Rápido',
     category: ProjectCategory.WEB,
+    industry: 'Varejo & E-commerce',
     imageUrl: 'https://picsum.photos/800/600?random=8',
     description: 'Landing page de alta conversão para lançamento de aplicativo de entregas.',
     tags: ['Landing Page', 'App', 'Mobile First'],
@@ -129,6 +154,7 @@ export const PROJECTS: Project[] = [
     id: '9',
     title: 'Videoclipe Banda Neon',
     category: ProjectCategory.VIDEO,
+    industry: 'Entretenimento & Eventos',
     imageUrl: 'https://picsum.photos/800/600?random=9',
     description: 'Edição e efeitos visuais para clipe musical com estética Cyberpunk.',
     tags: ['VFX', 'Videoclipe', 'Edição Colorida'],
@@ -141,6 +167,7 @@ export const PROJECTS: Project[] = [
     id: '10',
     title: 'Advocacia Silva & Santos',
     category: ProjectCategory.LOGO,
+    industry: 'Direito & Advocacia',
     imageUrl: 'https://picsum.photos/800/600?random=10',
     description: 'Identidade sóbria e elegante para escritório de advocacia tradicional.',
     tags: ['Corporativo', 'Papelaria', 'Logo'],
@@ -150,33 +177,10 @@ export const PROJECTS: Project[] = [
     gallery: ['https://picsum.photos/800/600?random=1001', 'https://picsum.photos/800/600?random=1002']
   },
   {
-    id: '11',
-    title: 'Portal Notícias Locais',
-    category: ProjectCategory.WEB,
-    imageUrl: 'https://picsum.photos/800/600?random=11',
-    description: 'Site de notícias com sistema de gestão de conteúdo fácil de atualizar.',
-    tags: ['Blog', 'CMS', 'Notícias'],
-    client: 'Jornal da Cidade',
-    date: 'Outubro 2023',
-    longDescription: 'Desenvolvemos um portal onde os próprios jornalistas podem postar as notícias facilmente. Layout organizado para leitura.',
-    gallery: ['https://picsum.photos/800/600?random=1101', 'https://picsum.photos/800/600?random=1102']
-  },
-  {
-    id: '12',
-    title: 'Stories Promocionais',
-    category: ProjectCategory.VIDEO,
-    imageUrl: 'https://picsum.photos/800/600?random=12',
-    description: 'Pacote de 10 vídeos animados verticais para promoção de Black Friday.',
-    tags: ['Stories', 'Varejo', 'Animação'],
-    client: 'Mega Loja',
-    date: 'Novembro 2023',
-    longDescription: 'Animações rápidas de 15 segundos focadas em ofertas. Texto grande, preços piscando e chamadas para ação claras.',
-    gallery: ['https://picsum.photos/800/600?random=1201', 'https://picsum.photos/800/600?random=1202']
-  },
-  {
     id: '13',
     title: 'Barbearia Viking',
     category: ProjectCategory.LOGO,
+    industry: 'Beleza & Estética',
     imageUrl: 'https://picsum.photos/800/600?random=13',
     description: 'Identidade visual rústica e masculina para rede de barbearias.',
     tags: ['Logo', 'Fachada', 'Instagram'],
@@ -186,33 +190,10 @@ export const PROJECTS: Project[] = [
     gallery: ['https://picsum.photos/800/600?random=1301', 'https://picsum.photos/800/600?random=1302']
   },
   {
-    id: '14',
-    title: 'Dashboard Financeiro',
-    category: ProjectCategory.WEB,
-    imageUrl: 'https://picsum.photos/800/600?random=14',
-    description: 'Interface de usuário para sistema de controle financeiro empresarial.',
-    tags: ['UI/UX', 'Sistema', 'Dashboard'],
-    client: 'ContaCerta',
-    date: 'Fevereiro 2024',
-    longDescription: 'Focamos na usabilidade. Gráficos claros, cores que indicam status (verde/vermelho) e navegação intuitiva para o usuário.',
-    gallery: ['https://picsum.photos/800/600?random=1401', 'https://picsum.photos/800/600?random=1402']
-  },
-  {
-    id: '15',
-    title: 'Vlog de Viagem - Intro',
-    category: ProjectCategory.VIDEO,
-    imageUrl: 'https://picsum.photos/800/600?random=15',
-    description: 'Abertura cinematográfica para canal de viagens no YouTube.',
-    tags: ['YouTube', 'Cinematográfico', 'Intro'],
-    client: 'Mundo Afora',
-    date: 'Março 2024',
-    longDescription: 'Misturamos imagens de drone com tipografia animada sobrepondo paisagens. Uma introdução que inspira aventura.',
-    gallery: ['https://picsum.photos/800/600?random=1501', 'https://picsum.photos/800/600?random=1502']
-  },
-  {
     id: '16',
     title: 'Clínica Sorriso',
     category: ProjectCategory.WEB,
+    industry: 'Saúde & Bem-estar',
     imageUrl: 'https://picsum.photos/800/600?random=16',
     description: 'Site institucional com agendamento online integrado.',
     tags: ['Saúde', 'Agendamento', 'Site'],
@@ -222,21 +203,10 @@ export const PROJECTS: Project[] = [
     gallery: ['https://picsum.photos/800/600?random=1601', 'https://picsum.photos/800/600?random=1602']
   },
   {
-    id: '17',
-    title: 'Burger King da Esquina',
-    category: ProjectCategory.DESIGN,
-    imageUrl: 'https://picsum.photos/800/600?random=17',
-    description: 'Cardápio digital e impresso para hamburgueria artesanal.',
-    tags: ['Cardápio', 'Food', 'Impresso'],
-    client: 'Burger King da Esquina',
-    date: 'Maio 2024',
-    longDescription: 'Fotos apetitosas dos lanches com descrições curtas. O design facilita a leitura e induz o cliente a pedir combos.',
-    gallery: ['https://picsum.photos/800/600?random=1701', 'https://picsum.photos/800/600?random=1702']
-  },
-  {
     id: '18',
     title: 'Imobiliária Drone Tour',
     category: ProjectCategory.VIDEO,
+    industry: 'Imobiliário',
     imageUrl: 'https://picsum.photos/800/600?random=18',
     description: 'Vídeo tour de imóvel de luxo com imagens aéreas e internas.',
     tags: ['Imobiliário', 'Drone', 'Tour Virtual'],
@@ -244,67 +214,6 @@ export const PROJECTS: Project[] = [
     date: 'Junho 2024',
     longDescription: 'Um vídeo elegante para vender mansões. Trilha sonora clássica, cortes suaves e correção de cor para valorizar a iluminação da casa.',
     gallery: ['https://picsum.photos/800/600?random=1801', 'https://picsum.photos/800/600?random=1802']
-  },
-  {
-    id: '19',
-    title: 'PetShop Amigo Fiel',
-    category: ProjectCategory.WEB,
-    imageUrl: 'https://picsum.photos/800/600?random=19',
-    description: 'E-commerce de produtos pets com blog de dicas.',
-    tags: ['Pet', 'Loja Virtual', 'Blog'],
-    client: 'Amigo Fiel',
-    date: 'Julho 2024',
-    longDescription: 'Um site divertido e colorido. Categorias bem definidas (Cães, Gatos, Aves) para facilitar a busca do dono do pet.',
-    gallery: ['https://picsum.photos/800/600?random=1901', 'https://picsum.photos/800/600?random=1902']
-  },
-  {
-    id: '20',
-    title: 'Tech Solutions Rebrand',
-    category: ProjectCategory.LOGO,
-    imageUrl: 'https://picsum.photos/800/600?random=20',
-    description: 'Modernização de marca para consultoria de TI.',
-    tags: ['Rebranding', 'B2B', 'Tech'],
-    client: 'Tech Solutions',
-    date: 'Agosto 2024',
-    longDescription: 'Removemos elementos antigos e simplificamos o logo para funcionar melhor em telas digitais e ícones de app.',
-    gallery: ['https://picsum.photos/800/600?random=2001', 'https://picsum.photos/800/600?random=2002']
-  },
-  // Mais logos para popular a aba
-  {
-    id: '21',
-    title: 'Alpha Fitness',
-    category: ProjectCategory.LOGO,
-    imageUrl: 'https://picsum.photos/800/600?random=21',
-    description: 'Identidade energética para rede de academias.',
-    tags: ['Fitness', 'Esporte', 'Marca'],
-    client: 'Alpha Fit',
-    date: 'Setembro 2024',
-    longDescription: 'Cores vibrantes e formas dinâmicas que sugerem movimento e força.',
-    gallery: ['https://picsum.photos/800/600?random=2101', 'https://picsum.photos/800/600?random=2102']
-  },
-  {
-    id: '22',
-    title: 'Boutique Flor',
-    category: ProjectCategory.LOGO,
-    imageUrl: 'https://picsum.photos/800/600?random=22',
-    description: 'Logo delicado e feminino para loja de roupas.',
-    tags: ['Moda', 'Feminino', 'Minimalista'],
-    client: 'Ana Flor',
-    date: 'Outubro 2024',
-    longDescription: 'Traços finos e tipografia serifada para transmitir elegância e exclusividade.',
-    gallery: ['https://picsum.photos/800/600?random=2201', 'https://picsum.photos/800/600?random=2202']
-  },
-  {
-    id: '23',
-    title: 'Pizza Express',
-    category: ProjectCategory.LOGO,
-    imageUrl: 'https://picsum.photos/800/600?random=23',
-    description: 'Redesign de marca para delivery de pizza.',
-    tags: ['Food', 'Delivery', 'Redesign'],
-    client: 'Pizza Express',
-    date: 'Novembro 2024',
-    longDescription: 'Um logo divertido e apetitoso, otimizado para aplicativos de entrega.',
-    gallery: ['https://picsum.photos/800/600?random=2301', 'https://picsum.photos/800/600?random=2302']
   }
 ];
 
@@ -345,16 +254,6 @@ export const LOGOS = [
   { id: 'l6', name: 'Zeta Labs', url: 'https://picsum.photos/200/200?random=1006' },
   { id: 'l7', name: 'Omega Watch', url: 'https://picsum.photos/200/200?random=1007' },
   { id: 'l8', name: 'Theta Finance', url: 'https://picsum.photos/200/200?random=1008' },
-  { id: 'l9', name: 'Iota Invest', url: 'https://picsum.photos/200/200?random=1009' },
-  { id: 'l10', name: 'Kappa Kitchen', url: 'https://picsum.photos/200/200?random=1010' },
-  { id: 'l11', name: 'Lambda Logistics', url: 'https://picsum.photos/200/200?random=1011' },
-  { id: 'l12', name: 'Mu Media', url: 'https://picsum.photos/200/200?random=1012' },
-  { id: 'l13', name: 'Nu Network', url: 'https://picsum.photos/200/200?random=1013' },
-  { id: 'l14', name: 'Xi Xtreme', url: 'https://picsum.photos/200/200?random=1014' },
-  { id: 'l15', name: 'Omicron Ops', url: 'https://picsum.photos/200/200?random=1015' },
-  { id: 'l16', name: 'Pi Productions', url: 'https://picsum.photos/200/200?random=1016' },
-  { id: 'l17', name: 'Rho Racing', url: 'https://picsum.photos/200/200?random=1017' },
-  { id: 'l18', name: 'Sigma Security', url: 'https://picsum.photos/200/200?random=1018' },
 ];
 
 export const FEATURED_WEB_PROJECTS = [

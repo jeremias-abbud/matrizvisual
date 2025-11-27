@@ -1,16 +1,20 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2 } from 'lucide-react';
 import { ProjectCategory } from '../../types';
+import { INDUSTRIES } from '../../constants';
 
 interface Project {
   id: string;
   title: string;
   category: string;
+  industry?: string;
   image_url: string;
   description: string;
   client: string;
   tags: string[];
+  video_url?: string;
 }
 
 const ProjectManager: React.FC = () => {
@@ -23,9 +27,11 @@ const ProjectManager: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     category: ProjectCategory.LOGO,
+    industry: '',
     description: '',
     client: '',
     tags: '', // comma separated string for input
+    videoUrl: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -51,28 +57,43 @@ const ProjectManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageFile) return alert('Selecione uma imagem principal');
+    if (!imageFile && !formData.videoUrl) return alert('Selecione uma imagem principal ou um link de vídeo');
     
     setUploading(true);
-    const imageUrl = await uploadImage(imageFile);
+    let imageUrl = '';
     
-    if (imageUrl) {
-      const tagsArray = formData.tags.split(',').map(t => t.trim());
+    if (imageFile) {
+        imageUrl = await uploadImage(imageFile) || '';
+    } else {
+        // Fallback or placeholder if needed, currently requiring one or other implies validation
+        // For now, let's assume image might be optional if video exists, but DB schema says image_url not null?
+        // Let's assume user uploads image for thumbnail mostly.
+        if (!imageUrl && !formData.videoUrl) {
+             alert('Erro no upload da imagem');
+             setUploading(false);
+             return;
+        }
+    }
+    
+    if (imageUrl || formData.videoUrl) {
+      const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t !== '');
       
       const { data, error } = await supabase.from('projects').insert([{
         title: formData.title,
         category: formData.category,
+        industry: formData.industry || null, // Salva null se vazio
         description: formData.description,
         client: formData.client,
         tags: tagsArray,
-        image_url: imageUrl,
-        long_description: formData.description // reusing short for long initially
+        image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project', // Placeholder se for só video
+        video_url: formData.videoUrl || null,
+        long_description: formData.description 
       }]).select();
 
       if (!error && data) {
         setProjects([data[0], ...projects]);
         setShowForm(false);
-        setFormData({ title: '', category: ProjectCategory.LOGO, description: '', client: '', tags: '' });
+        setFormData({ title: '', category: ProjectCategory.LOGO, industry: '', description: '', client: '', tags: '', videoUrl: '' });
         setImageFile(null);
       } else {
         alert('Erro ao salvar projeto.');
@@ -96,13 +117,13 @@ const ProjectManager: React.FC = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 overflow-y-auto">
-          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-2xl w-full my-10">
+          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-2xl w-full my-10 relative">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-white">Novo Projeto</h3>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-white"><X /></button>
             </div>
             
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Título do Projeto</label>
                 <input 
@@ -115,7 +136,7 @@ const ProjectManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-xs uppercase mb-1">Categoria</label>
+                <label className="block text-gray-400 text-xs uppercase mb-1">Categoria (Serviço)</label>
                 <select 
                   value={formData.category}
                   onChange={e => setFormData({...formData, category: e.target.value as ProjectCategory})}
@@ -128,11 +149,36 @@ const ProjectManager: React.FC = () => {
               </div>
 
               <div>
+                <label className="block text-gray-400 text-xs uppercase mb-1">Ramo de Negócio (Opcional)</label>
+                <select 
+                  value={formData.industry}
+                  onChange={e => setFormData({...formData, industry: e.target.value})}
+                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
+                >
+                    <option value="">-- Selecione ou deixe em branco --</option>
+                    {INDUSTRIES.map(ind => (
+                        <option key={ind} value={ind}>{ind}</option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-gray-400 text-xs uppercase mb-1">Cliente</label>
                 <input 
                   type="text" 
                   value={formData.client}
                   onChange={e => setFormData({...formData, client: e.target.value})}
+                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">Link de Vídeo (YouTube/Vimeo)</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: https://www.youtube.com/watch?v=..."
+                  value={formData.videoUrl}
+                  onChange={e => setFormData({...formData, videoUrl: e.target.value})}
                   className="w-full bg-black border border-white/10 p-2 text-white rounded"
                 />
               </div>
@@ -160,7 +206,9 @@ const ProjectManager: React.FC = () => {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Imagem Capa</label>
+                <label className="block text-gray-400 text-xs uppercase mb-1">
+                    Imagem Capa {formData.videoUrl && '(Opcional mas recomendado)'}
+                </label>
                 <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative">
                     <input 
                         type="file" 
@@ -197,7 +245,7 @@ const ProjectManager: React.FC = () => {
             <div className="grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-2">Imagem</div>
                 <div className="col-span-4">Título</div>
-                <div className="col-span-3">Categoria</div>
+                <div className="col-span-3">Categoria / Indústria</div>
                 <div className="col-span-3 text-right">Ações</div>
             </div>
             
@@ -209,12 +257,16 @@ const ProjectManager: React.FC = () => {
                     </div>
                     <div className="col-span-4 text-white font-bold truncate">{project.title}</div>
                     <div className="col-span-3">
-                        <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30">
+                        <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 block w-fit mb-1">
                             {project.category}
                         </span>
+                        {project.industry && (
+                            <span className="text-xs text-gray-500 block">
+                                {project.industry}
+                            </span>
+                        )}
                     </div>
                     <div className="col-span-3 flex justify-end gap-2">
-                        {/* Edit functionality would go here - omitted for brevity */}
                         <button 
                             onClick={() => handleDelete(project.id)}
                             className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"

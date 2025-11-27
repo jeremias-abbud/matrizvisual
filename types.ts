@@ -1,3 +1,4 @@
+
 export enum ProjectCategory {
   ALL = 'Todos',
   LOGO = 'Logotipos',
@@ -10,6 +11,7 @@ export interface Project {
   id: string;
   title: string;
   category: ProjectCategory;
+  industry?: string; // Novo campo opcional para Ramo de Negócio
   imageUrl: string;
   description: string;
   tags: string[];
@@ -18,6 +20,7 @@ export interface Project {
   gallery?: string[];
   client?: string;
   date?: string;
+  videoUrl?: string; // YouTube/Vimeo/MP4 URL
 }
 
 export interface Service {

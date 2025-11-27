@@ -1,13 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
-import { PROJECTS as MOCK_PROJECTS } from '../constants'; // Fallback
+import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { Project, ProjectCategory } from '../types';
-import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette } from 'lucide-react';
+import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette, Filter } from 'lucide-react';
+import { getEmbedUrl } from '../src/lib/videoHelper';
 
 const ITEMS_PER_PAGE = 6;
 
 const Portfolio: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(ProjectCategory.ALL);
+  const [activeIndustry, setActiveIndustry] = useState<string>(''); // Filtro de Indústria
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -25,18 +28,20 @@ const Portfolio: React.FC = () => {
         if (error) throw error;
 
         if (data && data.length > 0) {
-           // Map DB columns to frontend types (snake_case to camelCase)
+           // Map DB columns to frontend types
            const formattedData = data.map((item: any) => ({
             id: item.id,
             title: item.title,
             category: item.category as ProjectCategory,
+            industry: item.industry, // Mapeando o novo campo
             imageUrl: item.image_url,
             description: item.description,
             tags: item.tags,
             client: item.client,
             date: item.date,
             longDescription: item.long_description,
-            gallery: item.gallery
+            gallery: item.gallery,
+            videoUrl: item.video_url
           }));
           setProjects(formattedData);
         } else {
@@ -65,14 +70,17 @@ const Portfolio: React.FC = () => {
     };
   }, [selectedProject]);
 
-  // Reset visible count when category changes
+  // Reset visible count when category or industry changes
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [activeCategory]);
+  }, [activeCategory, activeIndustry]);
 
-  const filteredProjects = activeCategory === ProjectCategory.ALL
-    ? projects
-    : projects.filter(project => project.category === activeCategory);
+  // Filter Logic: Category AND Industry
+  const filteredProjects = projects.filter(project => {
+    const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
+    const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
+    return matchCategory && matchIndustry;
+  });
 
   const visibleProjects = filteredProjects.slice(0, visibleCount);
   const hasMore = visibleCount < filteredProjects.length;
@@ -117,40 +125,66 @@ const Portfolio: React.FC = () => {
       case ProjectCategory.LOGO:
         return <Palette className="text-white drop-shadow-md" size={48} />;
       default:
-        return null; // Clean look for design
+        return null;
     }
   };
 
   return (
     <section id="portfolio" className="py-16 md:py-20 bg-matriz-black scroll-mt-28 relative">
       <div className="container mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
-          <div>
+        <div className="flex flex-col xl:flex-row justify-between items-end mb-10 gap-6">
+          <div className="w-full xl:w-auto">
             <span className="text-matriz-purple uppercase tracking-widest text-sm font-bold">Nosso Trabalho</span>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-2">Portfólio</h2>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex flex-wrap gap-2 md:gap-4">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setActiveCategory(category)}
-                className={`px-4 py-2 text-sm uppercase tracking-wider transition-all border ${
-                  activeCategory === category
-                    ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                    : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          <div className="flex flex-col md:flex-row gap-6 w-full xl:w-auto items-start md:items-end">
+             
+             {/* Main Category Filter (Tabs) */}
+             <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
+                {categories.map((category) => (
+                <button
+                    key={category}
+                    onClick={() => setActiveCategory(category)}
+                    className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
+                    activeCategory === category
+                        ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                        : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
+                    }`}
+                >
+                    {category}
+                </button>
+                ))}
+             </div>
+
+             {/* Secondary Industry Filter (Dropdown) */}
+             <div className="relative group min-w-[200px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                    <Filter size={14} />
+                </div>
+                <select 
+                    value={activeIndustry}
+                    onChange={(e) => setActiveIndustry(e.target.value)}
+                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                >
+                    <option value="">Todos os Ramos</option>
+                    {INDUSTRIES.map(ind => (
+                        <option key={ind} value={ind}>{ind}</option>
+                    ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                    <ChevronLeft size={14} className="-rotate-90" />
+                </div>
+             </div>
           </div>
         </div>
 
         {/* Counters */}
-        <div className="mb-6 text-gray-500 text-sm text-right">
-          Exibindo {visibleProjects.length} de {filteredProjects.length} projetos
+        <div className="mb-6 text-gray-500 text-sm flex justify-between items-center border-b border-white/5 pb-2">
+           <span>
+             {activeIndustry ? <span className="text-matriz-purple font-bold mr-1">{activeIndustry}</span> : 'Todos os Ramos'}
+           </span>
+           <span>Exibindo {visibleProjects.length} de {filteredProjects.length} projetos</span>
         </div>
 
         {loading ? (
@@ -183,9 +217,17 @@ const Portfolio: React.FC = () => {
                     {/* Overlay Content */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                     <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                        <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider mb-2 block">
-                        {project.category}
-                        </span>
+                        <div className="flex justify-between items-end mb-2">
+                             <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider block">
+                                {project.category}
+                             </span>
+                             {project.industry && (
+                                <span className="text-[10px] text-gray-400 uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded-sm bg-black/50">
+                                    {project.industry}
+                                </span>
+                             )}
+                        </div>
+                        
                         <h3 className="text-xl font-display font-bold text-white mb-2">{project.title}</h3>
                         <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
                         
@@ -206,8 +248,16 @@ const Portfolio: React.FC = () => {
         )}
         
         {!loading && filteredProjects.length === 0 && (
-          <div className="text-center py-20 animate-fade-in">
-            <p className="text-gray-500">Nenhum projeto encontrado nesta categoria.</p>
+          <div className="text-center py-20 animate-fade-in bg-white/5 border border-white/5 rounded-sm">
+            <Filter size={48} className="mx-auto text-gray-600 mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Nenhum projeto encontrado</h3>
+            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio ou Categoria.</p>
+            <button 
+                onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); }}
+                className="mt-4 text-matriz-purple font-bold uppercase text-sm hover:underline"
+            >
+                Limpar Filtros
+            </button>
           </div>
         )}
 
@@ -258,33 +308,74 @@ const Portfolio: React.FC = () => {
               <X size={24} />
             </button>
 
-            {/* Hero Image */}
+            {/* Hero Media (Video or Image) */}
             <div className="w-full h-64 md:h-96 relative bg-matriz-black flex items-center justify-center overflow-hidden">
-               {/* Background Blur for logos */}
-               {selectedProject.category === ProjectCategory.LOGO && (
-                  <img 
-                    src={selectedProject.imageUrl} 
-                    className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-150"
-                  />
-               )}
-              <img 
-                src={selectedProject.imageUrl} 
-                alt={selectedProject.title} 
-                className={`w-full h-full relative z-10 ${
-                    selectedProject.category === ProjectCategory.LOGO 
-                    ? 'object-contain p-12' 
-                    : 'object-cover'
-                }`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-matriz-dark via-transparent to-transparent z-20"></div>
+                {selectedProject.videoUrl ? (
+                     <div className="w-full h-full relative z-20">
+                         <iframe 
+                             src={getEmbedUrl(selectedProject.videoUrl)} 
+                             title={selectedProject.title}
+                             className="w-full h-full"
+                             frameBorder="0"
+                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                             allowFullScreen
+                         ></iframe>
+                     </div>
+                ) : (
+                    <>
+                        {/* Background Blur for logos */}
+                        {selectedProject.category === ProjectCategory.LOGO && (
+                            <img 
+                                src={selectedProject.imageUrl} 
+                                className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-150"
+                            />
+                        )}
+                        <img 
+                            src={selectedProject.imageUrl} 
+                            alt={selectedProject.title} 
+                            className={`w-full h-full relative z-10 ${
+                                selectedProject.category === ProjectCategory.LOGO 
+                                ? 'object-contain p-12' 
+                                : 'object-cover'
+                            }`}
+                        />
+                         <div className="absolute inset-0 bg-gradient-to-t from-matriz-dark via-transparent to-transparent z-20 pointer-events-none"></div>
+                    </>
+                )}
               
-              <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full z-30">
-                <span className="inline-block px-3 py-1 mb-3 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
-                  {selectedProject.category}
-                </span>
-                <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
-              </div>
+              {!selectedProject.videoUrl && (
+                  <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full z-30">
+                    <div className="flex gap-2 mb-3">
+                        <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
+                        {selectedProject.category}
+                        </span>
+                        {selectedProject.industry && (
+                            <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
+                            {selectedProject.industry}
+                            </span>
+                        )}
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
+                </div>
+              )}
             </div>
+            
+            {/* Title Block for Video Projects (since overlay is hidden) */}
+            {selectedProject.videoUrl && (
+                <div className="p-6 md:px-10 md:pt-10 md:pb-0">
+                    <div className="flex gap-2 mb-3">
+                        <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
+                        {selectedProject.category}
+                        </span>
+                        {selectedProject.industry && (
+                            <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
+                            {selectedProject.industry}
+                            </span>
+                        )}
+                    </div>
+                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
+                </div>
+            )}
 
             <div className="p-6 md:p-10">
               <div className="flex flex-col lg:flex-row gap-10">
@@ -298,7 +389,7 @@ const Portfolio: React.FC = () => {
                     {selectedProject.longDescription || selectedProject.description}
                   </p>
 
-                  {/* Enhanced Gallery Carousel */}
+                  {/* Enhanced Gallery Carousel (If gallery exists AND it's not just the cover image already shown, OR if it's video project show gallery) */}
                   {selectedProject.gallery && selectedProject.gallery.length > 0 && (
                     <div className="space-y-4">
                       <h3 className="text-lg font-bold text-white mb-2">Galeria do Projeto</h3>
@@ -392,6 +483,17 @@ const Portfolio: React.FC = () => {
                           <div className="flex items-center gap-2 text-white font-medium">
                             <Calendar size={16} className="text-matriz-purple" />
                             {selectedProject.date}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedProject.industry && (
+                        <div>
+                          <span className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Ramo</span>
+                          <div className="flex items-center gap-2 text-white font-medium">
+                             <span className="text-sm border border-white/10 px-2 py-1 rounded bg-black/50">
+                                {selectedProject.industry}
+                             </span>
                           </div>
                         </div>
                       )}
