@@ -8,14 +8,27 @@ import { getEmbedUrl } from '../src/lib/videoHelper';
 
 const ITEMS_PER_PAGE = 6;
 
-const Portfolio: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<ProjectCategory>(ProjectCategory.ALL);
+interface PortfolioProps {
+  headless?: boolean;
+  forcedCategory?: ProjectCategory;
+}
+
+const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory }) => {
+  // If forcedCategory is present, activeCategory is fixed to it
+  const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>(''); // Filtro de Indústria
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+  // Update active category when forcedCategory prop changes
+  useEffect(() => {
+    if (forcedCategory) {
+      setActiveCategory(forcedCategory);
+    }
+  }, [forcedCategory]);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -130,32 +143,40 @@ const Portfolio: React.FC = () => {
   };
 
   return (
-    <section id="portfolio" className="py-16 md:py-20 bg-matriz-black scroll-mt-28 relative">
-      <div className="container mx-auto px-6">
-        <div className="flex flex-col xl:flex-row justify-between items-end mb-10 gap-6">
-          <div className="w-full xl:w-auto">
-            <span className="text-matriz-purple uppercase tracking-widest text-sm font-bold">Nosso Trabalho</span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-2">Portfólio</h2>
+    <section id="portfolio" className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black scroll-mt-28 relative'}`}>
+      <div className={`${headless ? '' : 'container mx-auto px-6'}`}>
+        
+        {/* Header Only if NOT headless */}
+        {!headless && (
+          <div className="flex flex-col xl:flex-row justify-between items-end mb-10 gap-6">
+            <div className="w-full xl:w-auto">
+              <span className="text-matriz-purple uppercase tracking-widest text-sm font-bold">Nosso Trabalho</span>
+              <h2 className="font-display text-4xl md:text-5xl font-bold text-white mt-2">Portfólio</h2>
+            </div>
           </div>
+        )}
 
-          <div className="flex flex-col md:flex-row gap-6 w-full xl:w-auto items-start md:items-end">
+        {/* Filters Section */}
+        <div className={`flex flex-col md:flex-row gap-6 w-full items-start md:items-end mb-10 ${headless ? 'justify-end' : ''}`}>
              
-             {/* Main Category Filter (Tabs) */}
-             <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
-                {categories.map((category) => (
-                <button
-                    key={category}
-                    onClick={() => setActiveCategory(category)}
-                    className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
-                    activeCategory === category
-                        ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
-                        : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
-                    }`}
-                >
-                    {category}
-                </button>
-                ))}
-             </div>
+             {/* Show category Tabs ONLY if not forced by parent */}
+             {!forcedCategory && (
+               <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
+                  {categories.map((category) => (
+                  <button
+                      key={category}
+                      onClick={() => setActiveCategory(category)}
+                      className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
+                      activeCategory === category
+                          ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                          : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
+                      }`}
+                  >
+                      {category}
+                  </button>
+                  ))}
+               </div>
+             )}
 
              {/* Secondary Industry Filter (Dropdown) */}
              <div className="relative group min-w-[200px]">
@@ -176,7 +197,6 @@ const Portfolio: React.FC = () => {
                     <ChevronLeft size={14} className="-rotate-90" />
                 </div>
              </div>
-          </div>
         </div>
 
         {/* Counters */}
@@ -202,7 +222,8 @@ const Portfolio: React.FC = () => {
                     alt={project.title} 
                     loading="lazy"
                     decoding="async"
-                    className={`w-full h-full transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0 ${
+                    // REMOVED GRAYSCALE, KEPT HOVER SCALE
+                    className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${
                         project.category === ProjectCategory.LOGO 
                         ? 'object-contain p-10 bg-black/50' 
                         : 'object-cover'
@@ -333,6 +354,7 @@ const Portfolio: React.FC = () => {
                         <img 
                             src={selectedProject.imageUrl} 
                             alt={selectedProject.title} 
+                            // REMOVED GRAYSCALE
                             className={`w-full h-full relative z-10 ${
                                 selectedProject.category === ProjectCategory.LOGO 
                                 ? 'object-contain p-12' 

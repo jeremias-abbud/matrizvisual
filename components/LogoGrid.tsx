@@ -12,7 +12,11 @@ interface LogoItem {
   createdAt?: number;
 }
 
-const LogoGrid: React.FC = () => {
+interface LogoGridProps {
+  headless?: boolean; // Se true, remove cabeçalhos e paddings para uso embutido
+}
+
+const LogoGrid: React.FC<LogoGridProps> = ({ headless = false }) => {
   const INITIAL_COUNT = 8;
   const [logos, setLogos] = useState<LogoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -140,21 +144,27 @@ const LogoGrid: React.FC = () => {
   }, [selectedLogoIndex, closeModal, nextLogo, prevLogo]);
 
   return (
-    <section className="py-16 md:py-20 bg-matriz-black relative border-b border-white/5 scroll-mt-28" id="logos">
-      <div className="container mx-auto px-6">
-        <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
-           <div className="w-full lg:w-auto">
-             <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Identidade Visual</span>
-             <h3 className="font-display text-3xl md:text-4xl font-bold text-white mt-2">
-               Galeria de <span className="text-gray-500">Logotipos</span>
-             </h3>
-             <p className="text-gray-400 mt-4 max-w-xl text-sm leading-relaxed">
-               Cada logotipo é criado para ser único. Confira nossa coleção de marcas desenvolvidas para empreendedores que desejam se destacar no mercado.
-             </p>
-           </div>
+    <section className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black relative border-b border-white/5 scroll-mt-28'}`} id="logos">
+      <div className={`${headless ? '' : 'container mx-auto px-6'}`}>
+        
+        {/* Render Header Only if NOT Headless */}
+        {!headless && (
+          <div className="flex flex-col lg:flex-row justify-between items-end mb-10 gap-6">
+             <div className="w-full lg:w-auto">
+               <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Design de Marca</span>
+               <h3 className="font-display text-3xl md:text-4xl font-bold text-white mt-2">
+                 Galeria de <span className="text-gray-500">Logotipos</span>
+               </h3>
+               <p className="text-gray-400 mt-4 max-w-xl text-sm leading-relaxed">
+                 Cada logotipo é criado para ser único. Confira nossa coleção de marcas desenvolvidas para empreendedores que desejam se destacar no mercado.
+               </p>
+             </div>
+          </div>
+        )}
 
-           {/* Industry Filter Dropdown */}
-           <div className="w-full lg:w-auto relative group min-w-[240px]">
+        {/* Filter Bar (Visible in Headless mode too, but styled differently if needed) */}
+        <div className={`flex justify-end mb-8 ${headless ? 'w-full' : ''}`}>
+           <div className="w-full md:w-auto relative group min-w-[240px]">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                     <Filter size={14} />
                 </div>
@@ -201,7 +211,8 @@ const LogoGrid: React.FC = () => {
                     <img 
                         src={logo.url} 
                         alt={logo.name} 
-                        className="w-full h-full object-contain filter grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-105 relative z-10" 
+                        // REMOVED GRAYSCALE, added drop-shadow
+                        className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
                     />
                     
@@ -297,7 +308,7 @@ const LogoGrid: React.FC = () => {
                     </h3>
                     <div className="flex flex-col items-center gap-1 mt-2">
                         <span className="text-matriz-purple text-xs uppercase tracking-[0.3em] font-bold block">
-                            Design de Marca
+                            Logotipos
                         </span>
                         {filteredLogos[selectedLogoIndex].industry && (
                              <span className="text-gray-500 text-[10px] uppercase tracking-widest bg-white/5 px-2 py-1 rounded">

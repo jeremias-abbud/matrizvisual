@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2 } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
 import { INDUSTRIES } from '../../constants';
+import ModernSelect from './ModernSelect';
 
 interface Logo {
   id: string;
   name: string;
   url: string;
   industry?: string;
+  display_order: number;
 }
 
 const LogoManager: React.FC = () => {
@@ -16,6 +18,11 @@ const LogoManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  
+  // Reorder State
+  const [isReordering, setIsReordering] = useState(false);
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
   
   // Form State
   const [name, setName] = useState('');
@@ -28,7 +35,12 @@ const LogoManager: React.FC = () => {
   }, []);
 
   const fetchLogos = async () => {
-    const { data } = await supabase.from('logos').select('*').order('created_at', { ascending: false });
+    // Ordenar por display_order (ASC) para respeitar a ordem manual
+    const { data } = await supabase
+        .from('logos')
+        .select('*')
+        .order('display_order', { ascending: true });
+    
     if (data) setLogos(data);
     setLoading(false);
   };
@@ -48,7 +60,7 @@ const LogoManager: React.FC = () => {
     setEditingId(logo.id);
     setName(logo.name);
     setIndustry(logo.industry || '');
-    setImageFile(null); // Reset file input, user might not want to change image
+    setImageFile(null); 
     setShowForm(true);
   };
 
@@ -64,19 +76,17 @@ const LogoManager: React.FC = () => {
     e.preventDefault();
     setUploading(true);
 
-    // 1. Upload Image if exists
     let imageUrl = null;
     if (imageFile) {
         imageUrl = await uploadImage(imageFile);
     }
 
     if (editingId) {
-        // --- UPDATE MODE ---
         const updates: any = { 
             name,
             industry: industry || null
         };
-        if (imageUrl) updates.url = imageUrl; // Only update URL if a new image was uploaded
+        if (imageUrl) updates.url = imageUrl; 
 
         const { error } = await supabase
             .from('logos')
@@ -91,21 +101,25 @@ const LogoManager: React.FC = () => {
         }
 
     } else {
-        // --- CREATE MODE ---
         if (!imageUrl) {
             alert('Selecione uma imagem para criar um novo logo.');
             setUploading(false);
             return;
         }
 
+        // Definir display_order como o último + 1
+        const maxOrder = logos.length > 0 ? Math.max(...logos.map(l => l.display_order || 0)) : 0;
+
         const { data, error } = await supabase.from('logos').insert([{
             name,
             industry: industry || null,
-            url: imageUrl
+            url: imageUrl,
+            display_order: maxOrder + 1
         }]).select();
 
         if (!error && data) {
-            setLogos([data[0], ...logos]);
+            // Adiciona no final da lista local
+            setLogos([...logos, data[0]]);
             resetForm();
         } else {
             alert('Erro ao criar logo.');
@@ -115,16 +129,94 @@ const LogoManager: React.FC = () => {
     setUploading(false);
   };
 
+  // --- DRAG AND DROP LOGIC ---
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragEnter = (index: number) => {
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    
+    const newLogos = [...logos];
+    const draggedItem = newLogos[draggedItemIndex];
+    
+    // Remove from old pos
+    newLogos.splice(draggedItemIndex, 1);
+    // Insert at new pos
+    newLogos.splice(index, 0, draggedItem);
+    
+    setLogos(newLogos);
+    setDraggedItemIndex(index);
+    setHasOrderChanged(true);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+  };
+
+  const saveOrder = async () => {
+    setUploading(true);
+    
+    // Create updates array
+    const updates = logos.map((logo, index) => ({
+        id: logo.id,
+        display_order: index + 1 // 1-based index
+    }));
+
+    try {
+        const { error } = await supabase.from('logos').upsert(updates, { onConflict: 'id' });
+        
+        if (error) throw error;
+        setHasOrderChanged(false);
+        setIsReordering(false);
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar a ordem.');
+    } finally {
+        setUploading(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-display font-bold text-white">Gerenciar Logotipos</h2>
-        <button 
-          onClick={() => { resetForm(); setShowForm(true); }}
-          className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
-        >
-          <Plus size={18} /> Adicionar Novo
-        </button>
+        
+        <div className="flex gap-3">
+             {isReordering ? (
+                 <>
+                    <button 
+                        onClick={() => { setIsReordering(false); fetchLogos(); /* Reset */ }}
+                        className="flex items-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase"
+                        disabled={uploading}
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        onClick={saveOrder}
+                        disabled={!hasOrderChanged || uploading}
+                        className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}
+                    >
+                        <Save size={18} /> {uploading ? 'Salvando...' : 'Salvar Ordem'}
+                    </button>
+                 </>
+             ) : (
+                <>
+                    <button 
+                        onClick={() => setIsReordering(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase"
+                    >
+                        <GripVertical size={18} /> Reordenar
+                    </button>
+                    <button 
+                        onClick={() => { resetForm(); setShowForm(true); }}
+                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
+                    >
+                        <Plus size={18} /> Adicionar Novo
+                    </button>
+                </>
+             )}
+        </div>
       </div>
 
       {showForm && (
@@ -150,17 +242,13 @@ const LogoManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-xs uppercase mb-1">Ramo de Negócio (Opcional)</label>
-                <select 
+                <ModernSelect 
+                  label="Ramo de Negócio (Opcional)"
                   value={industry}
-                  onChange={e => setIndustry(e.target.value)}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded custom-scrollbar"
-                >
-                    <option value="">-- Selecione ou deixe em branco --</option>
-                    {INDUSTRIES.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
-                    ))}
-                </select>
+                  onChange={(val) => setIndustry(val)}
+                  options={INDUSTRIES}
+                  placeholder="Selecione o Ramo"
+                />
               </div>
               
               <div>
@@ -196,32 +284,48 @@ const LogoManager: React.FC = () => {
       {loading ? (
         <div className="text-white">Carregando...</div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {logos.map(logo => (
-            <div key={logo.id} className="bg-white/5 border border-white/10 rounded p-4 relative group">
-              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <button 
-                    onClick={() => handleEdit(logo)}
-                    className="bg-blue-600 p-1.5 rounded text-white hover:bg-blue-500 transition-colors"
-                    title="Editar"
-                >
-                    <Edit2 size={14} />
-                </button>
-                <button 
-                    onClick={() => handleDelete(logo.id)}
-                    className="bg-red-600 p-1.5 rounded text-white hover:bg-red-500 transition-colors"
-                    title="Excluir"
-                >
-                    <Trash2 size={14} />
-                </button>
-              </div>
+        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 ${isReordering ? 'bg-white/5 p-4 rounded border border-dashed border-white/20' : ''}`}>
+          {logos.map((logo, index) => (
+            <div 
+                key={logo.id} 
+                className={`bg-white/5 border border-white/10 rounded p-4 relative group transition-all ${isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10 scale-95' : ''}`}
+                draggable={isReordering}
+                onDragStart={() => handleDragStart(index)}
+                onDragEnter={() => handleDragEnter(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()} // Necessary to allow dropping
+            >
+              {!isReordering && (
+                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button 
+                        onClick={() => handleEdit(logo)}
+                        className="bg-blue-600 p-1.5 rounded text-white hover:bg-blue-500 transition-colors"
+                        title="Editar"
+                    >
+                        <Edit2 size={14} />
+                    </button>
+                    <button 
+                        onClick={() => handleDelete(logo.id)}
+                        className="bg-red-600 p-1.5 rounded text-white hover:bg-red-500 transition-colors"
+                        title="Excluir"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                  </div>
+              )}
+
+              {isReordering && (
+                  <div className="absolute top-2 left-2 z-20 bg-matriz-purple text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg">
+                      {index + 1}
+                  </div>
+              )}
               
-              <div className="aspect-square flex items-center justify-center mb-2 bg-black/20 rounded border border-white/5">
+              <div className="aspect-square flex items-center justify-center mb-2 bg-black/20 rounded border border-white/5 pointer-events-none">
                 <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain p-2" />
               </div>
-              <p className="text-center text-white text-sm font-bold truncate">{logo.name}</p>
+              <p className="text-center text-white text-sm font-bold truncate select-none">{logo.name}</p>
               {logo.industry && (
-                  <p className="text-center text-gray-500 text-[10px] uppercase truncate mt-1 px-1 bg-white/5 rounded">
+                  <p className="text-center text-gray-500 text-[10px] uppercase truncate mt-1 px-1 bg-white/5 rounded select-none">
                       {logo.industry}
                   </p>
               )}

@@ -14,7 +14,11 @@ interface WebProject {
   industry?: string;
 }
 
-const WebShowcase: React.FC = () => {
+interface WebShowcaseProps {
+  headless?: boolean;
+}
+
+const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false }) => {
   const [projects, setProjects] = useState<WebProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -80,28 +84,34 @@ const WebShowcase: React.FC = () => {
 
   if (loading) {
       return (
-        <section className="py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden flex justify-center items-center h-96">
+        <section className={`${headless ? 'py-10' : 'py-16 md:py-20'} bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden flex justify-center items-center h-96`}>
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-matriz-purple"></div>
         </section>
       )
   }
 
   return (
-    <section className="py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-matriz-purple/5 rounded-full blur-3xl pointer-events-none"></div>
+    <section className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden'}`}>
+      {/* Background Decor - Only if not headless to avoid stacking */}
+      {!headless && <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-matriz-purple/5 rounded-full blur-3xl pointer-events-none"></div>}
       
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="mb-10 lg:mb-12 flex flex-col lg:flex-row justify-between items-end gap-6">
-          <div>
-            <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Galeria de Sites</span>
-            <h2 className="font-display text-4xl font-bold text-white mt-2">
-                Sites Profissionais <span className="text-gray-500">Modernos</span>
-            </h2>
+      <div className={`${headless ? '' : 'container mx-auto px-6'} relative z-10`}>
+        
+        {/* Header Section - Conditional */}
+        {!headless && (
+          <div className="mb-10 lg:mb-12 flex flex-col lg:flex-row justify-between items-end gap-6">
+            <div>
+              <span className="text-matriz-purple text-xs font-bold uppercase tracking-[0.3em]">Galeria de Sites</span>
+              <h2 className="font-display text-4xl font-bold text-white mt-2">
+                  Sites Profissionais <span className="text-gray-500">Modernos</span>
+              </h2>
+            </div>
           </div>
+        )}
 
-          {/* Industry Filter Dropdown */}
-           <div className="w-full lg:w-auto relative group min-w-[240px]">
+        {/* Filter - Always Visible but positioned differently if headless */}
+        <div className={`flex justify-end mb-8 ${headless ? 'w-full' : 'absolute top-0 right-6'}`}>
+            <div className="w-full lg:w-auto relative group min-w-[240px]">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                     <Filter size={14} />
                 </div>

@@ -4,12 +4,10 @@ import { CheckCircle2 } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 
 const About: React.FC = () => {
-  const { assets, styles } = useSiteAssets();
+  const { assets } = useSiteAssets();
 
-  // Se styles.about_grayscale for true, aplica grayscale, senão nada.
-  const imgClasses = `w-full h-64 object-cover rounded-sm transition-all duration-500 border border-white/10 ${
-    styles.about_grayscale ? 'grayscale hover:grayscale-0' : ''
-  }`;
+  // REMOVED GRAYSCALE LOGIC. Images are colored by default with hover glow.
+  const imgClasses = `w-full h-64 object-cover rounded-sm transition-all duration-500 border border-white/10 hover:shadow-[0_0_30px_rgba(139,92,246,0.3)] hover:border-matriz-purple/50`;
 
   return (
     <section id="about" className="py-16 md:py-20 bg-matriz-dark border-y border-white/5 relative overflow-hidden scroll-mt-28">

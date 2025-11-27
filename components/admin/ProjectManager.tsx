@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2 } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
+import ModernSelect from './ModernSelect';
 
 interface Project {
   id: string;
@@ -15,6 +16,7 @@ interface Project {
   client: string;
   tags: string[];
   video_url?: string;
+  display_order?: number;
 }
 
 const ProjectManager: React.FC = () => {
@@ -22,6 +24,11 @@ const ProjectManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // Reorder State
+  const [isReordering, setIsReordering] = useState(false);
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
+  const [hasOrderChanged, setHasOrderChanged] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -40,7 +47,12 @@ const ProjectManager: React.FC = () => {
   }, []);
 
   const fetchProjects = async () => {
-    const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    // Ordenar por display_order (ASC) para respeitar a ordem visual definida
+    const { data } = await supabase
+        .from('projects')
+        .select('*')
+        .order('display_order', { ascending: true });
+        
     if (data) setProjects(data);
     setLoading(false);
   };
@@ -65,9 +77,6 @@ const ProjectManager: React.FC = () => {
     if (imageFile) {
         imageUrl = await uploadImage(imageFile) || '';
     } else {
-        // Fallback or placeholder if needed, currently requiring one or other implies validation
-        // For now, let's assume image might be optional if video exists, but DB schema says image_url not null?
-        // Let's assume user uploads image for thumbnail mostly.
         if (!imageUrl && !formData.videoUrl) {
              alert('Erro no upload da imagem');
              setUploading(false);
@@ -78,6 +87,9 @@ const ProjectManager: React.FC = () => {
     if (imageUrl || formData.videoUrl) {
       const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(t => t !== '');
       
+      // Calcular a próxima ordem (último + 1)
+      const maxOrder = projects.length > 0 ? Math.max(...projects.map(p => p.display_order || 0)) : 0;
+
       const { data, error } = await supabase.from('projects').insert([{
         title: formData.title,
         category: formData.category,
@@ -87,11 +99,12 @@ const ProjectManager: React.FC = () => {
         tags: tagsArray,
         image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project', // Placeholder se for só video
         video_url: formData.videoUrl || null,
-        long_description: formData.description 
+        long_description: formData.description,
+        display_order: maxOrder + 1
       }]).select();
 
       if (!error && data) {
-        setProjects([data[0], ...projects]);
+        setProjects([...projects, data[0]]); // Adiciona no final
         setShowForm(false);
         setFormData({ title: '', category: ProjectCategory.LOGO, industry: '', description: '', client: '', tags: '', videoUrl: '' });
         setImageFile(null);
@@ -103,16 +116,96 @@ const ProjectManager: React.FC = () => {
     setUploading(false);
   };
 
+  // --- DRAG AND DROP LOGIC ---
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragEnter = (index: number) => {
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    
+    const newProjects = [...projects];
+    const draggedItem = newProjects[draggedItemIndex];
+    
+    // Remove from old pos
+    newProjects.splice(draggedItemIndex, 1);
+    // Insert at new pos
+    newProjects.splice(index, 0, draggedItem);
+    
+    setProjects(newProjects);
+    setDraggedItemIndex(index);
+    setHasOrderChanged(true);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+  };
+
+  const saveOrder = async () => {
+    setUploading(true);
+    
+    // Create updates array
+    const updates = projects.map((proj, index) => ({
+        id: proj.id,
+        display_order: index + 1
+    }));
+
+    try {
+        const { error } = await supabase.from('projects').upsert(updates, { onConflict: 'id' });
+        
+        if (error) throw error;
+        setHasOrderChanged(false);
+        setIsReordering(false);
+        // Opcional: Recarregar para garantir sincronia
+        // fetchProjects(); 
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar a ordem.');
+    } finally {
+        setUploading(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <h2 className="text-2xl font-display font-bold text-white">Gerenciar Portfólio</h2>
-        <button 
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
-        >
-          <Plus size={18} /> Adicionar Projeto
-        </button>
+        
+        <div className="flex gap-3">
+             {isReordering ? (
+                 <>
+                    <button 
+                        onClick={() => { setIsReordering(false); fetchProjects(); /* Reset */ }}
+                        className="flex items-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase"
+                        disabled={uploading}
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        onClick={saveOrder}
+                        disabled={!hasOrderChanged || uploading}
+                        className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}
+                    >
+                        <Save size={18} /> {uploading ? 'Salvando...' : 'Salvar Ordem'}
+                    </button>
+                 </>
+             ) : (
+                <>
+                    <button 
+                        onClick={() => setIsReordering(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase"
+                    >
+                        <GripVertical size={18} /> Reordenar
+                    </button>
+                    <button 
+                        onClick={() => setShowForm(true)}
+                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
+                    >
+                        <Plus size={18} /> Adicionar Projeto
+                    </button>
+                </>
+             )}
+        </div>
       </div>
 
       {showForm && (
@@ -136,30 +229,23 @@ const ProjectManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-xs uppercase mb-1">Categoria (Serviço)</label>
-                <select 
+                <ModernSelect 
+                  label="Categoria (Serviço)"
                   value={formData.category}
-                  onChange={e => setFormData({...formData, category: e.target.value as ProjectCategory})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                >
-                    {Object.values(ProjectCategory).map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                </select>
+                  onChange={(val) => setFormData({...formData, category: val as ProjectCategory})}
+                  options={Object.values(ProjectCategory)}
+                  required
+                />
               </div>
 
               <div>
-                <label className="block text-gray-400 text-xs uppercase mb-1">Ramo de Negócio (Opcional)</label>
-                <select 
+                <ModernSelect 
+                  label="Ramo de Negócio"
                   value={formData.industry}
-                  onChange={e => setFormData({...formData, industry: e.target.value})}
-                  className="w-full bg-black border border-white/10 p-2 text-white rounded"
-                >
-                    <option value="">-- Selecione ou deixe em branco --</option>
-                    {INDUSTRIES.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
-                    ))}
-                </select>
+                  onChange={(val) => setFormData({...formData, industry: val})}
+                  options={INDUSTRIES}
+                  placeholder="Selecione o Ramo"
+                />
               </div>
 
               <div>
@@ -243,15 +329,33 @@ const ProjectManager: React.FC = () => {
         <div className="space-y-2">
             {/* Header */}
             <div className="grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
+                <div className="col-span-1 text-center">#</div>
                 <div className="col-span-2">Imagem</div>
                 <div className="col-span-4">Título</div>
                 <div className="col-span-3">Categoria / Indústria</div>
-                <div className="col-span-3 text-right">Ações</div>
+                <div className="col-span-2 text-right">Ações</div>
             </div>
             
             {/* List */}
-            {projects.map(project => (
-                <div key={project.id} className="grid grid-cols-12 gap-4 bg-black/40 border border-white/5 p-3 rounded items-center hover:bg-white/5 transition-colors">
+            {projects.map((project, index) => (
+                <div 
+                    key={project.id} 
+                    className={`grid grid-cols-12 gap-4 bg-black/40 border border-white/5 p-3 rounded items-center transition-colors ${
+                        isReordering 
+                        ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' 
+                        : 'hover:bg-white/5'
+                    } ${
+                        isReordering && draggedItemIndex === index ? 'opacity-50 border-dashed border-matriz-purple' : ''
+                    }`}
+                    draggable={isReordering}
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnter={() => handleDragEnter(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                >
+                    <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
+                        {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
+                    </div>
                     <div className="col-span-2 h-12 w-20 overflow-hidden rounded bg-black">
                         <img src={project.image_url} alt="" className="w-full h-full object-cover" />
                     </div>
@@ -261,18 +365,21 @@ const ProjectManager: React.FC = () => {
                             {project.category}
                         </span>
                         {project.industry && (
-                            <span className="text-xs text-gray-500 block">
+                            <span className="text-xs text-gray-500 block truncate">
                                 {project.industry}
                             </span>
                         )}
                     </div>
-                    <div className="col-span-3 flex justify-end gap-2">
-                        <button 
-                            onClick={() => handleDelete(project.id)}
-                            className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"
-                        >
-                            <Trash2 size={16} />
-                        </button>
+                    <div className="col-span-2 flex justify-end gap-2">
+                        {!isReordering && (
+                            <button 
+                                onClick={() => handleDelete(project.id)}
+                                className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors"
+                                title="Excluir"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
                     </div>
                 </div>
             ))}

@@ -1,13 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Services from './components/Services';
-import LogoGrid from './components/LogoGrid';
-import WebShowcase from './components/WebShowcase';
-import Portfolio from './components/Portfolio';
+import MasterPortfolio from './components/MasterPortfolio'; // New unified component
 import About from './components/About';
 import Contact from './components/Contact';
 import BackToTop from './components/BackToTop';
+import WhatsAppButton from './components/WhatsAppButton';
 import AdminDashboard from './components/admin/AdminDashboard';
 
 function App() {
@@ -41,12 +41,16 @@ function App() {
       <main>
         <Hero />
         <Services />
-        <LogoGrid />
-        <WebShowcase />
-        <Portfolio />
+        
+        {/* Master Portfolio now contains Logos, Web Showcase, and General Projects */}
+        <MasterPortfolio />
+        
         <About />
       </main>
       <Contact />
+      
+      {/* Floating Elements */}
+      <WhatsAppButton />
       <BackToTop />
     </div>
   );
