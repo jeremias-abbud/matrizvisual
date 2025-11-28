@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
@@ -184,12 +183,12 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     <div 
                     key={logo.id} 
                     onClick={() => openModal(index)}
-                    className="group relative aspect-square bg-matriz-dark border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-white/5 animate-fade-in cursor-pointer"
+                    className="group relative aspect-square bg-matriz-dark border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer"
                     >
-                    <div className="absolute inset-0 bg-matriz-purple/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 bg-radial-gradient from-matriz-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                        <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-lg">
+                        <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-[0_0_10px_rgba(139,92,246,0.5)]">
                             <ZoomIn size={16} />
                         </div>
                     </div>
@@ -197,14 +196,14 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     <img 
                         src={logo.imageUrl} 
                         alt={logo.title} 
-                        className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" 
+                        className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
                     />
                     
                     <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2">
-                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate">{logo.title}</span>
+                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate drop-shadow-md">{logo.title}</span>
                         {logo.industry && (
-                            <span className="text-[8px] uppercase tracking-wide text-gray-500 block truncate">{logo.industry}</span>
+                            <span className="text-[8px] uppercase tracking-wide text-gray-400 block truncate">{logo.industry}</span>
                         )}
                     </div>
                     </div>
@@ -229,7 +228,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     {hasMore && (
                         <button 
                         onClick={handleLoadMore}
-                        className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden"
+                        className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
                         >
                         <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
                             <Plus size={18} className="group-hover:rotate-180 transition-transform duration-500" />

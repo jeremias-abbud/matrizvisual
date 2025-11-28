@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
@@ -96,11 +95,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
   const getTypeIcon = (category: ProjectCategory) => {
     switch (category) {
       case ProjectCategory.VIDEO:
-        return <PlayCircle className="text-white drop-shadow-md" size={48} />;
+        return <PlayCircle className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
       case ProjectCategory.WEB:
-        return <Globe className="text-white drop-shadow-md" size={48} />;
+        return <Globe className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
       case ProjectCategory.LOGO:
-        return <Palette className="text-white drop-shadow-md" size={48} />;
+        return <Palette className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
       default:
         return null;
     }
@@ -129,7 +128,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                       onClick={() => setActiveCategory(category)}
                       className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
                       activeCategory === category
-                          ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                          ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]'
                           : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
                       }`}
                   >
@@ -146,7 +145,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 <select 
                     value={activeIndustry}
                     onChange={(e) => setActiveIndustry(e.target.value)}
-                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm"
                 >
                     <option value="">Todos os Ramos</option>
                     {INDUSTRIES.map(ind => (
@@ -173,57 +172,63 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {visibleProjects.map((project) => (
-                <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => onProjectClick(project)}>
+                <div 
+                    key={project.id} 
+                    className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm" 
+                    onClick={() => onProjectClick(project)}
+                >
                 <div className="aspect-video overflow-hidden relative bg-black/50">
                     <img 
                     src={project.imageUrl} 
                     alt={project.title} 
                     loading="lazy"
                     decoding="async"
-                    className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
                     />
                     
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none scale-90 group-hover:scale-100 transform duration-300">
                         {getTypeIcon(project.category)}
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                    {/* Gradient Overlay com toque de Roxo */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
                     <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
                         <div className="flex justify-between items-end mb-2">
-                             <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider block">
+                             <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider block drop-shadow-md">
                                 {project.category}
                              </span>
                              {project.industry && (
-                                <span className="text-[10px] text-gray-400 uppercase tracking-widest border border-white/10 px-2 py-0.5 rounded-sm bg-black/50">
+                                <span className="text-[10px] text-gray-300 uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-sm">
                                     {project.industry}
                                 </span>
                              )}
                         </div>
                         
-                        <h3 className="text-xl font-display font-bold text-white mb-2">{project.title}</h3>
+                        <h3 className="text-xl font-display font-bold text-white mb-2 drop-shadow-lg">{project.title}</h3>
                         <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
                         
                         <div className="flex items-center gap-4">
                             <button className="inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider">
                                 Ver Detalhes <ArrowRight size={16} />
                             </button>
-                            {project.category === ProjectCategory.WEB && project.videoUrl && (
-                                <a 
-                                    href={project.videoUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-matriz-purple/10 border border-matriz-purple text-matriz-purple hover:bg-matriz-purple hover:text-white rounded-sm transition-colors text-xs uppercase font-bold"
+                            {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(project.videoUrl || '#', '_blank');
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black rounded-sm transition-all duration-300 text-xs uppercase font-bold shadow-[0_0_10px_rgba(139,92,246,0.5)] hover:shadow-none"
                                 >
                                     <Globe size={14} /> Acessar Site
-                                </a>
+                                </button>
                             )}
                         </div>
                     </div>
                     </div>
                 </div>
                 
-                <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                {/* Borda brilhante animada */}
+                <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-sm"></div>
                 </div>
             ))}
             </div>
@@ -248,7 +253,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             {hasMore && (
               <button 
                 onClick={handleLoadMore}
-                className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden"
+                className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
               >
                 <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
                   <Plus size={18} className="group-hover:rotate-180 transition-transform duration-500" />

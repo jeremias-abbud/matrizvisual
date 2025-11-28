@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
 import Portfolio from './Portfolio';
@@ -61,11 +60,11 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
   
   const SectionHeader = ({ icon, title }: { icon: React.ReactNode, title: string }) => (
     <div className="flex items-center gap-4 mb-8">
-      <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple">
+      <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.2)]">
         {icon}
       </div>
       <h3 className="font-display text-2xl md:text-3xl font-bold text-white">{title}</h3>
-      <div className="flex-grow h-px bg-white/10 ml-4"></div>
+      <div className="flex-grow h-px bg-gradient-to-r from-matriz-purple/30 to-transparent ml-4"></div>
     </div>
   );
 
@@ -83,19 +82,21 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                <button 
                   key={project.id} 
                   onClick={() => onProjectClick(project)}
-                  className="group relative overflow-hidden bg-matriz-dark border border-white/5 flex flex-col text-left hover:border-matriz-purple/50 transition-colors duration-300"
+                  className="group relative overflow-hidden bg-matriz-dark border border-white/5 flex flex-col text-left transition-all duration-300 hover:border-matriz-purple/50 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] rounded-sm"
                 >
                   <div className="aspect-video overflow-hidden relative bg-black/50">
                       <img 
                       src={project.imageUrl} 
                       alt={project.title} 
                       loading="lazy"
-                      className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-contain bg-matriz-black p-2 transition-transform duration-700 group-hover:scale-110"
                       />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </div>
-                  <div className="p-4 flex-grow flex flex-col">
+                  <div className="p-4 flex-grow flex flex-col relative z-10 bg-matriz-dark border-t border-white/5 group-hover:border-matriz-purple/20 transition-colors">
                       <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider mb-2">{project.category}</span>
-                      <h4 className="text-lg font-bold text-white mb-2 flex-grow">{project.title}</h4>
+                      <h4 className="text-lg font-bold text-white mb-2 flex-grow group-hover:text-matriz-purple transition-colors">{project.title}</h4>
                       <p className="text-gray-400 text-sm line-clamp-2">{project.description}</p>
                   </div>
                </button>
@@ -117,14 +118,14 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       <section>
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple">
+                <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.2)]">
                     <Grid size={24} />
                 </div>
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-white">Galeria de Logotipos</h3>
             </div>
             <button 
               onClick={() => (document.querySelector('button[data-tab-id="logos"]') as HTMLButtonElement)?.click()}
-              className="group text-matriz-purple font-bold uppercase text-sm tracking-wider flex items-center gap-2"
+              className="group text-matriz-purple font-bold uppercase text-sm tracking-wider flex items-center gap-2 hover:bg-matriz-purple/10 px-4 py-2 rounded-full transition-all"
             >
               Ver Galeria Completa <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
