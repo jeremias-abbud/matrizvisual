@@ -23,50 +23,66 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
   const getMockLogos = () => MOCK_PROJECTS.filter(p => p.category === ProjectCategory.LOGO);
 
   useEffect(() => {
-    async function fetchLogos() {
+    async function fetchAllLogos() {
       try {
         setLoading(true);
 
-        let query = supabase
+        // 1. Fetch NEW logos from 'projects' table
+        const { data: newLogosData, error: newLogosError } = await supabase
           .from('projects')
           .select('id, title, image_url, industry, created_at, display_order')
           .eq('category', ProjectCategory.LOGO)
           .order('display_order', { ascending: true, nullsFirst: true })
           .order('created_at', { ascending: false });
-        
-        if (limit) {
-          query = query.limit(limit);
-        }
 
-        const { data, error } = await query;
-
-        if (error) throw error;
+        if (newLogosError) throw newLogosError;
         
-        const formattedData = (data || []).map((item: any) => ({
+        const formattedNewLogos = (newLogosData || []).map((item: any) => ({
             ...item,
             imageUrl: item.image_url, // Ensure field name consistency
         })) as Project[];
+        
+        // 2. Fetch OLD logos from 'logos' table
+        const { data: oldLogosData, error: oldLogosError } = await supabase
+            .from('logos')
+            .select('id, name, url, industry, display_order')
+            .order('display_order', { ascending: true });
 
-        if (formattedData.length > 0) {
-          setLogos(formattedData);
+        if (oldLogosError) throw oldLogosError;
+
+        // Map old structure to new Project structure for consistency
+        const formattedOldLogos = (oldLogosData || []).map((item: any) => ({
+            id: `old_${item.id}`,
+            title: item.name,
+            imageUrl: item.url,
+            industry: item.industry,
+            display_order: item.display_order,
+            category: ProjectCategory.LOGO
+        })) as Project[];
+        
+        // 3. Combine both lists
+        const combinedLogos = [...formattedNewLogos, ...formattedOldLogos];
+
+        if (combinedLogos.length > 0) {
+          setLogos(combinedLogos);
         } else {
           setLogos(getMockLogos());
         }
       } catch (err) {
-        console.error('Error fetching logos from projects table:', err);
+        console.error('Error fetching all logos:', err);
         setLogos(getMockLogos());
       } finally {
         setLoading(false);
       }
     }
-    fetchLogos();
-  }, [limit]);
+    fetchAllLogos();
+  }, []);
   
   const filteredLogos = logos.filter(logo => {
     return activeIndustry === '' || logo.industry === activeIndustry;
   });
   
-  const visibleLogos = limit ? filteredLogos : filteredLogos.slice(0, visibleCount);
+  const visibleLogos = limit ? filteredLogos.slice(0, limit) : filteredLogos.slice(0, visibleCount);
   const hasMore = visibleCount < filteredLogos.length;
   const canShowLess = visibleCount > INITIAL_COUNT;
 

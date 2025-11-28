@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { ProjectCategory } from '../types';
 
 interface WebProject {
   id: string;
@@ -32,9 +33,10 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
     async function fetchWebProjects() {
         try {
             let query = supabase
-                .from('web_showcase')
+                .from('projects')
                 .select('*')
-                .order('created_at', { ascending: false }); // Ordenar por mais recente
+                .eq('category', ProjectCategory.WEB) // Filter by Web Sites category
+                .order('created_at', { ascending: false });
             
             if (limit) {
                 query = query.limit(limit);
@@ -50,8 +52,8 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     title: item.title,
                     description: item.description,
                     imageUrl: item.image_url,
-                    tech: item.tech,
-                    liveUrl: item.live_url,
+                    tech: item.tags || [], // Map 'tags' to 'tech'
+                    liveUrl: item.video_url || '#', // Map 'video_url' to 'liveUrl'
                     industry: item.industry
                  }));
                  setProjects(formattedData);
@@ -66,7 +68,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
         }
     }
     fetchWebProjects();
-  }, [limit]); // Adiciona limit como dependência
+  }, [limit]);
 
   // Filter Logic
   const filteredProjects = projects.filter(proj => {

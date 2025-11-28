@@ -228,6 +228,10 @@ const ProjectManager: React.FC = () => {
 
   // Determina se a descrição é obrigatória
   const isDescriptionRequired = formData.category !== ProjectCategory.LOGO;
+  // Label dinâmico para o campo de link
+  const linkLabel = formData.category === ProjectCategory.WEB 
+    ? "Link do Site (URL)" 
+    : "Link de Vídeo (YouTube/Vimeo)";
 
   return (
     <div>
@@ -278,8 +282,8 @@ const ProjectManager: React.FC = () => {
                 <input type="text" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Link de Vídeo (YouTube/Vimeo)</label>
-                <input type="text" placeholder="Ex: https://www.youtube.com/watch?v=..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+                <label className="block text-gray-400 text-xs uppercase mb-1">{linkLabel}</label>
+                <input type="text" placeholder="Ex: https://..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card) {isDescriptionRequired && <span className="text-matriz-purple">*</span>}</label>
