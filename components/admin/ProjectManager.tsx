@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Star } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
@@ -153,7 +153,7 @@ const ProjectManager: React.FC = () => {
         }
     } else {
         if (!imageUrl && !formData.videoUrl) {
-            alert('Para um novo projeto, adicione uma imagem de capa ou um link de vídeo.');
+            alert('Para um novo projeto, adicione uma imagem de capa.');
             setUploading(false);
             return;
         }
@@ -222,6 +222,9 @@ const ProjectManager: React.FC = () => {
     }
   };
 
+  // Determina se a descrição é obrigatória
+  const isDescriptionRequired = formData.category !== ProjectCategory.LOGO;
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -257,7 +260,7 @@ const ProjectManager: React.FC = () => {
             
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Título do Projeto</label>
+                <label className="block text-gray-400 text-xs uppercase mb-1">Título do Projeto <span className="text-matriz-purple">*</span></label>
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
               <div>
@@ -275,8 +278,8 @@ const ProjectManager: React.FC = () => {
                 <input type="text" placeholder="Ex: https://www.youtube.com/watch?v=..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card)</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card) {isDescriptionRequired && <span className="text-matriz-purple">*</span>}</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required={isDescriptionRequired} />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (para o detalhe)</label>
@@ -292,10 +295,10 @@ const ProjectManager: React.FC = () => {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">
-                    {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
+                    {editingProject ? 'Trocar Imagem de Capa (Opcional)' : 'Imagem de Capa *'}
                 </label>
                 <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative">
-                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required={!editingProject} />
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                         <Upload size={24} />
                         <span className="text-sm">{imageFile ? imageFile.name : 'Clique para enviar imagem'}</span>
