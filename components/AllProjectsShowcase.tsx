@@ -9,7 +9,11 @@ import { Project, ProjectCategory } from '../types';
 import { Clock, Monitor, Grid, Palette, Video, ArrowRight } from 'lucide-react';
 import { PROJECTS as MOCK_PROJECTS } from '../constants';
 
-const AllProjectsShowcase: React.FC = () => {
+interface AllProjectsShowcaseProps {
+  onProjectClick: (project: Project) => void;
+}
+
+const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClick }) => {
   const [latestProjects, setLatestProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +37,12 @@ const AllProjectsShowcase: React.FC = () => {
             industry: item.industry,
             imageUrl: item.image_url,
             description: item.description,
-            tags: item.tags,
+            tags: item.tags || [],
+            client: item.client,
+            date: item.date,
+            longDescription: item.long_description,
+            gallery: item.gallery,
+            videoUrl: item.video_url,
           }));
           setLatestProjects(formattedData);
         } else {
@@ -71,13 +80,17 @@ const AllProjectsShowcase: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {latestProjects.map(project => (
-               <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 flex flex-col">
-                  <div className="aspect-video overflow-hidden relative bg-matriz-dark">
+               <button 
+                  key={project.id} 
+                  onClick={() => onProjectClick(project)}
+                  className="group relative overflow-hidden bg-matriz-dark border border-white/5 flex flex-col text-left hover:border-matriz-purple/50 transition-colors duration-300"
+                >
+                  <div className="aspect-video overflow-hidden relative bg-black/50">
                       <img 
                       src={project.imageUrl} 
                       alt={project.title} 
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-110"
                       />
                   </div>
                   <div className="p-4 flex-grow flex flex-col">
@@ -85,7 +98,7 @@ const AllProjectsShowcase: React.FC = () => {
                       <h4 className="text-lg font-bold text-white mb-2 flex-grow">{project.title}</h4>
                       <p className="text-gray-400 text-sm line-clamp-2">{project.description}</p>
                   </div>
-               </div>
+               </button>
             ))}
           </div>
         )}
@@ -110,7 +123,6 @@ const AllProjectsShowcase: React.FC = () => {
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-white">Galeria de Logotipos</h3>
             </div>
             <button 
-// Fix: Cast the result of querySelector to HTMLButtonElement to access the 'click' method.
               onClick={() => (document.querySelector('button[data-tab-id="logos"]') as HTMLButtonElement)?.click()}
               className="group text-matriz-purple font-bold uppercase text-sm tracking-wider flex items-center gap-2"
             >
@@ -126,11 +138,11 @@ const AllProjectsShowcase: React.FC = () => {
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div>
               <SectionHeader icon={<Palette size={24} />} title="Design Gráfico" />
-              <Portfolio headless forcedCategory={ProjectCategory.DESIGN} />
+              <Portfolio headless forcedCategory={ProjectCategory.DESIGN} onProjectClick={onProjectClick} />
             </div>
             <div>
               <SectionHeader icon={<Video size={24} />} title="Vídeo & Motion" />
-              <Portfolio headless forcedCategory={ProjectCategory.VIDEO} />
+              <Portfolio headless forcedCategory={ProjectCategory.VIDEO} onProjectClick={onProjectClick} />
             </div>
          </div>
       </section>
@@ -139,5 +151,4 @@ const AllProjectsShowcase: React.FC = () => {
   );
 };
 
-// Fix: Removed unused and erroneous helper component that was causing build errors.
 export default AllProjectsShowcase;

@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { Project, ProjectCategory } from '../types';
-import { X, Calendar, User, ArrowRight, ChevronLeft, ChevronRight, Plus, Minus, PlayCircle, Globe, Palette, Filter, Star } from 'lucide-react';
-import { getEmbedUrl } from '../src/lib/videoHelper';
+import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
@@ -13,15 +12,14 @@ const ITEMS_PER_PAGE = 6;
 interface PortfolioProps {
   headless?: boolean;
   forcedCategory?: ProjectCategory;
+  onProjectClick: (project: Project) => void;
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, onProjectClick }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   useEffect(() => {
@@ -48,7 +46,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
             industry: item.industry,
             imageUrl: item.image_url,
             description: item.description,
-            tags: item.tags,
+            tags: item.tags || [],
             client: item.client,
             date: item.date,
             longDescription: item.long_description,
@@ -68,18 +66,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
     }
     fetchProjects();
   }, []);
-
-  useEffect(() => {
-    if (selectedProject) {
-      setCurrentImageIndex(0);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [selectedProject]);
 
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
@@ -105,20 +91,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
   };
 
   const categories = Object.values(ProjectCategory);
-
-  const nextImage = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (selectedProject?.gallery) {
-      setCurrentImageIndex((prev) => (prev + 1) % selectedProject.gallery!.length);
-    }
-  };
-
-  const prevImage = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (selectedProject?.gallery) {
-      setCurrentImageIndex((prev) => (prev - 1 + selectedProject.gallery!.length) % selectedProject.gallery!.length);
-    }
-  };
 
   const getTypeIcon = (category: ProjectCategory) => {
     switch (category) {
@@ -200,18 +172,14 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {visibleProjects.map((project) => (
-                <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => setSelectedProject(project)}>
-                <div className="aspect-video overflow-hidden relative bg-matriz-dark">
+                <div key={project.id} className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer" onClick={() => onProjectClick(project)}>
+                <div className="aspect-video overflow-hidden relative bg-black/50">
                     <img 
                     src={project.imageUrl} 
                     alt={project.title} 
                     loading="lazy"
                     decoding="async"
-                    className={`w-full h-full transition-transform duration-700 group-hover:scale-110 ${
-                        project.category === ProjectCategory.LOGO 
-                        ? 'object-contain p-10 bg-black/50' 
-                        : 'object-cover'
-                    }`}
+                    className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-110"
                     />
                     
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
@@ -291,227 +259,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory 
           </div>
         )}
       </div>
-
-      {selectedProject && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" 
-            onClick={() => setSelectedProject(null)}
-          ></div>
-          
-          <div className="relative bg-matriz-dark w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar">
-            
-            <button 
-              onClick={() => setSelectedProject(null)}
-              className="absolute top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10"
-            >
-              <X size={24} />
-            </button>
-
-            <div className="w-full h-64 md:h-96 relative bg-matriz-black flex items-center justify-center overflow-hidden">
-                {selectedProject.videoUrl ? (
-                     <div className="w-full h-full relative z-20">
-                         <iframe 
-                             src={getEmbedUrl(selectedProject.videoUrl)} 
-                             title={selectedProject.title}
-                             className="w-full h-full"
-                             frameBorder="0"
-                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                             allowFullScreen
-                         ></iframe>
-                     </div>
-                ) : (
-                    <>
-                        {selectedProject.category === ProjectCategory.LOGO && (
-                            <img 
-                                src={selectedProject.imageUrl} 
-                                className="absolute inset-0 w-full h-full object-cover opacity-20 blur-xl scale-150"
-                            />
-                        )}
-                        <img 
-                            src={selectedProject.imageUrl} 
-                            alt={selectedProject.title} 
-                            className={`w-full h-full relative z-10 ${
-                                selectedProject.category === ProjectCategory.LOGO 
-                                ? 'object-contain p-12' 
-                                : 'object-cover'
-                            }`}
-                        />
-                         <div className="absolute inset-0 bg-gradient-to-t from-matriz-dark via-transparent to-transparent z-20 pointer-events-none"></div>
-                    </>
-                )}
-              
-              {!selectedProject.videoUrl && (
-                  <div className="absolute bottom-0 left-0 p-6 md:p-10 w-full z-30">
-                    <div className="flex gap-2 mb-3 items-center">
-                        <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
-                        {selectedProject.category}
-                        </span>
-                        {selectedProject.industry && (
-                            <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
-                            {selectedProject.industry}
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
-                </div>
-              )}
-            </div>
-            
-            {selectedProject.videoUrl && (
-                <div className="p-6 md:px-10 md:pt-10 md:pb-0">
-                    <div className="flex gap-2 mb-3 items-center">
-                        <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">
-                        {selectedProject.category}
-                        </span>
-                        {selectedProject.industry && (
-                            <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">
-                            {selectedProject.industry}
-                            </span>
-                        )}
-                    </div>
-                    <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-2 drop-shadow-lg">{selectedProject.title}</h2>
-                </div>
-            )}
-
-            <div className="p-6 md:p-10">
-              <div className="flex flex-col lg:flex-row gap-10">
-                
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    Sobre o Projeto
-                  </h3>
-                  <p className="text-gray-300 leading-relaxed mb-8 text-lg">
-                    {selectedProject.longDescription || selectedProject.description}
-                  </p>
-
-                  {selectedProject.gallery && selectedProject.gallery.length > 0 && (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white mb-2">Galeria do Projeto</h3>
-                      
-                      <div className="relative group bg-black border border-white/10 rounded-sm overflow-hidden select-none">
-                        <div className="aspect-video w-full relative bg-matriz-dark/50 flex items-center justify-center">
-                          <img 
-                            src={selectedProject.gallery[currentImageIndex]} 
-                            alt={`Gallery image ${currentImageIndex + 1}`} 
-                            className={`w-full h-full animate-fade-in ${
-                                selectedProject.category === ProjectCategory.LOGO 
-                                ? 'object-contain p-8' 
-                                : 'object-contain'
-                            }`}
-                            key={currentImageIndex}
-                          />
-                        </div>
-
-                        {selectedProject.gallery.length > 1 && (
-                          <>
-                            <button 
-                              onClick={prevImage}
-                              className="absolute left-0 top-0 bottom-0 px-4 hover:bg-black/20 text-white/50 hover:text-white transition-all flex items-center justify-center focus:outline-none"
-                            >
-                              <div className="p-2 bg-black/50 rounded-full backdrop-blur-sm hover:bg-matriz-purple">
-                                <ChevronLeft size={24} />
-                              </div>
-                            </button>
-                            <button 
-                              onClick={nextImage}
-                              className="absolute right-0 top-0 bottom-0 px-4 hover:bg-black/20 text-white/50 hover:text-white transition-all flex items-center justify-center focus:outline-none"
-                            >
-                              <div className="p-2 bg-black/50 rounded-full backdrop-blur-sm hover:bg-matriz-purple">
-                                <ChevronRight size={24} />
-                              </div>
-                            </button>
-                          </>
-                        )}
-                        
-                         <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-md px-3 py-1 text-xs text-white rounded-full border border-white/10">
-                           {currentImageIndex + 1} / {selectedProject.gallery.length}
-                         </div>
-                      </div>
-
-                      <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar pt-2">
-                        {selectedProject.gallery.map((img, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentImageIndex(idx)}
-                            className={`relative flex-shrink-0 w-24 h-16 rounded-sm overflow-hidden border-2 transition-all bg-black ${
-                              currentImageIndex === idx 
-                                ? 'border-matriz-purple opacity-100 ring-2 ring-matriz-purple/20' 
-                                : 'border-transparent opacity-40 hover:opacity-80'
-                            }`}
-                          >
-                            <img 
-                              src={img} 
-                              alt="" 
-                              loading="lazy"
-                              decoding="async"
-                              className={`w-full h-full ${selectedProject.category === ProjectCategory.LOGO ? 'object-contain p-1' : 'object-cover'}`}
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="lg:w-80 space-y-8">
-                  <div className="bg-white/5 p-6 rounded-sm border border-white/5">
-                    <div className="space-y-4">
-                      {selectedProject.client && (
-                        <div>
-                          <span className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Cliente</span>
-                          <div className="flex items-center gap-2 text-white font-medium">
-                            <User size={16} className="text-matriz-purple" />
-                            {selectedProject.client}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {selectedProject.date && (
-                        <div>
-                          <span className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Data</span>
-                          <div className="flex items-center gap-2 text-white font-medium">
-                            <Calendar size={16} className="text-matriz-purple" />
-                            {selectedProject.date}
-                          </div>
-                        </div>
-                      )}
-
-                      {selectedProject.industry && (
-                        <div>
-                          <span className="text-xs uppercase tracking-widest text-gray-500 block mb-1">Ramo</span>
-                          <div className="flex items-center gap-2 text-white font-medium">
-                             <span className="text-sm border border-white/10 px-2 py-1 rounded bg-black/50">
-                                {selectedProject.industry}
-                             </span>
-                          </div>
-                        </div>
-                      )}
-
-                      <div>
-                        <span className="text-xs uppercase tracking-widest text-gray-500 block mb-2">Tecnologias</span>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedProject.tags.map(tag => (
-                            <span key={tag} className="px-2 py-1 bg-black text-xs text-gray-300 border border-white/10 rounded-sm">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <a href="#contact" onClick={() => setSelectedProject(null)} className="block w-full py-3 bg-matriz-purple hover:bg-purple-600 text-white font-bold uppercase tracking-widest text-center transition-colors text-sm">
-                    Solicitar Orçamento
-                  </a>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
     </section>
   );
 };
