@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Code2, ChevronLeft, ChevronRight, Filter, Loader2 } from 'lucide-react';
+import { ExternalLink, Code2, ChevronLeft, ChevronRight, Filter, Loader2, Globe } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { ProjectCategory } from '../types';
@@ -52,7 +52,8 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     description: item.description,
                     imageUrl: item.image_url,
                     tech: item.tags || [],
-                    liveUrl: item.video_url || '#', // Using video_url field for website link based on previous schema decisions
+                    // Prioritiza video_url como link do site, fallback para '#'
+                    liveUrl: item.video_url || '#', 
                     industry: item.industry
                  }));
                  setProjects(formattedData);
@@ -152,15 +153,29 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 </button>
             </div>
         ) : (
-            <div className="flex flex-col lg:flex-row gap-12">
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             
             {/* PREVIEW WINDOW (Common for Mobile & Desktop) */}
             <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden group">
+                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden group">
+                    {/* Header do Browser Falso (Estético) */}
+                    <div className="h-8 bg-black/80 border-b border-white/5 flex items-center px-4 gap-2">
+                        <div className="flex gap-1.5">
+                            <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                            <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                        </div>
+                        <div className="flex-1 text-center">
+                             <div className="inline-block px-3 py-0.5 bg-white/5 rounded text-[10px] text-gray-500 truncate max-w-[200px]">
+                                {activeProject.liveUrl}
+                             </div>
+                        </div>
+                    </div>
+
                     {isIframeLoading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-matriz-black text-gray-500 z-10">
-                            <Loader2 className="animate-spin" size={32} />
-                            <span className="text-xs uppercase tracking-widest">Carregando Site...</span>
+                        <div className="absolute inset-0 top-8 flex flex-col items-center justify-center gap-3 bg-matriz-dark text-gray-500 z-10">
+                            <Loader2 className="animate-spin text-matriz-purple" size={32} />
+                            <span className="text-xs uppercase tracking-widest animate-pulse">Carregando Preview...</span>
                         </div>
                     )}
                     <iframe
@@ -168,52 +183,57 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         src={activeProject.liveUrl}
                         title={activeProject.title}
                         onLoad={() => setIsIframeLoading(false)}
-                        className={`w-full h-full transition-opacity duration-500 bg-white ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
+                        className={`w-full h-full bg-white transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
                         sandbox="allow-scripts allow-same-origin allow-forms"
                         loading="lazy"
                     />
-                    {/* Overlay to allow clicking the button without interacting with iframe instantly, 
-                        removed on hover/interaction if needed, but keeps iframe usable */}
+                    
+                    {/* Overlay Interativo para Mobile (Permite scroll no iframe mas mostra que é interativo) */}
+                    <div className="absolute bottom-4 right-4 z-20 pointer-events-none md:hidden">
+                        <span className="bg-black/70 backdrop-blur text-white text-[10px] px-2 py-1 rounded uppercase tracking-wider border border-white/10">
+                            Interativo
+                        </span>
+                    </div>
                 </div>
             </div>
             
             {/* MOBILE INFO & NAVIGATION (Visible only on small screens) */}
-            <div className="lg:hidden order-2 flex flex-col gap-6">
-                <div className="flex items-center justify-between gap-4">
-                    <button onClick={prevProject} className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors">
-                        <ChevronLeft size={24} />
+            <div className="lg:hidden order-2 flex flex-col gap-6 mt-2">
+                <div className="flex items-center justify-between gap-4 bg-white/5 p-4 rounded-lg border border-white/5">
+                    <button onClick={prevProject} className="p-3 bg-black/50 border border-white/10 rounded-full hover:bg-matriz-purple hover:text-white transition-colors" aria-label="Projeto Anterior">
+                        <ChevronLeft size={20} />
                     </button>
                     
-                    <div className="text-center flex-1">
-                        <h3 className="font-display text-xl font-bold text-white mb-1">
+                    <div className="text-center flex-1 min-w-0">
+                        <h3 className="font-display text-lg font-bold text-white mb-1 truncate">
                         {activeProject.title}
                         </h3>
                         {activeProject.industry && (
-                             <span className="text-xs text-gray-500 uppercase tracking-widest block">
+                             <span className="text-[10px] text-matriz-purple font-bold uppercase tracking-widest block truncate">
                                 {activeProject.industry}
                              </span>
                         )}
                     </div>
 
-                    <button onClick={nextProject} className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors">
-                        <ChevronRight size={24} />
+                    <button onClick={nextProject} className="p-3 bg-black/50 border border-white/10 rounded-full hover:bg-matriz-purple hover:text-white transition-colors" aria-label="Próximo Projeto">
+                        <ChevronRight size={20} />
                     </button>
                 </div>
                 
-                <p className="text-gray-400 text-sm leading-relaxed text-center">{activeProject.description}</p>
+                <p className="text-gray-400 text-sm leading-relaxed text-center px-4">{activeProject.description}</p>
                 
                 <a 
                   href={activeProject.liveUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                  className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)] animate-pulse hover:animate-none"
                 >
-                  Acessar Site <ExternalLink size={16} />
+                  <Globe size={18} /> Acessar Site
                 </a>
             </div>
 
             {/* DESKTOP LIST (Hidden on mobile) */}
-            <div className="hidden lg:flex lg:w-1/3 flex-col gap-4 order-1">
+            <div className="hidden lg:flex lg:w-1/3 flex-col gap-4 order-1 h-full min-h-[500px]">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">Lista de Projetos</span>
                     <div className="flex gap-2">
@@ -251,28 +271,30 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     ))}
                 </div>
                 
-                <div className="mt-4 p-6 bg-black/40 border border-white/5 rounded-sm">
-                    <div className="flex items-center gap-2 mb-4 text-matriz-silver">
-                        <Code2 size={20} className="text-matriz-purple" />
-                        <span className="text-xs uppercase tracking-widest font-bold">Tecnologias</span>
+                <div className="mt-auto pt-4">
+                    <div className="p-6 bg-black/40 border border-white/5 rounded-sm">
+                        <div className="flex items-center gap-2 mb-4 text-matriz-silver">
+                            <Code2 size={20} className="text-matriz-purple" />
+                            <span className="text-xs uppercase tracking-widest font-bold">Tecnologias</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {activeProject.tech.length > 0 ? activeProject.tech.map((tech) => (
+                                <span key={tech} className="px-3 py-1 text-xs border border-matriz-purple/30 text-matriz-purple bg-matriz-purple/5 rounded-full">
+                                    {tech}
+                                </span>
+                            )) : <span className="text-gray-600 text-xs italic">Nenhuma tag informada</span>}
+                        </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                        {activeProject.tech.length > 0 ? activeProject.tech.map((tech) => (
-                            <span key={tech} className="px-3 py-1 text-xs border border-matriz-purple/30 text-matriz-purple bg-matriz-purple/5 rounded-full">
-                                {tech}
-                            </span>
-                        )) : <span className="text-gray-600 text-xs italic">Nenhuma tag informada</span>}
-                    </div>
+                    
+                    <a 
+                        href={activeProject.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                    >
+                        Acessar Site <ExternalLink size={18} />
+                    </a>
                 </div>
-                
-                <a 
-                    href={activeProject.liveUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-                >
-                    Acessar Site <ExternalLink size={18} />
-                </a>
             </div>
 
             </div>
