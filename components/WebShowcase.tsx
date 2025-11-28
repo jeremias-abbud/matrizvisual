@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight, Filter, Loader2 } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { ProjectCategory } from '../types';
@@ -18,15 +18,15 @@ interface WebProject {
 
 interface WebShowcaseProps {
   headless?: boolean;
-  limit?: number; // Nova propriedade de limite
+  limit?: number;
 }
 
 const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) => {
   const [projects, setProjects] = useState<WebProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isIframeLoading, setIsIframeLoading] = useState(true);
   
-  // Filter State
   const [activeIndustry, setActiveIndustry] = useState<string>('');
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
             let query = supabase
                 .from('projects')
                 .select('*')
-                .eq('category', ProjectCategory.WEB) // Filter by Web Sites category
+                .eq('category', ProjectCategory.WEB)
                 .order('created_at', { ascending: false });
             
             if (limit) {
@@ -52,8 +52,8 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     title: item.title,
                     description: item.description,
                     imageUrl: item.image_url,
-                    tech: item.tags || [], // Map 'tags' to 'tech'
-                    liveUrl: item.video_url || '#', // Map 'video_url' to 'liveUrl'
+                    tech: item.tags || [],
+                    liveUrl: item.video_url || '#',
                     industry: item.industry
                  }));
                  setProjects(formattedData);
@@ -70,15 +70,15 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
     fetchWebProjects();
   }, [limit]);
 
-  // Filter Logic
-  const filteredProjects = projects.filter(proj => {
-    return activeIndustry === '' || proj.industry === activeIndustry;
-  });
+  const filteredProjects = projects.filter(proj => activeIndustry === '' || proj.industry === proj.industry);
 
-  // Reset index when filter changes
   useEffect(() => {
     setActiveIndex(0);
   }, [activeIndustry]);
+
+  useEffect(() => {
+    setIsIframeLoading(true);
+  }, [activeIndex]);
 
   const activeProject = filteredProjects[activeIndex];
 
@@ -102,12 +102,10 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
 
   return (
     <section className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-gradient-to-b from-matriz-black to-matriz-dark border-b border-white/5 relative overflow-hidden'}`}>
-      {/* Background Decor - Only if not headless to avoid stacking */}
       {!headless && <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-matriz-purple/5 rounded-full blur-3xl pointer-events-none"></div>}
       
       <div className={`${headless ? '' : 'container mx-auto px-6'} relative z-10`}>
         
-        {/* Header Section - Conditional */}
         {!headless && (
           <div className="mb-10 lg:mb-12 flex flex-col lg:flex-row justify-between items-end gap-6">
             <div>
@@ -119,7 +117,6 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
           </div>
         )}
 
-        {/* Oculta filtro quando há limite */}
         {!limit && (
             <div className={`flex justify-end mb-8 ${headless ? 'w-full' : 'absolute top-0 right-6'}`}>
                 <div className="w-full lg:w-auto relative group min-w-[240px]">
@@ -158,60 +155,58 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
         ) : (
             <div className="flex flex-col lg:flex-row gap-12">
             
-            {/* MOBILE NAVIGATION & INFO (Visible only on small screens) */}
+            {/* PREVIEW WINDOW (Common for Mobile & Desktop) */}
+            <div className="lg:w-2/3 order-1 lg:order-2">
+                <div className="relative aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden">
+                    {isIframeLoading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-matriz-black text-gray-500">
+                            <Loader2 className="animate-spin" size={32} />
+                            <span className="text-xs uppercase tracking-widest">Carregando Preview...</span>
+                        </div>
+                    )}
+                    <iframe
+                        key={activeProject.id}
+                        src={activeProject.liveUrl}
+                        title={activeProject.title}
+                        onLoad={() => setIsIframeLoading(false)}
+                        className={`w-full h-full transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
+                        sandbox="allow-scripts allow-same-origin"
+                    />
+                </div>
+            </div>
+            
+            {/* MOBILE INFO & NAVIGATION (Visible only on small screens) */}
             <div className="lg:hidden order-2 flex flex-col gap-6">
                 <div className="flex items-center justify-between gap-4">
-                <button 
-                    onClick={prevProject}
-                    className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors"
-                >
-                    <ChevronLeft size={24} />
-                </button>
+                    <button onClick={prevProject} className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors">
+                        <ChevronLeft size={24} />
+                    </button>
+                    
+                    <div className="text-center flex-1">
+                        <h3 className="font-display text-xl font-bold text-white mb-1">
+                        {activeProject.title}
+                        </h3>
+                        {activeProject.industry && (
+                             <span className="text-xs text-gray-500 uppercase tracking-widest">
+                                {activeProject.industry}
+                             </span>
+                        )}
+                    </div>
+
+                    <button onClick={nextProject} className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors">
+                        <ChevronRight size={24} />
+                    </button>
+                </div>
                 
-                <div className="text-center flex-1">
-                    <h3 className="font-display text-xl font-bold text-white mb-1">
-                    {activeProject.title}
-                    </h3>
-                    <span className="text-xs text-gray-500 uppercase tracking-widest">
-                    {activeIndex + 1} / {filteredProjects.length}
-                    </span>
-                </div>
-
-                <button 
-                    onClick={nextProject}
-                    className="p-4 bg-white/5 border border-white/10 rounded-sm hover:bg-matriz-purple hover:text-white transition-colors"
-                >
-                    <ChevronRight size={24} />
-                </button>
-                </div>
-
-                <div className="flex items-center justify-center">
-                    {activeProject.industry && (
-                        <span className="text-xs text-gray-400 border border-white/10 px-2 py-1 rounded bg-black/30 uppercase tracking-widest">
-                            {activeProject.industry}
-                        </span>
-                    )}
-                </div>
-
-                <p className="text-gray-400 text-sm leading-relaxed text-center">
-                {activeProject.description}
-                </p>
-
-                <div className="flex flex-wrap justify-center gap-2">
-                    {activeProject.tech.map((tech) => (
-                        <span key={tech} className="px-3 py-1 text-xs border border-matriz-purple/30 text-matriz-purple bg-matriz-purple/5 rounded-full">
-                            {tech}
-                        </span>
-                    ))}
-                </div>
-
+                <p className="text-gray-400 text-sm leading-relaxed text-center">{activeProject.description}</p>
+                
                 <a 
-                href={activeProject.liveUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                  href={activeProject.liveUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm"
                 >
-                Acessar Site <ExternalLink size={16} />
+                  Acessar Site <ExternalLink size={16} />
                 </a>
             </div>
 
@@ -227,32 +222,23 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         : 'border-white/5 bg-transparent hover:bg-white/5 hover:border-white/20'
                     }`}
                 >
-                    {/* Active Indicator */}
                     {index === activeIndex && (
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-matriz-purple"></div>
                     )}
-
-                    <div className="flex justify-between items-start">
-                        <h3 className={`font-display text-lg font-bold mb-1 transition-colors ${
+                    <h3 className={`font-display text-lg font-bold mb-1 transition-colors ${
                         index === activeIndex ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                        }`}>
+                    }`}>
                         {project.title}
-                        </h3>
-                    </div>
-                    
+                    </h3>
                     {project.industry && (
                         <span className="text-[10px] text-gray-500 uppercase tracking-widest block mb-2">
                             {project.industry}
                         </span>
                     )}
-
-                    <p className="text-sm text-gray-500 line-clamp-2">
-                    {project.description}
-                    </p>
+                    <p className="text-sm text-gray-500 line-clamp-2">{project.description}</p>
                 </button>
                 ))}
                 
-                {/* Tech Stack of Active Project */}
                 <div className="mt-8 p-6 bg-black/40 border border-white/5 rounded-sm">
                     <div className="flex items-center gap-2 mb-4 text-matriz-silver">
                         <Code2 size={20} className="text-matriz-purple" />
@@ -277,26 +263,6 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 </a>
             </div>
 
-            {/* IMAGE SHOWCASE (Visible on both, adapted styles) */}
-            <div className="lg:w-2/3 order-1 lg:order-2">
-               <a 
-                  href={activeProject.liveUrl || '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="relative group block aspect-[16/10] overflow-hidden bg-matriz-gray rounded-lg border border-white/10 shadow-2xl transition-all duration-300 hover:border-matriz-purple hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
-                >
-                  <img 
-                    key={activeProject.id}
-                    src={activeProject.imageUrl} 
-                    alt={activeProject.title} 
-                    className="w-full h-full object-cover animate-fade-in transition-transform duration-500 group-hover:scale-105"
-                  />
-                  
-                  {/* Subtle glow effect on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                  <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg pointer-events-none"></div>
-                </a>
-            </div>
             </div>
         )}
       </div>
