@@ -13,6 +13,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
 
+  // Combina imagem de capa com imagens da galeria para navegação completa
   const allImages = project ? [project.imageUrl, ...(project.gallery || [])] : [];
 
   const handleClose = useCallback(() => {
@@ -46,16 +47,22 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!project) return;
-      if (e.key === 'Escape') handleClose();
+      
+      // Se estiver em fullscreen
       if (fullscreenImage) {
+        if (e.key === 'Escape') setFullscreenImage(null);
         if (e.key === 'ArrowRight') nextImage();
         if (e.key === 'ArrowLeft') prevImage();
+        return;
       }
+
+      // Se estiver apenas no modal
+      if (e.key === 'Escape') onClose();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [project, handleClose, fullscreenImage, nextImage, prevImage]);
+  }, [project, onClose, fullscreenImage, nextImage, prevImage]);
 
   useEffect(() => {
     if (project) {
@@ -74,14 +81,21 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
 
   const renderFullscreenView = () => (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={handleClose}></div>
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setFullscreenImage(null)}></div>
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-        <button onClick={handleClose} className="fixed top-6 right-6 z-[120] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10">
+        <button onClick={() => setFullscreenImage(null)} className="fixed top-6 right-6 z-[120] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10">
           <X size={32} />
         </button>
+        
         <div className="relative w-full h-full flex items-center justify-center">
-          <img src={fullscreenImage!} alt={`Fullscreen image ${project.title}`} className="max-w-full max-h-full object-contain" />
+          <img 
+            src={fullscreenImage!} 
+            alt={`Fullscreen image ${project.title}`} 
+            className="max-w-full max-h-full object-contain" 
+          />
         </div>
+        
+        {/* Mostra setas de navegação se houver mais de uma imagem no total */}
         {allImages.length > 1 && (
           <>
             <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full">
@@ -113,7 +127,12 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
               <iframe src={getEmbedUrl(project.videoUrl)} title={project.title} className="w-full h-full" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
             ) : (
               <>
-                <img src={project.imageUrl} alt={project.title} className="w-full h-full object-contain" />
+                <img 
+                    src={project.imageUrl} 
+                    alt={project.title} 
+                    className="w-full h-full object-contain cursor-pointer" 
+                    onClick={(e) => openFullscreen(e, 0)}
+                />
                 <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-0 group-hover:opacity-100" title="Ver em tela cheia">
                   <Maximize size={20} />
                 </button>
@@ -138,7 +157,11 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                     <h3 className="text-lg font-bold text-white mb-2">Galeria do Projeto</h3>
                     <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar pt-2">
                       {project.gallery!.map((img, idx) => (
-                        <button key={idx} onClick={(e) => openFullscreen(e, idx + 1)} className="relative flex-shrink-0 w-32 h-20 rounded-sm overflow-hidden border-2 border-transparent hover:border-matriz-purple/50 bg-black group">
+                        <button 
+                            key={idx} 
+                            onClick={(e) => openFullscreen(e, idx + 1)} // idx + 1 porque 0 é a capa
+                            className="relative flex-shrink-0 w-32 h-20 rounded-sm overflow-hidden border-2 border-transparent hover:border-matriz-purple/50 bg-black group"
+                        >
                           <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                             <Maximize size={24} className="text-white" />

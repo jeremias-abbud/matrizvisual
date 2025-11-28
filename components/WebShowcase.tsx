@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Code2, Globe, ChevronLeft, ChevronRight, Filter, Loader2 } from 'lucide-react';
+import { ExternalLink, Code2, ChevronLeft, ChevronRight, Filter, Loader2 } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { ProjectCategory } from '../types';
@@ -53,7 +52,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     description: item.description,
                     imageUrl: item.image_url,
                     tech: item.tags || [],
-                    liveUrl: item.video_url || '#',
+                    liveUrl: item.video_url || '#', // Using video_url field for website link based on previous schema decisions
                     industry: item.industry
                  }));
                  setProjects(formattedData);
@@ -70,7 +69,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
     fetchWebProjects();
   }, [limit]);
 
-  const filteredProjects = projects.filter(proj => activeIndustry === '' || proj.industry === proj.industry);
+  const filteredProjects = projects.filter(proj => activeIndustry === '' || proj.industry === activeIndustry);
 
   useEffect(() => {
     setActiveIndex(0);
@@ -157,11 +156,11 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
             
             {/* PREVIEW WINDOW (Common for Mobile & Desktop) */}
             <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden">
+                <div className="relative aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden group">
                     {isIframeLoading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-matriz-black text-gray-500">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-matriz-black text-gray-500 z-10">
                             <Loader2 className="animate-spin" size={32} />
-                            <span className="text-xs uppercase tracking-widest">Carregando Preview...</span>
+                            <span className="text-xs uppercase tracking-widest">Carregando Site...</span>
                         </div>
                     )}
                     <iframe
@@ -169,9 +168,12 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         src={activeProject.liveUrl}
                         title={activeProject.title}
                         onLoad={() => setIsIframeLoading(false)}
-                        className={`w-full h-full transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
-                        sandbox="allow-scripts allow-same-origin"
+                        className={`w-full h-full transition-opacity duration-500 bg-white ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
+                        sandbox="allow-scripts allow-same-origin allow-forms"
+                        loading="lazy"
                     />
+                    {/* Overlay to allow clicking the button without interacting with iframe instantly, 
+                        removed on hover/interaction if needed, but keeps iframe usable */}
                 </div>
             </div>
             
@@ -187,7 +189,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         {activeProject.title}
                         </h3>
                         {activeProject.industry && (
-                             <span className="text-xs text-gray-500 uppercase tracking-widest">
+                             <span className="text-xs text-gray-500 uppercase tracking-widest block">
                                 {activeProject.industry}
                              </span>
                         )}
@@ -204,7 +206,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                   href={activeProject.liveUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm"
+                  className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
                 >
                   Acessar Site <ExternalLink size={16} />
                 </a>
@@ -212,44 +214,54 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
 
             {/* DESKTOP LIST (Hidden on mobile) */}
             <div className="hidden lg:flex lg:w-1/3 flex-col gap-4 order-1">
-                {filteredProjects.map((project, index) => (
-                <button
-                    key={project.id}
-                    onClick={() => setActiveIndex(index)}
-                    className={`group text-left p-6 border rounded-sm transition-all duration-300 relative overflow-hidden ${
-                    index === activeIndex
-                        ? 'border-matriz-purple bg-white/5 shadow-[0_0_20px_rgba(139,92,246,0.1)]'
-                        : 'border-white/5 bg-transparent hover:bg-white/5 hover:border-white/20'
-                    }`}
-                >
-                    {index === activeIndex && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-matriz-purple"></div>
-                    )}
-                    <h3 className={`font-display text-lg font-bold mb-1 transition-colors ${
-                        index === activeIndex ? 'text-white' : 'text-gray-400 group-hover:text-white'
-                    }`}>
-                        {project.title}
-                    </h3>
-                    {project.industry && (
-                        <span className="text-[10px] text-gray-500 uppercase tracking-widest block mb-2">
-                            {project.industry}
-                        </span>
-                    )}
-                    <p className="text-sm text-gray-500 line-clamp-2">{project.description}</p>
-                </button>
-                ))}
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">Lista de Projetos</span>
+                    <div className="flex gap-2">
+                         <button onClick={prevProject} className="p-2 hover:bg-white/10 rounded-full text-white"><ChevronLeft size={16}/></button>
+                         <button onClick={nextProject} className="p-2 hover:bg-white/10 rounded-full text-white"><ChevronRight size={16}/></button>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-2 space-y-3">
+                    {filteredProjects.map((project, index) => (
+                    <button
+                        key={project.id}
+                        onClick={() => setActiveIndex(index)}
+                        className={`w-full group text-left p-6 border rounded-sm transition-all duration-300 relative overflow-hidden ${
+                        index === activeIndex
+                            ? 'border-matriz-purple bg-white/5 shadow-[0_0_20px_rgba(139,92,246,0.1)]'
+                            : 'border-white/5 bg-transparent hover:bg-white/5 hover:border-white/20'
+                        }`}
+                    >
+                        {index === activeIndex && (
+                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-matriz-purple"></div>
+                        )}
+                        <h3 className={`font-display text-lg font-bold mb-1 transition-colors ${
+                            index === activeIndex ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                        }`}>
+                            {project.title}
+                        </h3>
+                        {project.industry && (
+                            <span className="text-[10px] text-gray-500 uppercase tracking-widest block mb-2">
+                                {project.industry}
+                            </span>
+                        )}
+                        <p className="text-sm text-gray-500 line-clamp-2">{project.description}</p>
+                    </button>
+                    ))}
+                </div>
                 
-                <div className="mt-8 p-6 bg-black/40 border border-white/5 rounded-sm">
+                <div className="mt-4 p-6 bg-black/40 border border-white/5 rounded-sm">
                     <div className="flex items-center gap-2 mb-4 text-matriz-silver">
                         <Code2 size={20} className="text-matriz-purple" />
-                        <span className="text-xs uppercase tracking-widest font-bold">Destaques</span>
+                        <span className="text-xs uppercase tracking-widest font-bold">Tecnologias</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {activeProject.tech.map((tech) => (
+                        {activeProject.tech.length > 0 ? activeProject.tech.map((tech) => (
                             <span key={tech} className="px-3 py-1 text-xs border border-matriz-purple/30 text-matriz-purple bg-matriz-purple/5 rounded-full">
                                 {tech}
                             </span>
-                        ))}
+                        )) : <span className="text-gray-600 text-xs italic">Nenhuma tag informada</span>}
                     </div>
                 </div>
                 
@@ -257,7 +269,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     href={activeProject.liveUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300"
+                    className="mt-2 inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
                 >
                     Acessar Site <ExternalLink size={18} />
                 </a>
