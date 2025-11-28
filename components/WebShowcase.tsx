@@ -166,7 +166,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                             <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
                         </div>
                         <div className="flex-1 text-center">
-                             <div className="inline-block px-3 py-0.5 bg-white/5 rounded text-[10px] text-gray-500 truncate max-w-[200px]">
+                             <div className="inline-block px-3 py-0.5 bg-white/5 rounded text-[10px] text-gray-500 truncate max-w-[200px]" title={activeProject.liveUrl}>
                                 {activeProject.liveUrl}
                              </div>
                         </div>
@@ -181,7 +181,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     <iframe
                         key={activeProject.id}
                         src={activeProject.liveUrl}
-                        title={activeProject.title}
+                        title={`Website do projeto ${activeProject.title} - Matriz Visual`}
                         onLoad={() => setIsIframeLoading(false)}
                         className={`w-full h-full bg-white transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
                         sandbox="allow-scripts allow-same-origin allow-forms"
@@ -227,6 +227,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)] animate-pulse hover:animate-none"
+                  aria-label={`Acessar site do projeto ${activeProject.title}`}
                 >
                   <Globe size={18} /> Acessar Site
                 </a>
@@ -237,8 +238,8 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">Lista de Projetos</span>
                     <div className="flex gap-2">
-                         <button onClick={prevProject} className="p-2 hover:bg-white/10 rounded-full text-white"><ChevronLeft size={16}/></button>
-                         <button onClick={nextProject} className="p-2 hover:bg-white/10 rounded-full text-white"><ChevronRight size={16}/></button>
+                         <button onClick={prevProject} className="p-2 hover:bg-white/10 rounded-full text-white" aria-label="Anterior"><ChevronLeft size={16}/></button>
+                         <button onClick={nextProject} className="p-2 hover:bg-white/10 rounded-full text-white" aria-label="Próximo"><ChevronRight size={16}/></button>
                     </div>
                 </div>
 
@@ -252,6 +253,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                             ? 'border-matriz-purple bg-white/5 shadow-[0_0_20px_rgba(139,92,246,0.1)]'
                             : 'border-white/5 bg-transparent hover:bg-white/5 hover:border-white/20'
                         }`}
+                        aria-label={`Ver projeto ${project.title}`}
                     >
                         {index === activeIndex && (
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-matriz-purple"></div>
@@ -291,6 +293,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         target="_blank"
                         rel="noreferrer"
                         className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                        aria-label={`Acessar site do projeto ${activeProject.title} em nova aba`}
                     >
                         Acessar Site <ExternalLink size={18} />
                     </a>

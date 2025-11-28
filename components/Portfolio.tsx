@@ -33,7 +33,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .order('display_order', { ascending: true, nullsFirst: true })
+          .order('display_order', { ascending: true, nullsFirst: false }) // Prioriza ordem manual
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -180,7 +180,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 <div className="aspect-video overflow-hidden relative bg-black/50">
                     <img 
                     src={project.imageUrl} 
-                    alt={project.title} 
+                    alt={`Projeto de ${project.category}: ${project.title} - ${project.industry || 'Portfólio Matriz Visual'}`}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"

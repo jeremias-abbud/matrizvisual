@@ -222,7 +222,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
 
                     <img 
                         src={logo.imageUrl} 
-                        alt={logo.title} 
+                        alt={`Logotipo criado para ${logo.title} - ${logo.industry || 'Design Gráfico'}`}
                         className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
                     />
@@ -304,7 +304,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     <img 
                         key={selectedLogoIndex}
                         src={filteredLogos[selectedLogoIndex].imageUrl} 
-                        alt={filteredLogos[selectedLogoIndex].title} 
+                        alt={`Logotipo ampliado: ${filteredLogos[selectedLogoIndex].title}`}
                         className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] animate-fade-in"
                     />
                 </div>

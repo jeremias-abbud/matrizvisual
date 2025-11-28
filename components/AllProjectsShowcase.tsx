@@ -22,18 +22,21 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         setLoading(true);
         
         // 1. Buscar projetos gerais (Design, Video, Web)
+        // Ordena primeiro por display_order (respeitando a curadoria manual), depois por data.
         const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
+          .order('display_order', { ascending: true, nullsFirst: false }) 
           .order('created_at', { ascending: false })
-          .limit(3);
+          .limit(6); // Buscamos um pouco mais para garantir uma boa mistura
 
         // 2. Buscar logotipos (tabela antiga/restaurada)
         const { data: logosData } = await supabase
           .from('logos')
           .select('*')
+          .order('display_order', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(3);
+          .limit(6);
 
         // Formatar Projetos
         const formattedProjects = (projectsData || []).map((item: any) => ({
@@ -49,7 +52,8 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             longDescription: item.long_description,
             gallery: item.gallery,
             videoUrl: item.video_url,
-            createdAt: new Date(item.created_at).getTime()
+            createdAt: new Date(item.created_at).getTime(),
+            displayOrder: item.display_order
         }));
 
         // Formatar Logotipos para parecerem Projetos
@@ -62,15 +66,26 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             description: 'Projeto de identidade visual e design de logotipo.',
             tags: ['Logotipo', 'Branding'],
             client: item.name,
-            createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+            createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+            displayOrder: item.display_order
         }));
 
-        // 3. Juntar e Ordenar por Data (Mais recente primeiro)
+        // 3. Juntar e Ordenar
+        // A lógica aqui deve priorizar quem tem display_order definido (menor valor = maior prioridade)
         const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
+            const orderA = a.displayOrder ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.displayOrder ?? Number.MAX_SAFE_INTEGER;
+            
+            // Se ambos tiverem ordem, ou um tiver e o outro não
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+
+            // Desempate por data (mais recente primeiro)
             return b.createdAt - a.createdAt;
         });
 
-        // Pegar apenas os 3 primeiros
+        // Pegar apenas os 3 primeiros para exibir na capa
         if (allItems.length > 0) {
           setLatestProjects(allItems.slice(0, 3));
         } else {
@@ -101,7 +116,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       
       {/* 1. Latest Projects Section */}
       <section>
-        <SectionHeader icon={<Clock size={24} />} title="Últimos Projetos" />
+        <SectionHeader icon={<Clock size={24} />} title="Destaques & Recentes" />
         {loading ? (
            <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-matriz-purple"></div></div>
         ) : (
@@ -115,7 +130,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                   <div className="aspect-video overflow-hidden relative bg-black/50">
                       <img 
                       src={project.imageUrl} 
-                      alt={project.title} 
+                      alt={`Projeto de ${project.category}: ${project.title} - ${project.industry || 'Matriz Visual'}`}
                       loading="lazy"
                       className="w-full h-full object-contain bg-matriz-black p-2 transition-transform duration-700 group-hover:scale-110"
                       />
