@@ -120,15 +120,30 @@ const SiteAssetsManager: React.FC = () => {
              
              {controls.includes('height') && (
                 <div className="space-y-3">
-                    <label className="text-xs uppercase font-bold text-gray-400 block">Tamanho do Logo</label>
+                    <label className="text-xs uppercase font-bold text-gray-400 block">Altura da Imagem (Logo)</label>
                     <div className="flex items-center gap-3">
-                        <Monitor size={16} className="text-gray-500" />
-                        <input type="text" value={styles.height_desktop || ''} onChange={(e) => handleStyleChange(key, 'height_desktop', e.target.value)} className="bg-black border border-white/10 rounded px-2 py-1 text-white text-sm w-full" placeholder="Ex: 4rem" />
+                        <Monitor size={16} className="text-gray-500 shrink-0" title="Desktop" />
+                        <input 
+                            type="text" 
+                            value={styles.height_desktop || ''} 
+                            onChange={(e) => handleStyleChange(key, 'height_desktop', e.target.value)} 
+                            className="bg-black border border-white/10 rounded px-3 py-2 text-white text-sm w-full" 
+                            placeholder="Ex: 10rem ou 160px" 
+                        />
                     </div>
                     <div className="flex items-center gap-3">
-                        <Smartphone size={16} className="text-gray-500" />
-                        <input type="text" value={styles.height_mobile || ''} onChange={(e) => handleStyleChange(key, 'height_mobile', e.target.value)} className="bg-black border border-white/10 rounded px-2 py-1 text-white text-sm w-full" placeholder="Ex: 3rem" />
+                        <Smartphone size={16} className="text-gray-500 shrink-0" title="Mobile" />
+                        <input 
+                            type="text" 
+                            value={styles.height_mobile || ''} 
+                            onChange={(e) => handleStyleChange(key, 'height_mobile', e.target.value)} 
+                            className="bg-black border border-white/10 rounded px-3 py-2 text-white text-sm w-full" 
+                            placeholder="Ex: 8rem ou 128px" 
+                        />
                     </div>
+                    <p className="text-xs text-gray-500 pt-1">
+                        Use unidades como 'rem' ou 'px'. Isso controla a altura da imagem. Deixe em branco para usar o padrão.
+                    </p>
                 </div>
              )}
              
