@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
@@ -35,7 +34,7 @@ const ProjectManager: React.FC = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({
     title: '',
-    category: ProjectCategory.LOGO,
+    category: ProjectCategory.DESIGN, // Default to DESIGN since LOGO is removed
     industry: '',
     description: '',
     longDescription: '',
@@ -93,7 +92,7 @@ const ProjectManager: React.FC = () => {
     setEditingProject(null);
     setFormData({
       title: '',
-      category: ProjectCategory.LOGO,
+      category: ProjectCategory.DESIGN,
       industry: '',
       description: '',
       longDescription: '',
@@ -226,8 +225,6 @@ const ProjectManager: React.FC = () => {
     }
   };
 
-  // Determina se a descrição é obrigatória
-  const isDescriptionRequired = formData.category !== ProjectCategory.LOGO;
   // Label dinâmico para o campo de link
   const linkLabel = formData.category === ProjectCategory.WEB 
     ? "Link do Site (URL)" 
@@ -272,7 +269,14 @@ const ProjectManager: React.FC = () => {
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
               <div>
-                <ModernSelect label="Categoria (Serviço)" value={formData.category} onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL)} required />
+                <ModernSelect 
+                  label="Categoria (Serviço)" 
+                  value={formData.category} 
+                  onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
+                  // Filtra 'Logotipos' e 'Todos' para não permitir criar novos logos aqui
+                  options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
+                  required 
+                />
               </div>
               <div>
                 <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
@@ -286,8 +290,8 @@ const ProjectManager: React.FC = () => {
                 <input type="text" placeholder="Ex: https://..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card) {isDescriptionRequired && <span className="text-matriz-purple">*</span>}</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required={isDescriptionRequired} />
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card) <span className="text-matriz-purple">*</span></label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (para o detalhe)</label>

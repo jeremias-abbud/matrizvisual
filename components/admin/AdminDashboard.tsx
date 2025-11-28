@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../src/lib/supabase';
 import Login from './Login';
@@ -65,7 +62,7 @@ const AdminDashboard: React.FC = () => {
                 onClick={() => setActiveTab('logos')}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'logos' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
             >
-                <Grid size={20} /> Logotipos (Antigo)
+                <Grid size={20} /> Gerenciar Logotipos
             </button>
             <button 
                 onClick={() => setActiveTab('assets')}

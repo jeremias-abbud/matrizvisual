@@ -1,8 +1,7 @@
 
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, ArrowLeft } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 
@@ -103,7 +102,29 @@ const LogoManager: React.FC = () => {
         }
 
     } else {
-       // This part is now disabled by removing the add button
+        if (!imageUrl) {
+            alert('Por favor, envie uma imagem para o logo.');
+            setUploading(false);
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from('logos')
+            .insert([{
+                name,
+                industry: industry || null,
+                url: imageUrl,
+                display_order: logos.length + 1
+            }])
+            .select();
+
+        if (!error && data) {
+            setLogos(prev => [...prev, data[0]]);
+            resetForm();
+        } else {
+            console.error(error);
+            alert('Erro ao criar logo.');
+        }
     }
     
     setUploading(false);
@@ -160,8 +181,8 @@ const LogoManager: React.FC = () => {
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
-            <h2 className="text-2xl font-display font-bold text-white">Gerenciar Logotipos (Antigo)</h2>
-            <p className="text-sm text-gray-500 mt-1">Gerencie os logos da galeria antiga. Para novos logos, use o "Portfólio Geral".</p>
+            <h2 className="text-2xl font-display font-bold text-white">Gerenciar Logotipos</h2>
+            <p className="text-sm text-gray-500 mt-1">Adicione, edite ou reordene os logotipos da sua galeria.</p>
         </div>
         
         <div className="flex gap-3">
@@ -190,14 +211,15 @@ const LogoManager: React.FC = () => {
                     >
                         <GripVertical size={18} /> Reordenar
                     </button>
+                    <button 
+                        onClick={() => { resetForm(); setShowForm(true); }}
+                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
+                    >
+                        <Plus size={18} /> Adicionar Novo
+                    </button>
                 </>
              )}
         </div>
-      </div>
-
-      <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-4 rounded-md mb-6 text-sm">
-        <p className="font-bold">Atenção:</p>
-        <p>Este painel serve apenas para gerenciar logotipos antigos. Para adicionar novos logotipos, por favor, use o <span className="font-bold">"Portfólio Geral"</span> e selecione a categoria "Logotipos".</p>
       </div>
 
       {showForm && (
@@ -242,6 +264,7 @@ const LogoManager: React.FC = () => {
                         accept="image/*"
                         onChange={e => setImageFile(e.target.files?.[0] || null)}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        required={!editingId}
                     />
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                         <Upload size={24} />
