@@ -211,7 +211,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 rel="noreferrer"
                 className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm"
                 >
-                Ver Exemplo Real <ExternalLink size={16} />
+                Acessar Site <ExternalLink size={16} />
                 </a>
             </div>
 
@@ -273,50 +273,29 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     rel="noreferrer"
                     className="mt-2 inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300"
                 >
-                    Ver Exemplo Real <ExternalLink size={18} />
+                    Acessar Site <ExternalLink size={18} />
                 </a>
             </div>
 
-            {/* BROWSER MOCKUP (Visible on both, adapted styles) */}
+            {/* IMAGE SHOWCASE (Visible on both, adapted styles) */}
             <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative group">
-                    {/* Glow behind monitor */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-matriz-purple to-blue-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                    
-                    {/* Browser Window */}
-                    <div className="relative bg-matriz-gray rounded-lg border border-white/10 overflow-hidden shadow-2xl">
-                        {/* Browser Toolbar */}
-                        <div className="h-8 lg:h-10 bg-[#1a1a1a] border-b border-white/5 flex items-center px-4 gap-2">
-                            <div className="flex gap-1.5 lg:gap-2">
-                                <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full bg-red-500/80"></div>
-                                <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full bg-yellow-500/80"></div>
-                                <div className="w-2.5 h-2.5 lg:w-3 lg:h-3 rounded-full bg-green-500/80"></div>
-                            </div>
-                            {/* Fake Address Bar */}
-                            <div className="ml-2 lg:ml-4 flex-1 bg-black/50 rounded-md h-5 lg:h-6 flex items-center px-3 text-[8px] lg:text-[10px] text-gray-500 font-mono truncate">
-                                <Globe size={10} className="mr-2 shrink-0" />
-                                www.{activeProject.title.toLowerCase().replace(/ /g, '').substring(0, 10)}.com.br
-                            </div>
-                        </div>
-
-                        {/* Viewport */}
-                        <div className="relative aspect-[16/10] overflow-hidden bg-black group-hover:shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]">
-                            <img 
-                                key={activeProject.id} // Forces animation restart on change
-                                src={activeProject.imageUrl} 
-                                alt={activeProject.title} 
-                                className="w-full h-full object-cover animate-fade-in hover:scale-105 transition-transform duration-[2s] ease-out origin-top"
-                            />
-                            
-                            {/* Overlay on hover */}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none"></div>
-                        </div>
-                    </div>
-                    
-                    {/* Decor elements */}
-                    <div className="absolute -bottom-6 -right-6 w-16 h-16 lg:w-24 lg:h-24 border-b-2 border-r-2 border-white/10 rounded-br-3xl pointer-events-none"></div>
-                    <div className="absolute -top-6 -left-6 w-16 h-16 lg:w-24 lg:h-24 border-t-2 border-l-2 border-matriz-purple/30 rounded-tl-3xl pointer-events-none"></div>
-                </div>
+               <a 
+                  href={activeProject.liveUrl || '#'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="relative group block aspect-[16/10] overflow-hidden bg-matriz-gray rounded-lg border border-white/10 shadow-2xl transition-all duration-300 hover:border-matriz-purple hover:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
+                >
+                  <img 
+                    key={activeProject.id}
+                    src={activeProject.imageUrl} 
+                    alt={activeProject.title} 
+                    className="w-full h-full object-cover animate-fade-in transition-transform duration-500 group-hover:scale-105"
+                  />
+                  
+                  {/* Subtle glow effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-lg pointer-events-none"></div>
+                </a>
             </div>
             </div>
         )}
