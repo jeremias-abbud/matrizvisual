@@ -90,8 +90,9 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
         <div className="relative w-full h-full flex items-center justify-center">
           <img 
             src={fullscreenImage!} 
-            alt={`Fullscreen image ${project.title}`} 
+            alt={`Visualização em tela cheia do projeto ${project.title}`} 
             className="max-w-full max-h-full object-contain" 
+            decoding="async"
           />
         </div>
         
@@ -132,6 +133,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                     alt={project.title} 
                     className="w-full h-full object-contain cursor-pointer" 
                     onClick={(e) => openFullscreen(e, 0)}
+                    decoding="async"
                 />
                 <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-0 group-hover:opacity-100 flex items-center gap-2" title="Ver em tela cheia">
                   <Maximize size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Expandir</span>
@@ -163,7 +165,13 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                             onClick={(e) => openFullscreen(e, idx + 1)} 
                             className="relative flex-shrink-0 w-32 h-20 rounded-sm overflow-hidden border-2 border-transparent hover:border-matriz-purple/50 bg-black group"
                         >
-                          <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                          <img 
+                            src={img} 
+                            alt={`Detalhe do projeto ${project.title} - Imagem ${idx + 1}`} 
+                            loading="lazy" 
+                            decoding="async" 
+                            className="w-full h-full object-cover" 
+                          />
                           <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                             <Maximize size={24} className="text-white" />
                           </div>

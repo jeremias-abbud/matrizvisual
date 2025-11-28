@@ -225,6 +225,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                         alt={`Logotipo criado para ${logo.title} - ${logo.industry || 'Design Gráfico'}`}
                         className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
+                        decoding="async"
                     />
                     
                     <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2 z-20">

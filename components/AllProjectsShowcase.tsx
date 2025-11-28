@@ -132,6 +132,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                       src={project.imageUrl} 
                       alt={`Projeto de ${project.category}: ${project.title} - ${project.industry || 'Matriz Visual'}`}
                       loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-contain bg-matriz-black p-2 transition-transform duration-700 group-hover:scale-110"
                       />
                       {/* Gradient Overlay */}
