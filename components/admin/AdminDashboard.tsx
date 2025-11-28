@@ -5,11 +5,12 @@ import Login from './Login';
 import ProjectManager from './ProjectManager';
 import LogoManager from './LogoManager';
 import SiteAssetsManager from './SiteAssetsManager';
-import { LogOut, LayoutGrid, Palette, ArrowLeft, Grid } from 'lucide-react';
+import OptimizationManager from './OptimizationManager';
+import { LogOut, LayoutGrid, Palette, ArrowLeft, Grid, Zap } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'projects' | 'logos' | 'assets' | 'settings'>('projects');
+  const [activeTab, setActiveTab] = useState<'projects' | 'logos' | 'assets' | 'optimization' | 'settings'>('projects');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -71,6 +72,12 @@ const AdminDashboard: React.FC = () => {
             >
                 <Palette size={20} /> Visual do Site
             </button>
+            <button 
+                onClick={() => setActiveTab('optimization')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'optimization' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            >
+                <Zap size={20} /> Otimização
+            </button>
         </nav>
 
         <div className="p-4 border-t border-white/10">
@@ -98,6 +105,7 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'projects' && <ProjectManager />}
             {activeTab === 'logos' && <LogoManager />}
             {activeTab === 'assets' && <SiteAssetsManager />}
+            {activeTab === 'optimization' && <OptimizationManager />}
             {activeTab === 'settings' && <div>Configurações em desenvolvimento...</div>}
         </div>
       </main>
