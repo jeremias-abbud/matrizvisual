@@ -46,8 +46,9 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-matriz-black flex flex-col md:flex-row text-white">
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-matriz-dark border-r border-white/10 flex flex-col">
-        <div className="p-6 border-b border-white/10">
-             <h1 className="font-display font-bold text-xl text-white">Matriz Visual</h1>
+        <div className="p-6 border-b border-white/10 flex flex-col justify-center min-h-[80px]">
+             {/* TEXT ONLY HEADER - No Image */}
+             <h1 className="font-display font-bold text-xl text-white tracking-wide">Matriz Visual</h1>
              <p className="text-xs text-matriz-purple font-bold uppercase tracking-widest mt-1">Painel Admin</p>
         </div>
         
@@ -70,14 +71,6 @@ const AdminDashboard: React.FC = () => {
             >
                 <Palette size={20} /> Visual do Site
             </button>
-            {/* 
-            <button 
-                onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${activeTab === 'settings' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
-            >
-                <Settings size={20} /> Configurações
-            </button>
-            */}
         </nav>
 
         <div className="p-4 border-t border-white/10">
