@@ -167,12 +167,18 @@ ${formData.details}`;
       <div className="border-t border-white/10 bg-black py-8">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-center items-center gap-6 text-center">
           <div className="flex flex-col md:flex-row items-center gap-2">
-             <img 
-               src={footerLogo?.image_url} 
-               alt="Matriz Visual" 
-               style={{ height: logoStyles.height || '2rem' }}
-               className="w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
-             />
+             {logoStyles.display_mode === 'text' && logoStyles.custom_text ? (
+                <h3 className="font-display text-xl font-bold text-gray-400 hover:text-white transition-colors">
+                  {logoStyles.custom_text}
+                </h3>
+             ) : (
+                <img 
+                  src={footerLogo?.image_url} 
+                  alt="Matriz Visual" 
+                  style={{ height: logoStyles.height || '2rem' }}
+                  className="w-auto object-contain opacity-60 hover:opacity-100 transition-opacity"
+                />
+             )}
             <span className="text-xs text-gray-500 md:ml-4 mt-2 md:mt-0">© {new Date().getFullYear()}. Todos os direitos reservados.</span>
           </div>
         </div>
