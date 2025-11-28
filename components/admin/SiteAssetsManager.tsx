@@ -4,7 +4,7 @@ import { Upload, RefreshCw, Save, Sliders, Monitor, Smartphone, Moon, Sun, Image
 import { useSiteAssets } from '../../src/hooks/useSiteAssets';
 import type { SiteAsset } from '../../src/hooks/useSiteAssets';
 
-type AssetKey = 'logo_navbar' | 'logo_hero' | 'logo_footer' | 'favicon' | 'about_img_1' | 'about_img_2' | 'social_share';
+type AssetKey = 'logo_navbar' | 'logo_hero' | 'favicon' | 'about_img_1' | 'about_img_2' | 'social_share';
 
 const SiteAssetsManager: React.FC = () => {
   const { assetsMap, loading, refreshAssets } = useSiteAssets();
@@ -165,7 +165,6 @@ const SiteAssetsManager: React.FC = () => {
   const TABS = [
     { id: 'navbar', label: 'Navbar', icon: <Navigation size={18} /> },
     { id: 'hero', label: 'Principal (Hero)', icon: <Star size={18} /> },
-    { id: 'footer', label: 'Rodapé', icon: <Box size={18} /> },
     { id: 'about', label: 'Sobre', icon: <ImageIcon size={18} /> },
     { id: 'other', label: 'Outros', icon: <Link2 size={18} /> },
   ];
@@ -210,68 +209,6 @@ const SiteAssetsManager: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                          {renderUploader('logo_hero')}
                          {renderStyleEditor('logo_hero', ['height', 'glow'])}
-                    </div>
-                )}
-                {activeTab === 'footer' && (
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                         {/* Conditional Uploader */}
-                         {localAssets.logo_footer?.style_config?.display_mode !== 'text' && renderUploader('logo_footer')}
-
-                         {/* Style and Mode Editor */}
-                         <div className="bg-matriz-dark border border-white/10 p-6 rounded-lg space-y-6">
-                           <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-2">Exibição no Rodapé</h3>
-
-                           {/* Display Mode Toggle */}
-                           <div className="space-y-2">
-                               <label className="text-xs uppercase font-bold text-gray-400 block">Tipo de Logo</label>
-                               <div className="flex bg-black rounded-md p-1 border border-white/10">
-                                   <button
-                                       onClick={() => handleStyleChange('logo_footer', 'display_mode', 'image')}
-                                       className={`flex-1 py-2 text-sm rounded transition-colors ${localAssets.logo_footer?.style_config?.display_mode !== 'text' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/10'}`}
-                                   >
-                                       Imagem
-                                   </button>
-                                   <button
-                                       onClick={() => handleStyleChange('logo_footer', 'display_mode', 'text')}
-                                       className={`flex-1 py-2 text-sm rounded transition-colors ${localAssets.logo_footer?.style_config?.display_mode === 'text' ? 'bg-matriz-purple text-white' : 'text-gray-400 hover:bg-white/10'}`}
-                                   >
-                                       Texto
-                                   </button>
-                               </div>
-                           </div>
-
-                           {/* Conditional Fields */}
-                           {localAssets.logo_footer?.style_config?.display_mode === 'text' ? (
-                               <div className="space-y-3 animate-fade-in">
-                                   <label className="text-xs uppercase font-bold text-gray-400 block">Texto Personalizado</label>
-                                   <input 
-                                       type="text" 
-                                       value={localAssets.logo_footer?.style_config?.custom_text || ''} 
-                                       onChange={(e) => handleStyleChange('logo_footer', 'custom_text', e.target.value)} 
-                                       className="bg-black border border-white/10 rounded px-3 py-2 text-white text-sm w-full" 
-                                       placeholder="Ex: Matriz Visual" 
-                                   />
-                               </div>
-                           ) : (
-                               <div className="space-y-3 animate-fade-in">
-                                   <label className="text-xs uppercase font-bold text-gray-400 block">Altura do Logo (Imagem)</label>
-                                   <div className="flex items-center gap-3">
-                                       <Box size={16} className="text-gray-500 shrink-0" />
-                                       <input 
-                                           type="text" 
-                                           value={localAssets.logo_footer?.style_config?.height || ''} 
-                                           onChange={(e) => handleStyleChange('logo_footer', 'height', e.target.value)} 
-                                           className="bg-black border border-white/10 rounded px-3 py-2 text-white text-sm w-full" 
-                                           placeholder="Ex: 2rem ou 32px" 
-                                       />
-                                   </div>
-                               </div>
-                           )}
-                           
-                           <button onClick={() => saveAssetConfig('logo_footer')} disabled={saving} className="w-full mt-4 py-2 bg-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-matriz-purple flex items-center justify-center gap-2 rounded-sm transition-colors">
-                              <Save size={14} /> {saving ? 'Salvando...' : 'Salvar Configuração'}
-                           </button>
-                         </div>
                     </div>
                 )}
                 {activeTab === 'about' && (
