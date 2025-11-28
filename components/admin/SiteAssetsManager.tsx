@@ -26,16 +26,15 @@ const SiteAssetsManager: React.FC = () => {
     setUploadingKey(key);
     const publicUrl = await uploadImage(file);
     if (publicUrl) {
-      const assetToUpdate = localAssets[key];
-      const updatedAsset = { ...assetToUpdate, image_url: publicUrl };
-      
       const { error } = await supabase
         .from('site_assets')
         .update({ image_url: publicUrl })
         .eq('key', key);
         
       if (!error) {
-        setLocalAssets(prev => ({ ...prev, [key]: updatedAsset }));
+        // Força a busca de todos os assets novamente, atualizando o estado global.
+        // O useEffect que depende de `assetsMap` irá atualizar o `localAssets` automaticamente.
+        await refreshAssets();
       } else {
         alert('Erro ao salvar imagem.');
       }
