@@ -203,11 +203,22 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                         <h3 className="text-xl font-display font-bold text-white mb-2">{project.title}</h3>
                         <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
                         
-                        <button 
-                        className="mt-2 inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider"
-                        >
-                        Ver Detalhes <ArrowRight size={16} />
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button className="inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider">
+                                Ver Detalhes <ArrowRight size={16} />
+                            </button>
+                            {project.category === ProjectCategory.WEB && project.videoUrl && (
+                                <a 
+                                    href={project.videoUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-matriz-purple/10 border border-matriz-purple text-matriz-purple hover:bg-matriz-purple hover:text-white rounded-sm transition-colors text-xs uppercase font-bold"
+                                >
+                                    <Globe size={14} /> Acessar Site
+                                </a>
+                            )}
+                        </div>
                     </div>
                     </div>
                 </div>

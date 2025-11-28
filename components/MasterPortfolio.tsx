@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
-import WebShowcase from './WebShowcase';
 import AllProjectsShowcase from './AllProjectsShowcase'; // Novo componente da vitrine
 import ProjectDetailModal from './ProjectDetailModal'; // Import the new modal
 import { Project, ProjectCategory } from '../types';
@@ -79,9 +78,7 @@ const MasterPortfolio: React.FC = () => {
               )}
 
               {activeTab === 'sites' && (
-                  <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-white/5 overflow-hidden">
-                      <WebShowcase headless />
-                  </div>
+                  <Portfolio headless forcedCategory={ProjectCategory.WEB} onProjectClick={handleProjectClick} />
               )}
 
               {activeTab === 'design' && (
