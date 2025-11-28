@@ -30,22 +30,22 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         const { data: newLogosData, error: newLogosError } = await supabase
           .from('projects')
           .select('id, title, image_url, industry, created_at, display_order')
-          .eq('category', ProjectCategory.LOGO)
-          .order('display_order', { ascending: true, nullsFirst: true })
-          .order('created_at', { ascending: false });
+          .eq('category', ProjectCategory.LOGO);
+          // Don't sort here, we will sort the combined list
 
         if (newLogosError) throw newLogosError;
         
         const formattedNewLogos = (newLogosData || []).map((item: any) => ({
             ...item,
-            imageUrl: item.image_url, // Ensure field name consistency
-        })) as Project[];
+            imageUrl: item.image_url,
+            isLegacy: false
+        })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
         // 2. Fetch OLD logos from 'logos' table
+        // Try to fetch created_at if it exists, otherwise ignore
         const { data: oldLogosData, error: oldLogosError } = await supabase
             .from('logos')
-            .select('id, name, url, industry, display_order')
-            .order('display_order', { ascending: true });
+            .select('id, name, url, industry, display_order, created_at');
 
         if (oldLogosError) throw oldLogosError;
 
@@ -56,11 +56,36 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
             imageUrl: item.url,
             industry: item.industry,
             display_order: item.display_order,
-            category: ProjectCategory.LOGO
-        })) as Project[];
+            created_at: item.created_at,
+            category: ProjectCategory.LOGO,
+            isLegacy: true
+        })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
-        // 3. Combine both lists
+        // 3. Combine and Sort Client-Side
+        // This ensures that "new" logos (added via old manager with display_order=min-1) 
+        // actually appear at the top, regardless of which table they came from.
         const combinedLogos = [...formattedNewLogos, ...formattedOldLogos];
+
+        combinedLogos.sort((a, b) => {
+             // Primary Sort: Display Order (Ascending)
+             // Treat null display_order as "large number" to put at end, or "small" to put at top?
+             // Since old manager uses display_order for position, we respect it.
+             // Projects (new system) default to null. 
+             // If we want projects to be sorted by date, we treat display_order as equal if both null.
+             
+             const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
+             const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
+             
+             if (orderA !== orderB) {
+                 return orderA - orderB;
+             }
+
+             // Secondary Sort: Created At (Descending) - Newest First
+             const dateA = new Date(a.created_at || 0).getTime();
+             const dateB = new Date(b.created_at || 0).getTime();
+             
+             return dateB - dateA;
+        });
 
         if (combinedLogos.length > 0) {
           setLogos(combinedLogos);
@@ -183,10 +208,12 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     <div 
                     key={logo.id} 
                     onClick={() => openModal(index)}
-                    className="group relative aspect-square bg-matriz-dark border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer"
+                    className="group relative aspect-square bg-matriz-dark/50 border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm"
                     >
-                    <div className="absolute inset-0 bg-radial-gradient from-matriz-purple/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
+                    {/* Efeito de tecla/vidro */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
+
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
                         <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-[0_0_10px_rgba(139,92,246,0.5)]">
                             <ZoomIn size={16} />
@@ -200,12 +227,15 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                         loading="lazy"
                     />
                     
-                    <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2">
+                    <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2 z-20">
                         <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate drop-shadow-md">{logo.title}</span>
                         {logo.industry && (
                             <span className="text-[8px] uppercase tracking-wide text-gray-400 block truncate">{logo.industry}</span>
                         )}
                     </div>
+                    
+                    {/* Borda Iluminada */}
+                    <div className="absolute inset-0 border border-matriz-purple/0 group-hover:border-matriz-purple/50 transition-colors duration-300 rounded-sm pointer-events-none"></div>
                     </div>
                 ))}
                 </div>

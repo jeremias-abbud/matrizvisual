@@ -108,18 +108,27 @@ const LogoManager: React.FC = () => {
             return;
         }
 
+        // Lógica para colocar no topo: Encontrar o menor display_order atual e subtrair 1
+        // Se a lista estiver vazia, começa com 1000 (número arbitrário seguro)
+        const currentMinOrder = logos.length > 0 
+            ? Math.min(...logos.map(l => l.display_order)) 
+            : 1000;
+        
+        const newOrder = currentMinOrder - 1;
+
         const { data, error } = await supabase
             .from('logos')
             .insert([{
                 name,
                 industry: industry || null,
                 url: imageUrl,
-                display_order: logos.length + 1
+                display_order: newOrder
             }])
             .select();
 
         if (!error && data) {
-            setLogos(prev => [...prev, data[0]]);
+            // Adiciona no início da lista local para feedback imediato
+            setLogos(prev => [data[0], ...prev]);
             resetForm();
         } else {
             console.error(error);
@@ -158,6 +167,7 @@ const LogoManager: React.FC = () => {
   const saveOrder = async () => {
     setUploading(true);
     
+    // Normaliza os orders para 1, 2, 3... ao salvar, para manter limpo
     const updates = logos.map((logo, index) => ({
         ...logo, 
         display_order: index + 1 
@@ -167,6 +177,7 @@ const LogoManager: React.FC = () => {
         const { error } = await supabase.from('logos').upsert(updates, { onConflict: 'id' });
         
         if (error) throw error;
+        setLogos(updates); // Atualiza estado local com os novos números normalizados
         setHasOrderChanged(false);
         setIsReordering(false);
     } catch (err) {
