@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Shield } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 import { smoothScrollTo } from '../src/lib/scroll';
+import { supabase } from '../src/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { assetsMap } = useSiteAssets();
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
 
   const navbarLogo = assetsMap.logo_navbar;
   const logoStyles = navbarLogo?.style_config || {};
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +39,12 @@ const Navbar: React.FC = () => {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setIsOpen(false);
+    
+    if (href === '#admin') {
+      window.location.hash = 'admin';
+      return;
+    }
+
     smoothScrollTo(e, href);
   };
 
@@ -76,6 +99,16 @@ const Navbar: React.FC = () => {
               {link.name}
             </a>
           ))}
+          {session && (
+             <a 
+              href="#admin" 
+              onClick={(e) => handleNavClick(e, '#admin')}
+              className="flex items-center gap-2 px-4 py-2 bg-yellow-500/10 border border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black transition-all duration-300 text-xs uppercase font-bold tracking-widest"
+            >
+              <Shield size={14} />
+              Admin
+            </a>
+          )}
           <a 
             href="#contact" 
             onClick={(e) => handleNavClick(e, '#contact')}
@@ -105,6 +138,16 @@ const Navbar: React.FC = () => {
                 {link.name}
               </a>
             ))}
+            {session && (
+              <a 
+                 href="#admin" 
+                 className="text-yellow-500 hover:text-yellow-400 py-3 border-b border-white/5 text-lg font-display tracking-wider cursor-pointer flex items-center gap-3"
+                 onClick={(e) => handleNavClick(e, '#admin')}
+               >
+                 <Shield size={20} />
+                 Painel Admin
+               </a>
+            )}
             <a 
               href="#contact" 
               onClick={(e) => handleNavClick(e, '#contact')}
