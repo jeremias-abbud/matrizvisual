@@ -20,16 +20,23 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
     const fetchLatest = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
+        
+        // 1. Buscar projetos gerais (Design, Video, Web)
+        const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
-          .order('created_at', { ascending: false }) // Pega os mais recentes primeiro
-          .limit(3); // Limita a 3 projetos
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-        if (error) throw error;
+        // 2. Buscar logotipos (tabela antiga/restaurada)
+        const { data: logosData } = await supabase
+          .from('logos')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-        if (data && data.length > 0) {
-          const formattedData = data.map((item: any) => ({
+        // Formatar Projetos
+        const formattedProjects = (projectsData || []).map((item: any) => ({
             id: item.id,
             title: item.title,
             category: item.category as ProjectCategory,
@@ -42,10 +49,31 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             longDescription: item.long_description,
             gallery: item.gallery,
             videoUrl: item.video_url,
-          }));
-          setLatestProjects(formattedData);
+            createdAt: new Date(item.created_at).getTime()
+        }));
+
+        // Formatar Logotipos para parecerem Projetos
+        const formattedLogos = (logosData || []).map((item: any) => ({
+            id: `logo_${item.id}`, // ID único para evitar conflito
+            title: item.name,
+            category: ProjectCategory.LOGO,
+            industry: item.industry,
+            imageUrl: item.url,
+            description: 'Projeto de identidade visual e design de logotipo.',
+            tags: ['Logotipo', 'Branding'],
+            client: item.name,
+            createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now()
+        }));
+
+        // 3. Juntar e Ordenar por Data (Mais recente primeiro)
+        const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
+            return b.createdAt - a.createdAt;
+        });
+
+        // Pegar apenas os 3 primeiros
+        if (allItems.length > 0) {
+          setLatestProjects(allItems.slice(0, 3));
         } else {
-          // Fallback para os 3 primeiros da lista mock
           setLatestProjects(MOCK_PROJECTS.slice(0, 3));
         }
       } catch (err) {

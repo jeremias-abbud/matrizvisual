@@ -121,7 +121,9 @@ const SiteAssetsManager: React.FC = () => {
                 <div className="space-y-3">
                     <label className="text-xs uppercase font-bold text-gray-400 block">Altura da Imagem (Logo)</label>
                     <div className="flex items-center gap-3">
-                        <Monitor size={16} className="text-gray-500 shrink-0" title="Desktop" />
+                        <span title="Desktop" className="shrink-0 flex items-center">
+                          <Monitor size={16} className="text-gray-500" />
+                        </span>
                         <input 
                             type="text" 
                             value={styles.height_desktop || ''} 
@@ -131,7 +133,9 @@ const SiteAssetsManager: React.FC = () => {
                         />
                     </div>
                     <div className="flex items-center gap-3">
-                        <Smartphone size={16} className="text-gray-500 shrink-0" title="Mobile" />
+                        <span title="Mobile" className="shrink-0 flex items-center">
+                          <Smartphone size={16} className="text-gray-500" />
+                        </span>
                         <input 
                             type="text" 
                             value={styles.height_mobile || ''} 
