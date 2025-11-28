@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://matrizvisual.com/sitemap.xml
+Sitemap: https://matrizvisual.com.br/sitemap.xml
