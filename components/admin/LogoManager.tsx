@@ -103,29 +103,7 @@ const LogoManager: React.FC = () => {
         }
 
     } else {
-        if (!imageUrl) {
-            alert('Selecione uma imagem para criar um novo logo.');
-            setUploading(false);
-            return;
-        }
-
-        // Definir display_order como o último + 1
-        const maxOrder = logos.length > 0 ? Math.max(...logos.map(l => l.display_order || 0)) : 0;
-
-        const { data, error } = await supabase.from('logos').insert([{
-            name,
-            industry: industry || null,
-            url: imageUrl,
-            display_order: maxOrder + 1,
-        }]).select();
-
-        if (!error && data) {
-            // Adiciona no final da lista local
-            setLogos([...logos, data[0]]);
-            resetForm();
-        } else {
-            alert('Erro ao criar logo.');
-        }
+       // This part is now disabled by removing the add button
     }
     
     setUploading(false);
@@ -212,15 +190,14 @@ const LogoManager: React.FC = () => {
                     >
                         <GripVertical size={18} /> Reordenar
                     </button>
-                    <button 
-                        onClick={() => { resetForm(); setShowForm(true); }}
-                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
-                    >
-                        <Plus size={18} /> Adicionar Novo
-                    </button>
                 </>
              )}
         </div>
+      </div>
+
+      <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 p-4 rounded-md mb-6 text-sm">
+        <p className="font-bold">Atenção:</p>
+        <p>Este painel serve apenas para gerenciar logotipos antigos. Para adicionar novos logotipos, por favor, use o <span className="font-bold">"Portfólio Geral"</span> e selecione a categoria "Logotipos".</p>
       </div>
 
       {showForm && (

@@ -34,7 +34,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
         const { data, error } = await supabase
           .from('projects')
           .select('*')
-          .order('display_order', { ascending: true });
+          .order('display_order', { ascending: true, nullsFirst: true })
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
 

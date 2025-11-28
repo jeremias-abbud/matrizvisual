@@ -3,35 +3,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
-import { LOGOS as MOCK_LOGOS, INDUSTRIES } from '../constants'; // Fallback
+import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { smoothScrollTo } from '../src/lib/scroll';
-
-interface LogoItem {
-  id: string;
-  name: string;
-  url: string;
-  industry?: string;
-  createdAt?: number;
-}
+import { Project, ProjectCategory } from '../types';
 
 interface LogoGridProps {
   headless?: boolean;
-  limit?: number; // Nova propriedade para limitar a quantidade
+  limit?: number;
 }
 
 const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
-  const INITIAL_COUNT = limit || 8; // Usa o limite se fornecido
-  const [logos, setLogos] = useState<LogoItem[]>([]);
+  const INITIAL_COUNT = limit || 8;
+  const [logos, setLogos] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [selectedLogoIndex, setSelectedLogoIndex] = useState<number | null>(null);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
 
-  const getMockLogos = () => MOCK_LOGOS.map(p => ({
-    id: p.id,
-    name: p.name,
-    url: p.url,
-  }));
+  const getMockLogos = () => MOCK_PROJECTS.filter(p => p.category === ProjectCategory.LOGO);
 
   useEffect(() => {
     async function fetchLogos() {
@@ -39,11 +28,12 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         setLoading(true);
 
         let query = supabase
-          .from('logos')
-          .select('id, name, url, created_at, industry')
-          .order('display_order', { ascending: true });
+          .from('projects')
+          .select('id, title, image_url, industry, created_at, display_order')
+          .eq('category', ProjectCategory.LOGO)
+          .order('display_order', { ascending: true, nullsFirst: true })
+          .order('created_at', { ascending: false });
         
-        // Aplica o limite se a prop for passada
         if (limit) {
           query = query.limit(limit);
         }
@@ -51,35 +41,31 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         const { data, error } = await query;
 
         if (error) throw error;
+        
+        const formattedData = (data || []).map((item: any) => ({
+            ...item,
+            imageUrl: item.image_url, // Ensure field name consistency
+        })) as Project[];
 
-        const normalizedProjects: LogoItem[] = (data || []).map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            url: item.url,
-            industry: item.industry,
-            createdAt: new Date(item.created_at).getTime(),
-        }));
-
-        if (normalizedProjects.length > 0) {
-          setLogos(normalizedProjects);
+        if (formattedData.length > 0) {
+          setLogos(formattedData);
         } else {
           setLogos(getMockLogos());
         }
       } catch (err) {
-        console.error('Error fetching logos from logos table:', err);
+        console.error('Error fetching logos from projects table:', err);
         setLogos(getMockLogos());
       } finally {
         setLoading(false);
       }
     }
     fetchLogos();
-  }, [limit]); // Adiciona limit como dependência
+  }, [limit]);
   
   const filteredLogos = logos.filter(logo => {
     return activeIndustry === '' || logo.industry === activeIndustry;
   });
   
-  // Se houver um limite, os logos visíveis são todos os filtrados (pois já foram limitados na query)
   const visibleLogos = limit ? filteredLogos : filteredLogos.slice(0, visibleCount);
   const hasMore = visibleCount < filteredLogos.length;
   const canShowLess = visibleCount > INITIAL_COUNT;
@@ -148,7 +134,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
           </div>
         )}
 
-        {/* O filtro é ocultado quando há um limite para não confundir o usuário */}
         {!limit && (
            <div className={`flex justify-end mb-8 ${headless ? 'w-full' : ''}`}>
              <div className="w-full md:w-auto relative group min-w-[240px]">
@@ -194,14 +179,14 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     </div>
 
                     <img 
-                        src={logo.url} 
-                        alt={logo.name} 
+                        src={logo.imageUrl} 
+                        alt={logo.title} 
                         className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" 
                         loading="lazy"
                     />
                     
                     <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2">
-                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate">{logo.name}</span>
+                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate">{logo.title}</span>
                         {logo.industry && (
                             <span className="text-[8px] uppercase tracking-wide text-gray-500 block truncate">{logo.industry}</span>
                         )}
@@ -223,7 +208,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     </div>
                 )}
                 
-                {/* Oculta botões de paginação quando há limite */}
                 {!limit && (hasMore || canShowLess) && (
                 <div className="mt-12 flex justify-center gap-4 animate-fade-in">
                     {hasMore && (
@@ -274,15 +258,15 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                 <div className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center">
                     <img 
                         key={selectedLogoIndex}
-                        src={filteredLogos[selectedLogoIndex].url} 
-                        alt={filteredLogos[selectedLogoIndex].name} 
+                        src={filteredLogos[selectedLogoIndex].imageUrl} 
+                        alt={filteredLogos[selectedLogoIndex].title} 
                         className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] animate-fade-in"
                     />
                 </div>
 
                 <div className="mt-8 text-center">
                     <h3 className="font-display text-2xl md:text-3xl font-bold text-white">
-                        {filteredLogos[selectedLogoIndex].name}
+                        {filteredLogos[selectedLogoIndex].title}
                     </h3>
                     <div className="flex flex-col items-center gap-1 mt-2">
                         <span className="text-matriz-purple text-xs uppercase tracking-[0.3em] font-bold block">

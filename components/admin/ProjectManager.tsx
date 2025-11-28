@@ -54,7 +54,8 @@ const ProjectManager: React.FC = () => {
     const { data } = await supabase
         .from('projects')
         .select('*')
-        .order('display_order', { ascending: true });
+        .order('display_order', { ascending: true, nullsFirst: true })
+        .order('created_at', { ascending: false });
         
     if (data) setProjects(data);
     setLoading(false);
@@ -158,9 +159,7 @@ const ProjectManager: React.FC = () => {
             return;
         }
       
-        const maxOrder = projects.length > 0 ? Math.max(...projects.map(p => p.display_order || 0)) : 0;
-
-        const { data, error } = await supabase.from('projects').insert([{
+        const newProjectData = {
             title: formData.title,
             category: formData.category,
             industry: formData.industry || null,
@@ -171,11 +170,16 @@ const ProjectManager: React.FC = () => {
             image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project',
             video_url: formData.videoUrl || null,
             gallery: galleryArray.length > 0 ? galleryArray : null,
-            display_order: maxOrder + 1,
-        }]).select();
+            // display_order is intentionally omitted to be null by default
+        };
+
+        const { data, error } = await supabase
+            .from('projects')
+            .insert([newProjectData])
+            .select();
 
         if (!error && data) {
-            setProjects([...projects, data[0]]);
+            setProjects(prev => [data[0], ...prev]); // Add to the beginning of the list
             resetForm();
         } else {
             alert('Erro ao salvar projeto.');
