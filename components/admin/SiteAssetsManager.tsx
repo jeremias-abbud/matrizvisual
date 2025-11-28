@@ -181,12 +181,12 @@ const SiteAssetsManager: React.FC = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-white/10 mb-8">
+        <div className="flex border-b border-white/10 mb-8 overflow-x-auto">
             {TABS.map(tab => (
                 <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors ${
+                    className={`flex items-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider border-b-2 transition-colors flex-shrink-0 ${
                         activeTab === tab.id
                         ? 'border-matriz-purple text-white'
                         : 'border-transparent text-gray-500 hover:text-white hover:border-white/20'
@@ -216,7 +216,28 @@ const SiteAssetsManager: React.FC = () => {
                 {activeTab === 'footer' && (
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                          {renderUploader('logo_footer')}
-                         {/* Add style editor if needed */}
+                         <div className="bg-matriz-dark border border-white/10 p-6 rounded-lg space-y-4">
+                           <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">Logo do Rodapé - Estilos</h3>
+                           <div className="space-y-3">
+                               <label className="text-xs uppercase font-bold text-gray-400 block">Altura do Logo</label>
+                               <div className="flex items-center gap-3">
+                                   <Box size={16} className="text-gray-500 shrink-0" />
+                                   <input 
+                                       type="text" 
+                                       value={localAssets.logo_footer?.style_config?.height || ''} 
+                                       onChange={(e) => handleStyleChange('logo_footer', 'height', e.target.value)} 
+                                       className="bg-black border border-white/10 rounded px-3 py-2 text-white text-sm w-full" 
+                                       placeholder="Ex: 2rem ou 32px" 
+                                   />
+                               </div>
+                               <p className="text-xs text-gray-500 pt-1">
+                                   Use unidades como 'rem' ou 'px'. Deixe em branco para o padrão.
+                               </p>
+                           </div>
+                           <button onClick={() => saveAssetConfig('logo_footer')} disabled={saving} className="w-full mt-4 py-2 bg-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-matriz-purple flex items-center justify-center gap-2 rounded-sm transition-colors">
+                              <Save size={14} /> {saving ? 'Salvando...' : 'Salvar Estilos'}
+                           </button>
+                         </div>
                     </div>
                 )}
                 {activeTab === 'about' && (
