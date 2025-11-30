@@ -1,15 +1,18 @@
-
 import React, { useState } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Zap, CheckCircle, RefreshCw, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Zap, CheckCircle, RefreshCw, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { convertWebPToPNG } from '../../src/lib/imageOptimizer';
 
 interface AssetToOptimize {
   table: 'projects' | 'logos' | 'site_assets';
-  id: string;
+  id: string; // ID ou Key do registro
   title: string;
   currentUrl: string;
   isWebP: boolean;
   status: 'pending' | 'processing' | 'done' | 'error';
+  // Campos extras para atualização de arrays (galeria)
+  itemIndex?: number; // Índice do item na galeria
+  originalRecord?: any; // O registro original completo
 }
 
 const OptimizationManager: React.FC = () => {
@@ -35,23 +38,16 @@ const OptimizationManager: React.FC = () => {
         projects.forEach(p => {
           if (p.image_url) {
             foundAssets.push({
-              table: 'projects',
-              id: p.id,
-              title: `Projeto: ${p.title} (Capa)`,
-              currentUrl: p.image_url,
-              isWebP: p.image_url.toLowerCase().includes('.webp'),
-              status: 'pending'
+              table: 'projects', id: p.id, title: `Projeto: ${p.title} (Capa)`,
+              currentUrl: p.image_url, isWebP: p.image_url.toLowerCase().endsWith('.webp'), status: 'pending'
             });
           }
           if (p.gallery && Array.isArray(p.gallery)) {
             p.gallery.forEach((url: string, idx: number) => {
                foundAssets.push({
-                table: 'projects',
-                id: `${p.id}_gallery_${idx}`, // Virtual ID for gallery items
-                title: `Projeto: ${p.title} (Galeria #${idx + 1})`,
-                currentUrl: url,
-                isWebP: url.toLowerCase().includes('.webp'),
-                status: 'pending'
+                table: 'projects', id: p.id, title: `Projeto: ${p.title} (Galeria #${idx + 1})`,
+                currentUrl: url, isWebP: url.toLowerCase().endsWith('.webp'), status: 'pending',
+                itemIndex: idx, originalRecord: p
               });
             });
           }
@@ -64,12 +60,8 @@ const OptimizationManager: React.FC = () => {
         logos.forEach(l => {
           if (l.url) {
             foundAssets.push({
-              table: 'logos',
-              id: l.id,
-              title: `Logo: ${l.name}`,
-              currentUrl: l.url,
-              isWebP: l.url.toLowerCase().includes('.webp'),
-              status: 'pending'
+              table: 'logos', id: l.id, title: `Logo: ${l.name}`,
+              currentUrl: l.url, isWebP: l.url.toLowerCase().endsWith('.webp'), status: 'pending'
             });
           }
         });
@@ -81,12 +73,8 @@ const OptimizationManager: React.FC = () => {
         siteAssets.forEach(a => {
           if (a.image_url) {
             foundAssets.push({
-              table: 'site_assets',
-              id: a.key,
-              title: `Asset: ${a.label}`,
-              currentUrl: a.image_url,
-              isWebP: a.image_url.toLowerCase().includes('.webp'),
-              status: 'pending'
+              table: 'site_assets', id: a.key, title: `Asset: ${a.label}`,
+              currentUrl: a.image_url, isWebP: a.image_url.toLowerCase().endsWith('.webp'), status: 'pending'
             });
           }
         });
@@ -95,7 +83,7 @@ const OptimizationManager: React.FC = () => {
       setAssets(foundAssets);
       addLog(`Varredura completa. Encontrados: ${foundAssets.length} itens.`);
       const nonOptimized = foundAssets.filter(a => !a.isWebP).length;
-      addLog(`Itens fora do padrão WebP: ${nonOptimized}`);
+      addLog(`Itens que podem ser otimizados (não-WebP): ${nonOptimized}`);
 
     } catch (err) {
       console.error(err);
@@ -105,88 +93,77 @@ const OptimizationManager: React.FC = () => {
     }
   };
 
-  const processAsset = async (asset: AssetToOptimize) => {
-    // Se for item de galeria, a lógica é complexa (precisaria atualizar array), vamos simplificar para Capas e Logos por enquanto
-    if (asset.id.includes('_gallery_')) {
-        addLog(`Ignorando galeria por segurança: ${asset.title}`);
-        return 'skipped';
-    }
-
+  const processAsset = async (asset: AssetToOptimize, reverseToPng = false) => {
+     setAssets(prev => prev.map(a => a.currentUrl === asset.currentUrl ? { ...a, status: 'processing' } : a));
+    
     try {
-      addLog(`Baixando: ${asset.title}...`);
-      
-      // 1. Baixar imagem original
-      const response = await fetch(asset.currentUrl);
-      const blob = await response.blob();
-      const file = new File([blob], "temp_image", { type: blob.type });
+        addLog(`Processando: ${asset.title}...`);
+        
+        let fileToUpload: File | null;
+        if (reverseToPng) {
+            addLog('Revertendo para PNG...');
+            fileToUpload = await convertWebPToPNG(asset.currentUrl);
+        } else {
+            addLog('Otimizando para WebP...');
+            const response = await fetch(asset.currentUrl);
+            const blob = await response.blob();
+            fileToUpload = new File([blob], "temp_image", { type: blob.type });
+        }
+        
+        if (!fileToUpload) throw new Error("Falha ao preparar arquivo.");
 
-      // 2. Upload (A função uploadImage já roda o otimizador e converte para WebP)
-      addLog(`Otimizando e Convertendo: ${asset.title}...`);
-      const newUrl = await uploadImage(file);
+        // Upload, pulando otimização se for reversão para PNG
+        const newUrl = await uploadImage(fileToUpload, reverseToPng);
+        if (!newUrl) throw new Error("Falha no upload");
 
-      if (!newUrl) throw new Error("Falha no upload");
+        addLog(`Atualizando banco de dados...`);
+        let error;
 
-      // 3. Atualizar Banco
-      addLog(`Atualizando Banco de Dados...`);
-      const { error } = await supabase
-        .from(asset.table)
-        .update(
-            asset.table === 'site_assets' 
-            ? { image_url: newUrl } 
-            : asset.table === 'logos' 
-                ? { url: newUrl } 
-                : { image_url: newUrl } // projects
-        )
-        .eq(asset.table === 'site_assets' ? 'key' : 'id', asset.id);
+        // Lógica de atualização
+        if (asset.itemIndex !== undefined && asset.originalRecord) { // É item de galeria
+            const updatedGallery = [...asset.originalRecord.gallery];
+            updatedGallery[asset.itemIndex] = newUrl;
+            ({ error } = await supabase.from('projects').update({ gallery: updatedGallery }).eq('id', asset.id));
+        } else { // É um campo simples
+            const fieldToUpdate = asset.table === 'logos' ? 'url' : 'image_url';
+            ({ error } = await supabase.from(asset.table).update({ [fieldToUpdate]: newUrl }).eq(asset.table === 'site_assets' ? 'key' : 'id', asset.id));
+        }
 
-      if (error) throw error;
-
-      return 'success';
-
+        if (error) throw error;
+        
+        addLog(`Sucesso: ${asset.title}`);
+        setAssets(prev => prev.map(a => a.currentUrl === asset.currentUrl ? { ...a, status: 'done', isWebP: !reverseToPng, currentUrl: newUrl } : a));
     } catch (err) {
-      console.error(err);
-      addLog(`Erro ao processar ${asset.title}`);
-      return 'error';
+        console.error(err);
+        addLog(`Erro ao processar ${asset.title}`);
+        setAssets(prev => prev.map(a => a.currentUrl === asset.currentUrl ? { ...a, status: 'error' } : a));
     }
   };
-
-  const runOptimization = async () => {
-    if (!window.confirm("Isso irá baixar, converter para WebP e re-enviar as imagens selecionadas. Deseja continuar? Mantenha esta janela aberta.")) return;
+  
+  const runOptimizationBatch = async () => {
+    const toOptimize = assets.filter(a => !a.isWebP);
+    if (toOptimize.length === 0 || !window.confirm(`Isso irá converter ${toOptimize.length} imagem(ns) para WebP. Deseja continuar?`)) return;
 
     setProcessing(true);
-    const toOptimize = assets.filter(a => !a.isWebP && !a.id.includes('_gallery_')); // Filtra o que precisa
-    
-    addLog(`Iniciando lote de ${toOptimize.length} imagens...`);
-
-    for (let i = 0; i < toOptimize.length; i++) {
-      const asset = toOptimize[i];
-      
-      setAssets(prev => prev.map(a => a.id === asset.id ? { ...a, status: 'processing' } : a));
-      
-      const result = await processAsset(asset);
-      
-      setAssets(prev => prev.map(a => a.id === asset.id ? { 
-          ...a, 
-          status: result === 'success' ? 'done' : 'error',
-          isWebP: result === 'success' ? true : a.isWebP 
-      } : a));
+    addLog(`Iniciando lote de otimização para ${toOptimize.length} imagens...`);
+    for (const asset of toOptimize) {
+        await processAsset(asset, false);
     }
-
     setProcessing(false);
-    addLog('Processo finalizado.');
+    addLog('Processo de otimização em lote finalizado.');
   };
 
-  const pendingCount = assets.filter(a => !a.isWebP && !a.id.includes('_gallery_')).length;
+  const toOptimizeCount = assets.filter(a => !a.isWebP).length;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
             <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
-                <Zap className="text-yellow-500" /> Otimizador de Egress
+                <Zap className="text-yellow-500" /> Otimizador de Imagens
             </h2>
             <p className="text-sm text-gray-400 mt-1">
-                Converte imagens antigas para WebP. Isso reduz drasticamente o consumo de banda (Egress) do Supabase.
+                Converta imagens para WebP para economizar banda ou reverta para PNG se necessário.
             </p>
         </div>
         <div className="flex gap-3">
@@ -197,20 +174,19 @@ const OptimizationManager: React.FC = () => {
              >
                 <RefreshCw size={16} className={scanning ? 'animate-spin' : ''} /> Escanear Imagens
              </button>
-             {pendingCount > 0 && (
+             {toOptimizeCount > 0 && (
                  <button 
-                    onClick={runOptimization}
+                    onClick={runOptimizationBatch}
                     disabled={processing}
                     className="flex items-center gap-2 px-4 py-2 rounded bg-matriz-purple text-white font-bold uppercase text-xs hover:bg-purple-600 shadow-[0_0_15px_rgba(139,92,246,0.4)]"
                  >
-                    <Zap size={16} /> Otimizar {pendingCount} Itens
+                    <Zap size={16} /> Otimizar {toOptimizeCount} Itens
                  </button>
              )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* List Area */}
           <div className="lg:col-span-2 bg-matriz-dark border border-white/10 rounded-lg p-4 h-[600px] overflow-y-auto custom-scrollbar">
                {assets.length === 0 ? (
                    <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4 opacity-50">
@@ -222,14 +198,19 @@ const OptimizationManager: React.FC = () => {
                        {assets.map((asset, idx) => (
                            <div key={`${asset.id}-${idx}`} className="flex items-center justify-between p-3 bg-black/40 rounded border border-white/5 text-sm">
                                <div className="flex items-center gap-3 overflow-hidden">
-                                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${asset.isWebP ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${asset.isWebP ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                                    <span className="truncate max-w-[200px] md:max-w-md text-gray-300" title={asset.title}>{asset.title}</span>
-                                   <span className="text-xs px-2 py-0.5 bg-white/5 rounded text-gray-500 uppercase">{asset.table}</span>
                                </div>
                                <div className="flex items-center gap-4">
-                                   <span className={`text-xs font-bold uppercase ${asset.isWebP ? 'text-green-500' : 'text-yellow-500'}`}>
-                                       {asset.isWebP ? 'WebP (OK)' : 'JPG/PNG'}
-                                   </span>
+                                   {asset.isWebP ? (
+                                     <button onClick={() => processAsset(asset, true)} disabled={processing} className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">
+                                       <ArrowLeft size={12}/> Reverter p/ PNG
+                                     </button>
+                                   ) : (
+                                     <button onClick={() => processAsset(asset, false)} disabled={processing} className="text-xs text-green-400 hover:text-green-300 disabled:opacity-50">
+                                       Otimizar p/ WebP
+                                     </button>
+                                   )}
                                    {asset.status === 'processing' && <RefreshCw size={14} className="animate-spin text-matriz-purple" />}
                                    {asset.status === 'done' && <CheckCircle size={14} className="text-green-500" />}
                                    {asset.status === 'error' && <AlertTriangle size={14} className="text-red-500" />}
@@ -240,7 +221,6 @@ const OptimizationManager: React.FC = () => {
                )}
           </div>
 
-          {/* Logs Area */}
           <div className="bg-black border border-white/10 rounded-lg p-4 h-[600px] overflow-y-auto custom-scrollbar font-mono text-xs">
               <h3 className="text-gray-400 uppercase font-bold mb-4 sticky top-0 bg-black pb-2 border-b border-white/10">Logs do Processo</h3>
               <div className="space-y-1">

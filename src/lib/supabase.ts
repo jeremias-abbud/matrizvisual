@@ -8,25 +8,27 @@ const SUPABASE_KEY = 'sb_publishable_eGx9KBwWN2UBURj7BE_F9A_znn0eHeF';
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
- * Faz upload de um arquivo para o Bucket 'portfolio-images' do Supabase
- * AUTOMATICAMENTE OTIMIZA A IMAGEM ANTES DO UPLOAD.
- * Retorna a URL pública do arquivo.
+ * Faz upload de um arquivo para o Bucket 'portfolio-images' do Supabase.
+ * OTIMIZA para WebP por padrão, a menos que skipOptimization seja true.
  */
-export const uploadImage = async (file: File): Promise<string | null> => {
+export const uploadImage = async (file: File, skipOptimization = false): Promise<string | null> => {
   try {
-    // 1. Otimização Obrigatória (Front-end compression)
-    // Isso garante que nunca enviaremos arquivos de 5MB+ para o Supabase
-    const optimizedFile = await optimizeImageForSupabase(file);
+    let fileToUpload = file;
+    
+    if (!skipOptimization) {
+      // 1. Otimização Padrão (WebP)
+      fileToUpload = await optimizeImageForSupabase(file);
+    }
 
     // 2. Preparar nome do arquivo
-    const fileExt = optimizedFile.name.split('.').pop();
+    const fileExt = fileToUpload.name.split('.').pop();
     const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // 3. Upload do arquivo já otimizado
+    // 3. Upload do arquivo
     const { error: uploadError } = await supabase.storage
       .from('portfolio-images')
-      .upload(filePath, optimizedFile);
+      .upload(filePath, fileToUpload);
 
     if (uploadError) {
       throw uploadError;
