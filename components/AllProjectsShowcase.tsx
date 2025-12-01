@@ -125,7 +125,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                <button 
                   key={project.id} 
                   onClick={() => onProjectClick(project)}
-                  className="group relative overflow-hidden bg-matriz-dark border border-white/5 flex flex-col text-left transition-all duration-300 hover:border-matriz-purple/50 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] rounded-sm"
+                  className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] flex flex-col text-left transition-all duration-300 hover:border-matriz-purple/50 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] rounded-sm"
                 >
                   <div className="aspect-video overflow-hidden relative bg-black/50">
                       <img 
@@ -152,7 +152,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       {/* 2. Web Showcase Section */}
       <section>
         <SectionHeader icon={<Monitor size={24} />} title="Websites em Destaque" />
-        <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-white/5 overflow-hidden">
+        <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-matriz-purple/10 overflow-hidden shadow-[0_4px_20px_rgba(139,92,246,0.05)]">
           {/* Mostra apenas os 3 mais recentes */}
           <WebShowcase headless limit={3} />
         </div>

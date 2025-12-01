@@ -157,7 +157,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
             
             {/* PREVIEW WINDOW (Common for Mobile & Desktop) */}
             <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-white/10 shadow-2xl overflow-hidden group">
+                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] overflow-hidden group">
                     {/* Header do Browser Falso (Estético) */}
                     <div className="h-8 bg-black/80 border-b border-white/5 flex items-center px-4 gap-2">
                         <div className="flex gap-1.5">
@@ -251,7 +251,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         className={`w-full group text-left p-6 border rounded-sm transition-all duration-300 relative overflow-hidden ${
                         index === activeIndex
                             ? 'border-matriz-purple bg-white/5 shadow-[0_0_20px_rgba(139,92,246,0.1)]'
-                            : 'border-white/5 bg-transparent hover:bg-white/5 hover:border-white/20'
+                            : 'border-matriz-purple/10 bg-transparent hover:bg-white/5 hover:border-white/20'
                         }`}
                         aria-label={`Ver projeto ${project.title}`}
                     >

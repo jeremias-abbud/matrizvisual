@@ -174,7 +174,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             {visibleProjects.map((project) => (
                 <div 
                     key={project.id} 
-                    className="group relative overflow-hidden bg-matriz-dark border border-white/5 animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm" 
+                    className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm" 
                     onClick={() => onProjectClick(project)}
                 >
                 <div className="aspect-video overflow-hidden relative bg-black/50">
@@ -191,7 +191,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     </div>
 
                     {/* Gradient Overlay com toque de Roxo */}
-                    {/* MODIFICAÇÃO MOBILE: opacity-100 no mobile, opacity-0 no desktop (com hover) */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent md:via-matriz-purple/20 md:to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 md:p-6">
                     {/* MODIFICAÇÃO MOBILE: Sem translate no mobile para ficar fixo */}
                     <div className="transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300">
@@ -230,8 +229,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     </div>
                 </div>
                 
-                {/* Borda brilhante animada */}
-                <div className="absolute inset-0 border-2 border-matriz-purple opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-sm"></div>
+                {/* Borda brilhante animada (Estado de Repouso Sutil + Hover Forte) */}
+                <div className="absolute inset-0 border border-matriz-purple/10 pointer-events-none rounded-sm transition-all duration-500 group-hover:border-2 group-hover:border-matriz-purple"></div>
                 </div>
             ))}
             </div>

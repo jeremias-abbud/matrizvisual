@@ -31,8 +31,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
           .from('projects')
           .select('id, title, image_url, industry, created_at, display_order')
           .eq('category', ProjectCategory.LOGO);
-          // Don't sort here, we will sort the combined list
-
+          
         if (newLogosError) throw newLogosError;
         
         const formattedNewLogos = (newLogosData || []).map((item: any) => ({
@@ -42,14 +41,12 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
         // 2. Fetch OLD logos from 'logos' table
-        // Try to fetch created_at if it exists, otherwise ignore
         const { data: oldLogosData, error: oldLogosError } = await supabase
             .from('logos')
             .select('id, name, url, industry, display_order, created_at');
 
         if (oldLogosError) throw oldLogosError;
 
-        // Map old structure to new Project structure for consistency
         const formattedOldLogos = (oldLogosData || []).map((item: any) => ({
             id: `old_${item.id}`,
             title: item.name,
@@ -62,17 +59,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
         // 3. Combine and Sort Client-Side
-        // This ensures that "new" logos (added via old manager with display_order=min-1) 
-        // actually appear at the top, regardless of which table they came from.
         const combinedLogos = [...formattedNewLogos, ...formattedOldLogos];
 
         combinedLogos.sort((a, b) => {
              // Primary Sort: Display Order (Ascending)
-             // Treat null display_order as "large number" to put at end, or "small" to put at top?
-             // Since old manager uses display_order for position, we respect it.
-             // Projects (new system) default to null. 
-             // If we want projects to be sorted by date, we treat display_order as equal if both null.
-             
              const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
              const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
              
@@ -208,7 +198,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
                     <div 
                     key={logo.id} 
                     onClick={() => openModal(index)}
-                    className="group relative aspect-square bg-matriz-dark/50 border border-white/5 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm"
+                    className="group relative aspect-square bg-matriz-dark border border-matriz-purple/10 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm shadow-[0_4px_20px_rgba(139,92,246,0.05)]"
                     >
                     {/* Efeito de tecla/vidro */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
