@@ -22,21 +22,20 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         setLoading(true);
         
         // 1. Buscar projetos gerais (Design, Video, Web)
-        // Ordena primeiro por display_order (respeitando a curadoria manual), depois por data.
+        // ALTERAÇÃO CRÍTICA: Ordenamos por data de criação no banco para garantir que
+        // os novos projetos (que não têm ordem manual ainda) sejam trazidos.
         const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
-          .order('display_order', { ascending: true, nullsFirst: false }) 
           .order('created_at', { ascending: false })
-          .limit(6); // Buscamos um pouco mais para garantir uma boa mistura
+          .limit(10); // Buscamos mais itens para garantir que temos material recente suficiente
 
         // 2. Buscar logotipos (tabela antiga/restaurada)
         const { data: logosData } = await supabase
           .from('logos')
           .select('*')
-          .order('display_order', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(6);
+          .limit(10);
 
         // Formatar Projetos
         const formattedProjects = (projectsData || []).map((item: any) => ({
@@ -70,18 +69,25 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             displayOrder: item.display_order
         }));
 
-        // 3. Juntar e Ordenar
-        // A lógica aqui deve priorizar quem tem display_order definido (menor valor = maior prioridade)
+        // 3. Juntar e Ordenar (Lógica Híbrida)
+        // Primeiro: Itens com Ordem Manual (1, 2, 3...)
+        // Segundo: Itens sem ordem (NULL), ordenados por data (mais novos primeiro)
         const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
-            const orderA = a.displayOrder ?? Number.MAX_SAFE_INTEGER;
-            const orderB = b.displayOrder ?? Number.MAX_SAFE_INTEGER;
-            
-            // Se ambos tiverem ordem, ou um tiver e o outro não
-            if (orderA !== orderB) {
+            const orderA = a.displayOrder;
+            const orderB = b.displayOrder;
+
+            // Se ambos têm ordem manual, respeita a numeração
+            if (orderA !== null && orderA !== undefined && orderB !== null && orderB !== undefined) {
                 return orderA - orderB;
             }
 
-            // Desempate por data (mais recente primeiro)
+            // Se apenas A tem ordem, ele vem primeiro
+            if (orderA !== null && orderA !== undefined) return -1;
+
+            // Se apenas B tem ordem, ele vem primeiro
+            if (orderB !== null && orderB !== undefined) return 1;
+
+            // Se nenhum tem ordem manual, ganha o mais recente (Data)
             return b.createdAt - a.createdAt;
         });
 
