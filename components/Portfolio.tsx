@@ -186,30 +186,33 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
                     />
                     
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none scale-90 group-hover:scale-100 transform duration-300">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none scale-90 group-hover:scale-100 transform duration-300 hidden md:flex">
                         {getTypeIcon(project.category)}
                     </div>
 
                     {/* Gradient Overlay com toque de Roxo */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                    {/* MODIFICAÇÃO MOBILE: opacity-100 no mobile, opacity-0 no desktop (com hover) */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent md:via-matriz-purple/20 md:to-transparent opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 md:p-6">
+                    {/* MODIFICAÇÃO MOBILE: Sem translate no mobile para ficar fixo */}
+                    <div className="transform translate-y-0 md:translate-y-4 md:group-hover:translate-y-0 transition-transform duration-300">
                         <div className="flex justify-between items-end mb-2">
-                             <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider block drop-shadow-md">
+                             <span className="text-matriz-purple text-[10px] md:text-xs font-bold uppercase tracking-wider block drop-shadow-md">
                                 {project.category}
                              </span>
                              {project.industry && (
-                                <span className="text-[10px] text-gray-300 uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-sm">
+                                <span className="text-[9px] md:text-[10px] text-gray-300 uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-sm">
                                     {project.industry}
                                 </span>
                              )}
                         </div>
                         
-                        <h3 className="text-xl font-display font-bold text-white mb-2 drop-shadow-lg">{project.title}</h3>
-                        <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
+                        <h3 className="text-lg md:text-xl font-display font-bold text-white mb-2 drop-shadow-lg">{project.title}</h3>
+                        {/* MODIFICAÇÃO MOBILE: Esconde a descrição no mobile para economizar espaço e focar na ação */}
+                        <p className="text-gray-300 text-sm mb-4 line-clamp-2 hidden md:block">{project.description}</p>
                         
-                        <div className="flex items-center gap-4">
-                            <button className="inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider">
-                                Ver Detalhes <ArrowRight size={16} />
+                        <div className="flex items-center gap-4 mt-1 md:mt-0">
+                            <button className="inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-xs md:text-sm uppercase font-bold tracking-wider">
+                                Ver Detalhes <ArrowRight size={14} />
                             </button>
                             {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
                                 <button
@@ -219,7 +222,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                                     }}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black rounded-sm transition-all duration-300 text-xs uppercase font-bold shadow-[0_0_10px_rgba(139,92,246,0.5)] hover:shadow-none"
                                 >
-                                    <Globe size={14} /> Acessar Site
+                                    <Globe size={14} /> Acessar
                                 </button>
                             )}
                         </div>
