@@ -92,19 +92,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
 
   const categories = Object.values(ProjectCategory);
 
-  const getTypeIcon = (category: ProjectCategory) => {
-    switch (category) {
-      case ProjectCategory.VIDEO:
-        return <PlayCircle className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
-      case ProjectCategory.WEB:
-        return <Globe className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
-      case ProjectCategory.LOGO:
-        return <Palette className="text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" size={48} />;
-      default:
-        return null;
-    }
-  };
-
   return (
     <section id="portfolio" className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black scroll-mt-28 relative'}`}>
       <div className={`${headless ? '' : 'container mx-auto px-6'}`}>
@@ -174,95 +161,62 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             {visibleProjects.map((project) => (
                 <div 
                     key={project.id} 
-                    className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm" 
+                    className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm h-full" 
                     onClick={() => onProjectClick(project)}
                 >
-                <div className="aspect-video overflow-hidden relative bg-black/50">
-                    <img 
-                    src={project.imageUrl} 
-                    alt={`Projeto de ${project.category}: ${project.title} - ${project.industry || 'Portfólio Matriz Visual'}`}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
-                    />
-                    
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none scale-90 group-hover:scale-100 transform duration-300 hidden lg:flex">
-                        {getTypeIcon(project.category)}
+                    {/* 1. IMAGE SECTION (Always visible, top half) */}
+                    <div className="aspect-video overflow-hidden relative bg-black/50 border-b border-white/5">
+                        <img 
+                            src={project.imageUrl} 
+                            alt={
+                                // SEO Optimized Alt Text
+                                `Projeto de ${project.category}: ${project.title} ${project.industry ? `- ${project.industry}` : ''} criado pela Matriz Visual`
+                            }
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
+                        />
+                        {/* Subtle inner shadow for depth */}
+                        <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
                     </div>
 
-                    {/* DESKTOP OVERLAY - Hidden on Mobile AND Tablet (lg and down) */}
-                    <div className="hidden lg:flex absolute inset-0 bg-gradient-to-t from-black/95 via-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex-col justify-end p-6">
-                        <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider block drop-shadow-md">
-                                    {project.category}
-                                </span>
+                    {/* 2. INFO SECTION (Always visible, bottom block) */}
+                    <div className="p-5 flex flex-col justify-between flex-grow bg-matriz-dark transition-colors duration-300 group-hover:bg-[#151515]">
+                        <div>
+                            <div className="flex justify-between items-start mb-2">
+                                <div>
+                                    <span className="text-matriz-purple text-[11px] font-bold uppercase tracking-wider block mb-1">
+                                        {project.category}
+                                    </span>
+                                    <h3 className="text-xl font-display font-bold text-white leading-tight line-clamp-2" title={project.title}>
+                                        {project.title}
+                                    </h3>
+                                </div>
                                 {project.industry && (
-                                    <span className="text-[10px] text-gray-300 uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded-sm bg-black/60 backdrop-blur-sm">
+                                    <span className="text-[9px] text-gray-400 uppercase tracking-widest border border-white/10 px-2 py-1 rounded-sm bg-black/30 whitespace-nowrap ml-2">
                                         {project.industry}
                                     </span>
                                 )}
                             </div>
-                            
-                            <h3 className="text-xl font-display font-bold text-white mb-2 drop-shadow-lg">{project.title}</h3>
-                            <p className="text-gray-300 text-sm mb-4 line-clamp-2">{project.description}</p>
-                            
-                            <div className="flex items-center gap-4">
-                                <button className="inline-flex items-center gap-2 text-white border-b border-matriz-purple pb-1 hover:text-matriz-purple transition-colors text-sm uppercase font-bold tracking-wider">
-                                    Ver Detalhes <ArrowRight size={14} />
-                                </button>
-                                {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            window.open(project.videoUrl || '#', '_blank');
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black rounded-sm transition-all duration-300 text-xs uppercase font-bold shadow-[0_0_10px_rgba(139,92,246,0.5)] hover:shadow-none"
-                                    >
-                                        <Globe size={14} /> Acessar
-                                    </button>
-                                )}
-                            </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* MOBILE & TABLET INFO BLOCK - Visible below LG breakpoint */}
-                <div className="lg:hidden p-4 bg-matriz-dark border-t border-white/5">
-                    <div className="flex justify-between items-start mb-2">
-                        <div>
-                             <span className="text-matriz-purple text-[10px] font-bold uppercase tracking-wider block mb-1">
-                                {project.category}
-                             </span>
-                             <h3 className="text-lg font-display font-bold text-white leading-tight">{project.title}</h3>
-                        </div>
-                        {project.industry && (
-                            <span className="text-[9px] text-gray-400 uppercase tracking-widest border border-white/10 px-2 py-1 rounded-sm bg-black/30">
-                                {project.industry}
-                            </span>
-                        )}
-                    </div>
-                    
-                    <div className="flex items-center gap-3 mt-4">
-                         <button className="flex-1 py-2 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors text-xs uppercase font-bold tracking-wider rounded-sm text-center">
-                            Ver Detalhes
-                        </button>
-                        {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.open(project.videoUrl || '#', '_blank');
-                                }}
-                                className="flex-1 py-2 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black transition-colors text-xs uppercase font-bold tracking-wider rounded-sm text-center flex items-center justify-center gap-2"
-                            >
-                                <Globe size={12} /> Acessar
+                        
+                        <div className="flex items-center gap-3 mt-5 pt-4 border-t border-white/5">
+                            <button className="flex-1 py-2.5 bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-colors text-xs uppercase font-bold tracking-wider rounded-sm text-center">
+                                Ver Detalhes
                             </button>
-                        )}
+                            {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(project.videoUrl || '#', '_blank');
+                                    }}
+                                    className="flex-1 py-2.5 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black transition-colors text-xs uppercase font-bold tracking-wider rounded-sm text-center flex items-center justify-center gap-2"
+                                >
+                                    <Globe size={14} /> Acessar
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
-                
-                {/* Borda brilhante animada (Estado de Repouso Sutil + Hover Forte) */}
-                <div className="absolute inset-0 border border-matriz-purple/10 pointer-events-none rounded-sm transition-all duration-500 group-hover:border-2 group-hover:border-matriz-purple"></div>
                 </div>
             ))}
             </div>
