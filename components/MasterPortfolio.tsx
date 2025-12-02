@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
-import AllProjectsShowcase from './AllProjectsShowcase'; // Novo componente da vitrine
-import ProjectDetailModal from './ProjectDetailModal'; // Import the new modal
+import AllProjectsShowcase from './AllProjectsShowcase';
+import ProjectDetailModal from './ProjectDetailModal';
 import { Project, ProjectCategory } from '../types';
 import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
@@ -11,17 +11,54 @@ import { supabase } from '../src/lib/supabase';
 const MasterPortfolio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video'>('overview');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  
+  // Estado para controlar a navegação (Carrossel)
+  const [projectList, setProjectList] = useState<Project[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(-1);
 
-  const handleProjectClick = (project: Project) => {
+  // Manipulador atualizado para aceitar a lista de contexto
+  const handleProjectClick = (project: Project, listContext?: Project[]) => {
     setSelectedProject(project);
-    // Opcional: Atualizar URL sem recarregar para criar histórico
+    
+    if (listContext && listContext.length > 0) {
+        setProjectList(listContext);
+        const idx = listContext.findIndex(p => p.id === project.id);
+        setCurrentIndex(idx);
+    } else {
+        // Fallback se não vier lista: lista de 1 item
+        setProjectList([project]);
+        setCurrentIndex(0);
+    }
+
+    // Atualizar URL (Deep Linking)
     const newUrl = `${window.location.pathname}?project=${project.id}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
   };
 
+  const handleNextProject = () => {
+    if (currentIndex < projectList.length - 1) {
+        const nextIdx = currentIndex + 1;
+        setSelectedProject(projectList[nextIdx]);
+        setCurrentIndex(nextIdx);
+        // Atualiza URL
+        const newUrl = `${window.location.pathname}?project=${projectList[nextIdx].id}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+    }
+  };
+
+  const handlePrevProject = () => {
+    if (currentIndex > 0) {
+        const prevIdx = currentIndex - 1;
+        setSelectedProject(projectList[prevIdx]);
+        setCurrentIndex(prevIdx);
+        // Atualiza URL
+        const newUrl = `${window.location.pathname}?project=${projectList[prevIdx].id}`;
+        window.history.replaceState({ path: newUrl }, '', newUrl);
+    }
+  };
+
   const handleCloseModal = () => {
     setSelectedProject(null);
-    // Limpar URL ao fechar
     const newUrl = window.location.pathname;
     window.history.pushState({ path: newUrl }, '', newUrl);
   };
@@ -33,16 +70,13 @@ const MasterPortfolio: React.FC = () => {
         const projectId = params.get('project');
 
         if (projectId) {
-            // Tenta buscar na tabela de projetos
-            let { data: projectData, error } = await supabase
+            let { data: projectData } = await supabase
                 .from('projects')
                 .select('*')
                 .eq('id', projectId)
                 .single();
 
-            // Se não achou em projetos, ou se o ID parece ser de logo antigo (ex: old_123 ou apenas numérico se não for UUID)
             if (!projectData) {
-                 // Tenta limpar prefixos comuns se houver
                  const cleanId = projectId.replace('old_', '').replace('logo_', '');
                  const { data: logoData } = await supabase
                     .from('logos')
@@ -51,23 +85,24 @@ const MasterPortfolio: React.FC = () => {
                     .single();
                  
                  if (logoData) {
-                     // Formata como projeto
-                     setSelectedProject({
+                     const logoProject = {
                         id: `logo_${logoData.id}`,
                         title: logoData.name,
                         category: ProjectCategory.LOGO,
                         industry: logoData.industry,
                         imageUrl: logoData.url,
-                        description: 'Projeto de identidade visual e design de logotipo.',
+                        description: 'Projeto de identidade visual.',
                         tags: ['Logotipo', 'Branding'],
                         client: logoData.name,
-                     });
+                     } as Project;
+                     
+                     handleProjectClick(logoProject); // Sem contexto no deep link inicial
                      return;
                  }
             }
 
             if (projectData) {
-                 setSelectedProject({
+                 const fullProject = {
                     id: projectData.id,
                     title: projectData.title,
                     category: projectData.category as ProjectCategory,
@@ -80,7 +115,9 @@ const MasterPortfolio: React.FC = () => {
                     longDescription: projectData.long_description,
                     gallery: projectData.gallery,
                     videoUrl: projectData.video_url,
-                 });
+                 } as Project;
+                 
+                 handleProjectClick(fullProject);
             }
         }
     };
@@ -102,7 +139,6 @@ const MasterPortfolio: React.FC = () => {
       <section id="portfolio" className="py-20 md:py-24 bg-matriz-black scroll-mt-20">
         <div className="container mx-auto px-6">
           
-          {/* Main Section Header */}
           <div className="mb-12 flex flex-col items-center text-center">
               <span className="text-matriz-purple uppercase tracking-[0.3em] text-xs font-bold mb-3">
                   O Que Criamos
@@ -115,7 +151,6 @@ const MasterPortfolio: React.FC = () => {
               </p>
           </div>
 
-          {/* Master Tabs */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
               {tabs.map((tab) => (
                   <button
@@ -134,7 +169,6 @@ const MasterPortfolio: React.FC = () => {
               ))}
           </div>
 
-          {/* Content Area - Conditional Rendering */}
           <div className="animate-fade-in min-h-[500px]">
               {activeTab === 'overview' && (
                   <AllProjectsShowcase onProjectClick={handleProjectClick} />
@@ -166,8 +200,14 @@ const MasterPortfolio: React.FC = () => {
         </div>
       </section>
       
-      {/* Render the centralized modal */}
-      <ProjectDetailModal project={selectedProject} onClose={handleCloseModal} />
+      <ProjectDetailModal 
+        project={selectedProject} 
+        onClose={handleCloseModal}
+        onNext={handleNextProject}
+        onPrev={handlePrevProject}
+        hasNext={currentIndex < projectList.length - 1}
+        hasPrev={currentIndex > 0}
+      />
     </>
   );
 };

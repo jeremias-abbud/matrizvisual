@@ -9,7 +9,7 @@ import { Clock, Monitor, Grid, Palette, Video, ArrowRight } from 'lucide-react';
 import { PROJECTS as MOCK_PROJECTS } from '../constants';
 
 interface AllProjectsShowcaseProps {
-  onProjectClick: (project: Project) => void;
+  onProjectClick: (project: Project, listContext?: Project[]) => void;
 }
 
 const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClick }) => {
@@ -22,15 +22,13 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         setLoading(true);
         
         // 1. Buscar projetos gerais (Design, Video, Web)
-        // Buscamos os 10 mais recentes
         const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10); 
 
-        // 2. Buscar logotipos (tabela antiga/restaurada)
-        // Buscamos os 10 mais recentes
+        // 2. Buscar logotipos
         const { data: logosData } = await supabase
           .from('logos')
           .select('*')
@@ -54,9 +52,9 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             createdAt: new Date(item.created_at).getTime(),
         }));
 
-        // Formatar Logotipos para parecerem Projetos
+        // Formatar Logotipos
         const formattedLogos = (logosData || []).map((item: any) => ({
-            id: `logo_${item.id}`, // ID único para evitar conflito
+            id: `logo_${item.id}`,
             title: item.name,
             category: ProjectCategory.LOGO,
             industry: item.industry,
@@ -68,12 +66,11 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         }));
 
         // 3. Juntar e Ordenar (ESTRITAMENTE CRONOLÓGICO)
-        // Ignoramos display_order aqui. O objetivo é mostrar o que é NOVO.
         const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
             return b.createdAt - a.createdAt;
         });
 
-        // Pegar apenas os 3 primeiros (mais novos) para exibir na capa
+        // Pegar apenas os 3 primeiros
         if (allItems.length > 0) {
           setLatestProjects(allItems.slice(0, 3));
         } else {
@@ -112,7 +109,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             {latestProjects.map(project => (
                <button 
                   key={project.id} 
-                  onClick={() => onProjectClick(project)}
+                  onClick={() => onProjectClick(project, latestProjects)}
                   className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] flex flex-col text-left transition-all duration-300 hover:border-matriz-purple/50 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] rounded-sm"
                 >
                   <div className="aspect-video overflow-hidden relative bg-black/50">
@@ -123,7 +120,6 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                       decoding="async"
                       className="w-full h-full object-contain bg-matriz-black p-2 transition-transform duration-700 group-hover:scale-110"
                       />
-                      {/* Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </div>
                   <div className="p-4 flex-grow flex flex-col relative z-10 bg-matriz-dark border-t border-white/5 group-hover:border-matriz-purple/20 transition-colors">
@@ -141,7 +137,6 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       <section>
         <SectionHeader icon={<Monitor size={24} />} title="Websites em Destaque" />
         <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-matriz-purple/10 overflow-hidden shadow-[0_4px_20px_rgba(139,92,246,0.05)]">
-          {/* Mostra apenas os 3 mais recentes */}
           <WebShowcase headless limit={3} />
         </div>
       </section>
@@ -162,7 +157,6 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
               Ver Galeria Completa <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </button>
         </div>
-        {/* Mostra uma prévia de 8 logos */}
         <LogoGrid headless limit={8} onProjectClick={onProjectClick} />
       </section>
 

@@ -1,15 +1,26 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Project } from '../types';
-import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle } from 'lucide-react';
+import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle, Globe } from 'lucide-react';
 import { getEmbedUrl } from '../src/lib/videoHelper';
 
 interface ProjectDetailModalProps {
   project: Project | null;
   onClose: () => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  hasNext?: boolean;
+  hasPrev?: boolean;
 }
 
-const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClose }) => {
+const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ 
+  project, 
+  onClose,
+  onNext,
+  onPrev,
+  hasNext,
+  hasPrev
+}) => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -45,13 +56,10 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
     setFullscreenImage(allImages[newIndex]);
   }, [fullscreenIndex, allImages]);
 
-  // Sharing Functions - CORRIGIDO PARA DEEP LINKING
+  // Sharing Functions
   const handleShareWhatsApp = () => {
     if (!project) return;
-    
-    // Gera a URL específica com o ID do projeto
     const deepLink = `${window.location.origin}/?project=${project.id}`;
-    
     const text = `Confira este projeto incrível: *${project.title}* - Matriz Visual\n${deepLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -59,10 +67,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
 
   const handleCopyLink = () => {
     if (!project) return;
-    
-    // Gera a URL específica com o ID do projeto
     const deepLink = `${window.location.origin}/?project=${project.id}`;
-    
     navigator.clipboard.writeText(deepLink);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
@@ -72,7 +77,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!project) return;
       
-      // Se estiver em fullscreen
+      // Se estiver em fullscreen (Navega entre IMAGENS)
       if (fullscreenImage) {
         if (e.key === 'Escape') setFullscreenImage(null);
         if (e.key === 'ArrowRight') nextImage();
@@ -80,13 +85,15 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
         return;
       }
 
-      // Se estiver apenas no modal
+      // Se estiver apenas no modal (Navega entre PROJETOS)
       if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight' && onNext) onNext();
+      if (e.key === 'ArrowLeft' && onPrev) onPrev();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [project, onClose, fullscreenImage, nextImage, prevImage]);
+  }, [project, onClose, fullscreenImage, nextImage, prevImage, onNext, onPrev]);
 
   useEffect(() => {
     if (project) {
@@ -102,6 +109,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
   if (!project) return null;
   
   const hasGallery = project.gallery && project.gallery.length > 0;
+  const showDescriptionTitle = (project.description || project.longDescription) && (project.description.length > 10 || (project.longDescription && project.longDescription.length > 10));
 
   const renderFullscreenView = () => (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
@@ -120,7 +128,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
           />
         </div>
         
-        {/* Mostra setas de navegação se houver mais de uma imagem no total */}
+        {/* Navegação de IMAGENS na tela cheia */}
         {allImages.length > 1 && (
           <>
             <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full z-[120]">
@@ -142,13 +150,36 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
     <>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
+        
+        {/* Botão Anterior (Projeto) */}
+        {hasPrev && (
+            <button 
+                onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
+                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                title="Projeto Anterior"
+            >
+                <ChevronLeft size={32} />
+            </button>
+        )}
+
+        {/* Botão Próximo (Projeto) */}
+        {hasNext && (
+            <button 
+                onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
+                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                title="Próximo Projeto"
+            >
+                <ChevronRight size={32} />
+            </button>
+        )}
+
         <div className="relative bg-matriz-dark w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar">
           <button onClick={onClose} className="sticky top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 float-right mr-4">
             <X size={24} />
           </button>
           
           <div className="w-full h-auto aspect-video max-h-[60vh] bg-matriz-black flex items-center justify-center clear-both relative group">
-            {project.videoUrl ? (
+            {project.videoUrl && project.category === 'Vídeos' ? (
               <iframe src={getEmbedUrl(project.videoUrl)} title={project.title} className="w-full h-full" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
             ) : (
               <>
@@ -175,7 +206,10 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                   {project.industry && <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">{project.industry}</span>}
                 </div>
                 <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">{project.title}</h2>
-                <h3 className="text-xl font-bold text-white mb-4">Sobre o Projeto</h3>
+                
+                {showDescriptionTitle && (
+                    <h3 className="text-xl font-bold text-white mb-4">Sobre o Projeto</h3>
+                )}
                 <p className="text-gray-300 leading-relaxed mb-8 text-lg">{project.longDescription || project.description}</p>
                 
                 {project.category === 'Web Sites' && (
@@ -186,7 +220,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                             rel="noreferrer"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm"
                          >
-                            <Link2 size={18} /> Acessar Site
+                            <Globe size={18} /> Acessar Site
                          </a>
                     </div>
                 )}
@@ -276,6 +310,24 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                 )}
               </div>
             </div>
+          </div>
+          
+          {/* Navegação Mobile (Fixo no rodapé do modal) */}
+          <div className="md:hidden flex justify-between p-4 border-t border-white/10 bg-matriz-black/50 sticky bottom-0">
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
+                    disabled={!hasPrev}
+                    className={`flex items-center gap-2 text-sm font-bold uppercase ${hasPrev ? 'text-white' : 'text-gray-600'}`}
+                >
+                    <ChevronLeft size={20} /> Anterior
+                </button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
+                    disabled={!hasNext}
+                    className={`flex items-center gap-2 text-sm font-bold uppercase ${hasNext ? 'text-white' : 'text-gray-600'}`}
+                >
+                    Próximo <ChevronRight size={20} />
+                </button>
           </div>
         </div>
       </div>

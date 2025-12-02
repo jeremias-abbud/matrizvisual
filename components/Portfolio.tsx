@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 6;
 interface PortfolioProps {
   headless?: boolean;
   forcedCategory?: ProjectCategory;
-  onProjectClick: (project: Project) => void;
+  onProjectClick: (project: Project, listContext?: Project[]) => void;
 }
 
 const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, onProjectClick }) => {
@@ -90,6 +90,15 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
     smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#portfolio');
   };
 
+  const handleVisitSite = (e: React.MouseEvent, url?: string) => {
+    e.stopPropagation();
+    if (!url) return;
+    
+    // Check if URL starts with http/https
+    const fullUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
+    window.open(fullUrl, '_blank');
+  };
+
   const categories = Object.values(ProjectCategory);
 
   return (
@@ -162,25 +171,21 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 <div 
                     key={project.id} 
                     className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm h-full" 
-                    onClick={() => onProjectClick(project)}
+                    onClick={() => onProjectClick(project, visibleProjects)}
                 >
-                    {/* 1. IMAGE SECTION (Always visible, top half) */}
+                    {/* 1. IMAGE SECTION */}
                     <div className="aspect-video overflow-hidden relative bg-black/50 border-b border-white/5">
                         <img 
                             src={project.imageUrl} 
-                            alt={
-                                // SEO Optimized Alt Text
-                                `Projeto de ${project.category}: ${project.title} ${project.industry ? `- ${project.industry}` : ''} criado pela Matriz Visual`
-                            }
+                            alt={`Projeto de ${project.category}: ${project.title} ${project.industry ? `- ${project.industry}` : ''} criado pela Matriz Visual`}
                             loading="lazy"
                             decoding="async"
                             className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
                         />
-                        {/* Subtle inner shadow for depth */}
                         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
                     </div>
 
-                    {/* 2. INFO SECTION (Always visible, bottom block) */}
+                    {/* 2. INFO SECTION */}
                     <div className="p-5 flex flex-col justify-between flex-grow bg-matriz-dark transition-colors duration-300 group-hover:bg-[#151515]">
                         <div>
                             <div className="flex justify-between items-start mb-2">
@@ -206,10 +211,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             </button>
                             {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
                                 <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(project.videoUrl || '#', '_blank');
-                                    }}
+                                    onClick={(e) => handleVisitSite(e, project.videoUrl)}
                                     className="flex-1 py-2.5 bg-matriz-purple border border-matriz-purple text-white hover:bg-white hover:text-matriz-black transition-colors text-xs uppercase font-bold tracking-wider rounded-sm text-center flex items-center justify-center gap-2"
                                 >
                                     <Globe size={14} /> Acessar

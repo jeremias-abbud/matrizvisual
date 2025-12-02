@@ -9,7 +9,7 @@ import { Project, ProjectCategory } from '../types';
 interface LogoGridProps {
   headless?: boolean;
   limit?: number;
-  onProjectClick?: (project: Project) => void;
+  onProjectClick?: (project: Project, listContext?: Project[]) => void;
 }
 
 const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectClick }) => {
@@ -26,7 +26,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
       try {
         setLoading(true);
 
-        // 1. Fetch NEW logos from 'projects' table
         const { data: newLogosData, error: newLogosError } = await supabase
           .from('projects')
           .select('id, title, image_url, industry, created_at, display_order, description, client, gallery')
@@ -41,7 +40,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
             industry: item.industry,
             imageUrl: item.image_url,
             description: item.description || 'Projeto de Identidade Visual.',
-            longDescription: item.description, // Use description as long description fallback
+            longDescription: item.description,
             client: item.client,
             gallery: item.gallery,
             tags: ['Logotipo', 'Branding', 'Identidade Visual'],
@@ -50,7 +49,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
             isLegacy: false
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
-        // 2. Fetch OLD logos from 'logos' table
         const { data: oldLogosData, error: oldLogosError } = await supabase
             .from('logos')
             .select('id, name, url, industry, display_order, created_at');
@@ -65,30 +63,24 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
             display_order: item.display_order,
             created_at: item.created_at,
             category: ProjectCategory.LOGO,
-            description: 'Projeto de design de logotipo e identidade visual.', // Default description for old logos
+            description: 'Projeto de design de logotipo e identidade visual.',
             tags: ['Logotipo'],
             client: item.name,
-            gallery: [], // Old logos usually don't have galleries
+            gallery: [],
             isLegacy: true
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
-        // 3. Combine and Sort Client-Side
         const combinedLogos = [...formattedNewLogos, ...formattedOldLogos];
 
         combinedLogos.sort((a, b) => {
-             // Primary Sort: Display Order (Ascending)
-             // Treat null/undefined as very small number to put new items at top if they have no order
              const orderA = a.display_order ?? -Infinity;
              const orderB = b.display_order ?? -Infinity;
              
              if (orderA !== orderB) {
                  return orderA - orderB;
              }
-
-             // Secondary Sort: Created At (Descending) - Newest First
              const dateA = new Date(a.created_at || 0).getTime();
              const dateB = new Date(b.created_at || 0).getTime();
-             
              return dateB - dateA;
         });
 
@@ -175,10 +167,9 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                 {visibleLogos.map((logo) => (
                     <div 
                     key={logo.id} 
-                    onClick={() => onProjectClick && onProjectClick(logo)}
+                    onClick={() => onProjectClick && onProjectClick(logo, visibleLogos)}
                     className="group relative aspect-square bg-matriz-dark border border-matriz-purple/10 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm shadow-[0_4px_20px_rgba(139,92,246,0.05)]"
                     >
-                    {/* Efeito de tecla/vidro */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
 
@@ -203,7 +194,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                         )}
                     </div>
                     
-                    {/* Borda Iluminada */}
                     <div className="absolute inset-0 border border-matriz-purple/0 group-hover:border-matriz-purple/50 transition-colors duration-300 rounded-sm pointer-events-none"></div>
                     </div>
                 ))}
