@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info } from 'lucide-react';
@@ -269,7 +268,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
       if (forcedCategory === ProjectCategory.WEB) pageTitle = "Gerenciar Websites";
       else if (forcedCategory === ProjectCategory.DESIGN) pageTitle = "Gerenciar Design Gráfico";
       else if (forcedCategory === ProjectCategory.VIDEO) pageTitle = "Gerenciar Vídeos";
-      else if (forcedCategory === ProjectCategory.PACKAGING) pageTitle = "Gerenciar Embalagens";
       else if (forcedCategory === ProjectCategory.MODELS) pageTitle = "Gerenciar Modelos";
       else pageTitle = `Gerenciar ${forcedCategory}`;
   }

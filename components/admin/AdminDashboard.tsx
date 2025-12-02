@@ -6,13 +6,13 @@ import ProjectManager from './ProjectManager';
 import LogoManager from './LogoManager';
 import SiteAssetsManager from './SiteAssetsManager';
 import OptimizationManager from './OptimizationManager';
-import { LogOut, LayoutGrid, Palette, ArrowLeft, Grid, Zap, Monitor, Video, Package, Users, Briefcase } from 'lucide-react';
+import { LogOut, LayoutGrid, Palette, ArrowLeft, Grid, Zap, Monitor, Video, Users } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const [session, setSession] = useState<any>(null);
   // Novos estados para navegação granular
-  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'design' | 'video' | 'packaging' | 'models' | 'assets' | 'optimization'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'design' | 'video' | 'models' | 'assets' | 'optimization'>('overview');
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -76,7 +76,6 @@ const AdminDashboard: React.FC = () => {
             <MenuButton id="sites" label="Websites" icon={Monitor} active={activeTab === 'sites'} />
             <MenuButton id="design" label="Design Gráfico" icon={Palette} active={activeTab === 'design'} />
             <MenuButton id="video" label="Vídeos" icon={Video} active={activeTab === 'video'} />
-            <MenuButton id="packaging" label="Rótulos/Embalagens" icon={Package} active={activeTab === 'packaging'} />
             <MenuButton id="models" label="Modelos/Personagens" icon={Users} active={activeTab === 'models'} />
 
             <div className="w-full h-px bg-white/5 my-4"></div>
@@ -118,7 +117,6 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'sites' && <ProjectManager forcedCategory={ProjectCategory.WEB} />}
             {activeTab === 'design' && <ProjectManager forcedCategory={ProjectCategory.DESIGN} />}
             {activeTab === 'video' && <ProjectManager forcedCategory={ProjectCategory.VIDEO} />}
-            {activeTab === 'packaging' && <ProjectManager forcedCategory={ProjectCategory.PACKAGING} />}
             {activeTab === 'models' && <ProjectManager forcedCategory={ProjectCategory.MODELS} />}
             
             {/* Outros */}

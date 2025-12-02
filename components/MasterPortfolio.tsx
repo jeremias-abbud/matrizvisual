@@ -5,11 +5,11 @@ import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase';
 import ProjectDetailModal from './ProjectDetailModal';
 import { Project, ProjectCategory } from '../types';
-import { PenTool, Monitor, Video, Grid, Sparkles, Package, Users, Share2, Check, Link } from 'lucide-react';
+import { PenTool, Monitor, Video, Grid, Sparkles, Users, Share2, Check, Link } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 
 const MasterPortfolio: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video' | 'models'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'design' | 'video' | 'models'>('overview');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [tabLinkCopied, setTabLinkCopied] = useState(false);
   
@@ -160,7 +160,6 @@ const MasterPortfolio: React.FC = () => {
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
-    { id: 'packaging', label: 'Rótulos & Embalagens', icon: <Package size={16} /> },
     { id: 'models', label: 'Modelos e Personagens', icon: <Users size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
     { id: 'video', label: 'Vídeos', icon: <Video size={16} /> },
@@ -231,10 +230,6 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'sites' && (
                   <Portfolio headless forcedCategory={ProjectCategory.WEB} onProjectClick={handleProjectClick} />
-              )}
-
-              {activeTab === 'packaging' && (
-                  <Portfolio headless forcedCategory={ProjectCategory.PACKAGING} onProjectClick={handleProjectClick} />
               )}
               
               {activeTab === 'models' && (

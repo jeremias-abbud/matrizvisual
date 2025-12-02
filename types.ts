@@ -5,7 +5,6 @@ export enum ProjectCategory {
   DESIGN = 'Design Gráfico',
   WEB = 'Web Sites',
   VIDEO = 'Vídeos',
-  PACKAGING = 'Rótulos & Embalagens',
   MODELS = 'Modelos e Personagens'
 }
 

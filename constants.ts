@@ -30,6 +30,7 @@ export const INDUSTRIES = [
   'Consultoria Empresarial & Coaching',
   'Contabilidade & Finanças',
   'Construção Civil & Empreiteiras',
+  'Design: Rótulos & Embalagens',
   'Design de Interiores & Decoração',
   'Distribuidora: Bebidas, Gás & Água',
   'Educação: Escolas & Creches',
