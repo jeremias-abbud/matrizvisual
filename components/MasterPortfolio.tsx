@@ -142,7 +142,7 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'logos' && (
                   <div className="bg-matriz-dark/30 rounded-lg p-4 md:p-8 border border-white/5">
-                      <LogoGrid headless />
+                      <LogoGrid headless onProjectClick={handleProjectClick} />
                   </div>
               )}
 

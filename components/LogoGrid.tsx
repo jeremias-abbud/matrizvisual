@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Minus, ZoomIn, X, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Minus, ZoomIn, Filter, ChevronLeft } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { smoothScrollTo } from '../src/lib/scroll';
@@ -9,14 +9,14 @@ import { Project, ProjectCategory } from '../types';
 interface LogoGridProps {
   headless?: boolean;
   limit?: number;
+  onProjectClick?: (project: Project) => void;
 }
 
-const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
+const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectClick }) => {
   const INITIAL_COUNT = limit || 8;
   const [logos, setLogos] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
-  const [selectedLogoIndex, setSelectedLogoIndex] = useState<number | null>(null);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
 
   const getMockLogos = () => MOCK_PROJECTS.filter(p => p.category === ProjectCategory.LOGO);
@@ -29,14 +29,24 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         // 1. Fetch NEW logos from 'projects' table
         const { data: newLogosData, error: newLogosError } = await supabase
           .from('projects')
-          .select('id, title, image_url, industry, created_at, display_order')
+          .select('id, title, image_url, industry, created_at, display_order, description, client, gallery')
           .eq('category', ProjectCategory.LOGO);
           
         if (newLogosError) throw newLogosError;
         
         const formattedNewLogos = (newLogosData || []).map((item: any) => ({
-            ...item,
+            id: item.id,
+            title: item.title,
+            category: ProjectCategory.LOGO,
+            industry: item.industry,
             imageUrl: item.image_url,
+            description: item.description || 'Projeto de Identidade Visual.',
+            longDescription: item.description, // Use description as long description fallback
+            client: item.client,
+            gallery: item.gallery,
+            tags: ['Logotipo', 'Branding', 'Identidade Visual'],
+            created_at: item.created_at,
+            display_order: item.display_order,
             isLegacy: false
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
@@ -48,13 +58,17 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         if (oldLogosError) throw oldLogosError;
 
         const formattedOldLogos = (oldLogosData || []).map((item: any) => ({
-            id: `old_${item.id}`,
+            id: `logo_${item.id}`,
             title: item.name,
             imageUrl: item.url,
             industry: item.industry,
             display_order: item.display_order,
             created_at: item.created_at,
             category: ProjectCategory.LOGO,
+            description: 'Projeto de design de logotipo e identidade visual.', // Default description for old logos
+            tags: ['Logotipo'],
+            client: item.name,
+            gallery: [], // Old logos usually don't have galleries
             isLegacy: true
         })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
         
@@ -63,8 +77,9 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
 
         combinedLogos.sort((a, b) => {
              // Primary Sort: Display Order (Ascending)
-             const orderA = a.display_order ?? Number.MAX_SAFE_INTEGER;
-             const orderB = b.display_order ?? Number.MAX_SAFE_INTEGER;
+             // Treat null/undefined as very small number to put new items at top if they have no order
+             const orderA = a.display_order ?? -Infinity;
+             const orderB = b.display_order ?? -Infinity;
              
              if (orderA !== orderB) {
                  return orderA - orderB;
@@ -108,43 +123,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
     setVisibleCount(INITIAL_COUNT);
     smoothScrollTo(e as React.MouseEvent<HTMLAnchorElement>, '#logos');
   };
-
-  const openModal = (index: number) => {
-    setSelectedLogoIndex(index);
-    document.body.style.overflow = 'hidden'; 
-  };
-
-  const closeModal = useCallback(() => {
-    setSelectedLogoIndex(null);
-    document.body.style.overflow = 'unset';
-  }, []);
-
-  const nextLogo = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (selectedLogoIndex !== null) {
-      setSelectedLogoIndex((prev) => (prev !== null ? (prev + 1) % filteredLogos.length : null));
-    }
-  }, [selectedLogoIndex, filteredLogos.length]);
-
-  const prevLogo = useCallback((e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (selectedLogoIndex !== null) {
-      setSelectedLogoIndex((prev) => (prev !== null ? (prev - 1 + filteredLogos.length) % filteredLogos.length : null));
-    }
-  }, [selectedLogoIndex, filteredLogos.length]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedLogoIndex === null) return;
-      
-      if (e.key === 'Escape') closeModal();
-      if (e.key === 'ArrowRight') nextLogo();
-      if (e.key === 'ArrowLeft') prevLogo();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedLogoIndex, closeModal, nextLogo, prevLogo]);
 
   return (
     <section className={`${headless ? 'py-0 border-none' : 'py-16 md:py-20 bg-matriz-black relative border-b border-white/5 scroll-mt-28'}`} id="logos">
@@ -194,10 +172,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
         ) : (
             <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-                {visibleLogos.map((logo, index) => (
+                {visibleLogos.map((logo) => (
                     <div 
                     key={logo.id} 
-                    onClick={() => openModal(index)}
+                    onClick={() => onProjectClick && onProjectClick(logo)}
                     className="group relative aspect-square bg-matriz-dark border border-matriz-purple/10 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm shadow-[0_4px_20px_rgba(139,92,246,0.05)]"
                     >
                     {/* Efeito de tecla/vidro */}
@@ -274,64 +252,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit }) => {
             </>
         )}
       </div>
-
-      {selectedLogoIndex !== null && filteredLogos.length > 0 && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
-            <div 
-                className="absolute inset-0 bg-black/95 backdrop-blur-xl"
-                onClick={closeModal}
-            ></div>
-
-            <div className="relative z-10 w-full max-w-4xl h-full flex flex-col items-center justify-center">
-                
-                <button 
-                    onClick={closeModal}
-                    className="fixed top-6 right-6 z-[110] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10"
-                >
-                    <X size={32} />
-                </button>
-
-                <div className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center">
-                    <img 
-                        key={selectedLogoIndex}
-                        src={filteredLogos[selectedLogoIndex].imageUrl} 
-                        alt={`Logotipo ampliado: ${filteredLogos[selectedLogoIndex].title}`}
-                        className="max-w-full max-h-full object-contain filter drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] animate-fade-in"
-                    />
-                </div>
-
-                <div className="mt-8 text-center">
-                    <h3 className="font-display text-2xl md:text-3xl font-bold text-white">
-                        {filteredLogos[selectedLogoIndex].title}
-                    </h3>
-                    <div className="flex flex-col items-center gap-1 mt-2">
-                        <span className="text-matriz-purple text-xs uppercase tracking-[0.3em] font-bold block">
-                            Logotipos
-                        </span>
-                        {filteredLogos[selectedLogoIndex].industry && (
-                             <span className="text-gray-500 text-[10px] uppercase tracking-widest bg-white/5 px-2 py-1 rounded">
-                                {filteredLogos[selectedLogoIndex].industry}
-                             </span>
-                        )}
-                    </div>
-                </div>
-
-                <button 
-                    onClick={prevLogo}
-                    className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
-                >
-                    <ChevronLeft size={48} />
-                </button>
-                <button 
-                    onClick={nextLogo}
-                    className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full"
-                >
-                    <ChevronRight size={48} />
-                </button>
-
-            </div>
-        </div>
-      )}
     </section>
   );
 };

@@ -163,7 +163,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             </button>
         </div>
         {/* Mostra uma prévia de 8 logos */}
-        <LogoGrid headless limit={8} />
+        <LogoGrid headless limit={8} onProjectClick={onProjectClick} />
       </section>
 
       {/* 4. Other Projects (Design & Video) */}
