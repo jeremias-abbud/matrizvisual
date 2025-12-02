@@ -2,15 +2,16 @@
 export const getEmbedUrl = (url: string): string => {
   if (!url) return '';
   
-  // Regex robusto para YouTube (suporta youtube.com/watch?v=, youtube.com/embed/, youtu.be/)
-  const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  // 1. YouTube (Suporte a Shorts, Watch, Embed, Youtu.be)
+  // Regex atualizada para capturar ID após 'shorts/', 'v/', 'embed/' ou 'watch?v='
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|feature=player_embedded&v=))([^&?\/]+)/);
   
   if (ytMatch && ytMatch[1]) {
     // Parâmetros: autoplay=1 (toca auto), mute=0 (com som), rel=0 (sem vídeos relacionados), modesta (sem logo yt)
     return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=0&rel=0&showinfo=0&modestbranding=1`;
   }
 
-  // Regex para Vimeo
+  // 2. Vimeo
   const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/);
   if (vimeoMatch && vimeoMatch[1]) {
     // Parâmetros Vimeo:
@@ -33,8 +34,9 @@ export const getEmbedUrl = (url: string): string => {
 export const getVideoThumbnail = async (url: string): Promise<string | null> => {
     if (!url) return null;
 
-    // 1. YouTube
-    const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    // 1. YouTube (Suporte a Shorts incluso na nova Regex)
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|feature=player_embedded&v=))([^&?\/]+)/);
+    
     if (ytMatch && ytMatch[1]) {
         // Retorna a imagem de máxima resolução
         return `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
