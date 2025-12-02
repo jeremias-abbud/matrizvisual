@@ -6,10 +6,10 @@ import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase'; // Novo componente da vitrine
 import ProjectDetailModal from './ProjectDetailModal'; // Import the new modal
 import { Project, ProjectCategory } from '../types';
-import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles } from 'lucide-react';
+import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package } from 'lucide-react';
 
 const MasterPortfolio: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'design' | 'video'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video'>('overview');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   const handleProjectClick = (project: Project) => {
@@ -24,6 +24,7 @@ const MasterPortfolio: React.FC = () => {
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
+    { id: 'packaging', label: 'Rótulos & Embalagens', icon: <Package size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
     { id: 'video', label: 'Vídeos', icon: <Video size={16} /> },
   ];
@@ -79,6 +80,10 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'sites' && (
                   <Portfolio headless forcedCategory={ProjectCategory.WEB} onProjectClick={handleProjectClick} />
+              )}
+
+              {activeTab === 'packaging' && (
+                  <Portfolio headless forcedCategory={ProjectCategory.PACKAGING} onProjectClick={handleProjectClick} />
               )}
 
               {activeTab === 'design' && (

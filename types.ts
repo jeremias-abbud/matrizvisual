@@ -5,7 +5,8 @@ export enum ProjectCategory {
   LOGO = 'Logotipos',
   DESIGN = 'Design Gráfico',
   WEB = 'Web Sites',
-  VIDEO = 'Vídeos' // Simplificado de 'Vídeos & Motion' para padronização
+  VIDEO = 'Vídeos',
+  PACKAGING = 'Rótulos & Embalagens'
 }
 
 export interface Project {

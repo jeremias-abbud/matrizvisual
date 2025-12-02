@@ -1,4 +1,5 @@
 
+
 import { Project, ProjectCategory, Service } from './types';
 
 export const INDUSTRIES = [
@@ -26,6 +27,7 @@ export const INDUSTRIES = [
   'Beleza: Maquiadores',
   'Beleza: Salões de Beleza',
   'Beleza: Spas & Estética Avançada',
+  'Cosméticos, Perfumaria & Aromas',
   'Consultoria Empresarial & Coaching',
   'Contabilidade & Finanças',
   'Construção Civil & Empreiteiras',
