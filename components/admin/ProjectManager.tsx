@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
@@ -32,18 +32,22 @@ const ProjectManager: React.FC = () => {
   const [hasOrderChanged, setHasOrderChanged] = useState(false);
   
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  
+  // Form States
   const [formData, setFormData] = useState({
     title: '',
-    category: ProjectCategory.DESIGN, // Default to DESIGN since LOGO is removed
+    category: ProjectCategory.DESIGN,
     industry: '',
     description: '',
     longDescription: '',
     client: '',
     tags: '',
     videoUrl: '',
-    gallery: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]); // New files to upload
+  const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]); // URLs already on server
 
   useEffect(() => {
     fetchProjects();
@@ -81,9 +85,13 @@ const ProjectManager: React.FC = () => {
       client: project.client || '',
       tags: project.tags?.join(', ') || '',
       videoUrl: project.video_url || '',
-      gallery: project.gallery?.join(', ') || '',
     });
-    setImageFile(null);
+    
+    // Set gallery state
+    setExistingGalleryUrls(project.gallery || []);
+    setGalleryFiles([]);
+    setCoverImageFile(null);
+    
     setShowForm(true);
   };
 
@@ -99,31 +107,52 @@ const ProjectManager: React.FC = () => {
       client: '',
       tags: '',
       videoUrl: '',
-      gallery: '',
     });
-    setImageFile(null);
+    setCoverImageFile(null);
+    setGalleryFiles([]);
+    setExistingGalleryUrls([]);
+  };
+
+  // Gallery Handlers
+  const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+          setGalleryFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+      }
+  };
+
+  const removeGalleryFile = (index: number) => {
+      setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingGalleryImage = (index: number) => {
+      setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);
 
-    let imageUrl: string | null = null;
-    if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-        if (!imageUrl) {
-             alert('Erro no upload da imagem');
-             setUploading(false);
-             return;
+    try {
+        // 1. Upload Cover Image
+        let coverImageUrl: string | null = null;
+        if (coverImageFile) {
+            coverImageUrl = await uploadImage(coverImageFile);
+            if (!coverImageUrl) throw new Error('Falha no upload da capa');
         }
-    }
-    
-    const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
-    const galleryArray = formData.gallery.split(',').map(url => url.trim()).filter(Boolean);
-    const longDesc = formData.longDescription || formData.description;
-    
-    if (editingProject) {
-        const updates: any = {
+
+        // 2. Upload New Gallery Images
+        const newGalleryUrls: string[] = [];
+        for (const file of galleryFiles) {
+            const url = await uploadImage(file);
+            if (url) newGalleryUrls.push(url);
+        }
+
+        // Combine existing URLs with new ones
+        const finalGallery = [...existingGalleryUrls, ...newGalleryUrls];
+        const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+        const longDesc = formData.longDescription || formData.description;
+        
+        const commonData = {
             title: formData.title,
             category: formData.category,
             industry: formData.industry || null,
@@ -132,66 +161,53 @@ const ProjectManager: React.FC = () => {
             client: formData.client,
             tags: tagsArray,
             video_url: formData.videoUrl || null,
-            gallery: galleryArray.length > 0 ? galleryArray : null,
-        };
-        if (imageUrl) {
-            updates.image_url = imageUrl;
-        }
-
-        const { data, error } = await supabase
-            .from('projects')
-            .update(updates)
-            .eq('id', editingProject.id)
-            .select();
-
-        if (!error && data) {
-            setProjects(prev => prev.map(p => p.id === editingProject.id ? data[0] : p));
-            resetForm();
-        } else {
-            alert('Erro ao atualizar projeto.');
-            console.error(error);
-        }
-    } else {
-        if (!imageUrl && !formData.videoUrl) {
-            alert('Para um novo projeto, adicione uma imagem de capa.');
-            setUploading(false);
-            return;
-        }
-      
-        const newProjectData = {
-            title: formData.title,
-            category: formData.category,
-            industry: formData.industry || null,
-            description: formData.description,
-            long_description: longDesc,
-            client: formData.client,
-            tags: tagsArray,
-            image_url: imageUrl || 'https://via.placeholder.com/800x600?text=Video+Project',
-            video_url: formData.videoUrl || null,
-            gallery: galleryArray.length > 0 ? galleryArray : null,
-            // display_order is intentionally omitted to be null by default
+            gallery: finalGallery.length > 0 ? finalGallery : null,
         };
 
-        const { data, error } = await supabase
-            .from('projects')
-            .insert([newProjectData])
-            .select();
+        if (editingProject) {
+            const updates: any = { ...commonData };
+            if (coverImageUrl) updates.image_url = coverImageUrl;
 
-        if (!error && data) {
-            setProjects(prev => [data[0], ...prev]); // Add to the beginning of the list
-            resetForm();
+            const { data, error } = await supabase
+                .from('projects')
+                .update(updates)
+                .eq('id', editingProject.id)
+                .select();
+
+            if (error) throw error;
+            if (data) setProjects(prev => prev.map(p => p.id === editingProject.id ? data[0] : p));
+
         } else {
-            alert('Erro ao salvar projeto.');
-            console.error(error);
+            if (!coverImageUrl && !formData.videoUrl) {
+                alert('Para um novo projeto, adicione uma imagem de capa.');
+                setUploading(false);
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('projects')
+                .insert([{
+                    ...commonData,
+                    image_url: coverImageUrl || 'https://via.placeholder.com/800x600?text=No+Image',
+                }])
+                .select();
+
+            if (error) throw error;
+            if (data) setProjects(prev => [data[0], ...prev]);
         }
+        
+        resetForm();
+
+    } catch (err) {
+        console.error(err);
+        alert('Ocorreu um erro ao salvar o projeto.');
+    } finally {
+        setUploading(false);
     }
-    setUploading(false);
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedItemIndex(index);
-  };
-
+  // --- Drag & Drop logic remains same ---
+  const handleDragStart = (index: number) => setDraggedItemIndex(index);
   const handleDragEnter = (index: number) => {
     if (draggedItemIndex === null || draggedItemIndex === index) return;
     const newProjects = [...projects];
@@ -201,31 +217,19 @@ const ProjectManager: React.FC = () => {
     setDraggedItemIndex(index);
     setHasOrderChanged(true);
   };
-
-  const handleDragEnd = () => {
-    setDraggedItemIndex(null);
-  };
-
+  const handleDragEnd = () => setDraggedItemIndex(null);
   const saveOrder = async () => {
     setUploading(true);
-    const updates = projects.map((proj, index) => ({
-        ...proj,
-        display_order: index + 1
-    }));
+    const updates = projects.map((proj, index) => ({ ...proj, display_order: index + 1 }));
     try {
         const { error } = await supabase.from('projects').upsert(updates, { onConflict: 'id' });
         if (error) throw error;
         setHasOrderChanged(false);
         setIsReordering(false);
-    } catch (err) {
-        console.error(err);
-        alert('Erro ao salvar a ordem. Verifique o console.');
-    } finally {
-        setUploading(false);
-    }
+    } catch (err) { console.error(err); alert('Erro ao salvar ordem.'); } 
+    finally { setUploading(false); }
   };
 
-  // Label dinâmico para o campo de link
   const linkLabel = formData.category === ProjectCategory.WEB 
     ? "Link do Site (URL)" 
     : "Link de Vídeo (YouTube/Vimeo)";
@@ -257,7 +261,7 @@ const ProjectManager: React.FC = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 overflow-y-auto">
-          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-2xl w-full my-10 relative">
+          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-3xl w-full my-10 relative">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-white">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
               <button onClick={resetForm} className="text-gray-400 hover:text-white"><X /></button>
@@ -265,15 +269,14 @@ const ProjectManager: React.FC = () => {
             
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Título do Projeto <span className="text-matriz-purple">*</span></label>
+                <label className="block text-gray-400 text-xs uppercase mb-1">Título <span className="text-matriz-purple">*</span></label>
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
               <div>
                 <ModernSelect 
-                  label="Categoria (Serviço)" 
+                  label="Categoria" 
                   value={formData.category} 
                   onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
-                  // Filtra 'Logotipos' e 'Todos' para não permitir criar novos logos aqui
                   options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
                   required 
                 />
@@ -281,45 +284,97 @@ const ProjectManager: React.FC = () => {
               <div>
                 <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
               </div>
-              <div>
-                <label className="block text-gray-400 text-xs uppercase mb-1">Cliente</label>
-                <input type="text" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">{linkLabel}</label>
-                <input type="text" placeholder="Ex: https://..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (para o card) <span className="text-matriz-purple">*</span></label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (para o detalhe)</label>
-                <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={4} />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Tags (separadas por vírgula)</label>
-                <input type="text" placeholder="Ex: Branding, Social Media, 2024" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Galeria (URLs separadas por vírgula)</label>
-                <textarea placeholder="Ex: https://..., https://..." value={formData.gallery} onChange={e => setFormData({...formData, gallery: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={3} />
-              </div>
+              
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">
                     {editingProject ? 'Trocar Imagem de Capa (Opcional)' : 'Imagem de Capa *'}
                 </label>
-                <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative">
-                    <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required={!editingProject} />
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
+                    <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required={!editingProject} />
+                    <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
                         <Upload size={24} />
-                        <span className="text-sm">{imageFile ? imageFile.name : 'Clique para enviar imagem'}</span>
+                        <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem de capa'}</span>
                     </div>
                 </div>
               </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">{linkLabel}</label>
+                <input type="text" placeholder="Ex: https://..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (Card) <span className="text-matriz-purple">*</span></label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (Detalhes)</label>
+                <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={4} />
+              </div>
+
+              {/* GALLERY MANAGER */}
+              <div className="md:col-span-2 bg-black/30 p-4 rounded border border-white/5">
+                <label className="block text-gray-400 text-xs uppercase mb-3 font-bold flex items-center gap-2">
+                    <ImageIcon size={14} /> Galeria de Imagens (Opcional)
+                </label>
+                
+                {/* Upload Area */}
+                <div className="mb-4">
+                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-sm text-gray-300 hover:text-white transition-colors">
+                        <Plus size={16} /> Adicionar Imagens
+                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleGalleryFileSelect} />
+                    </label>
+                    <span className="ml-3 text-xs text-gray-500">Selecione múltiplas imagens do seu computador</span>
+                </div>
+
+                {/* Previews */}
+                {(existingGalleryUrls.length > 0 || galleryFiles.length > 0) && (
+                    <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
+                        {/* Existing Images */}
+                        {existingGalleryUrls.map((url, idx) => (
+                            <div key={`exist-${idx}`} className="relative aspect-square group border border-white/10 rounded overflow-hidden">
+                                <img src={url} alt="Galeria" className="w-full h-full object-cover" />
+                                <button type="button" onClick={() => removeExistingGalleryImage(idx)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <X size={12} />
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center text-white py-0.5">Salva</div>
+                            </div>
+                        ))}
+                        {/* New Files */}
+                        {galleryFiles.map((file, idx) => (
+                            <div key={`new-${idx}`} className="relative aspect-square group border border-matriz-purple/50 rounded overflow-hidden">
+                                <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
+                                <button type="button" onClick={() => removeGalleryFile(idx)} className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <X size={12} />
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-matriz-purple text-[8px] text-center text-white py-0.5">Nova</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {existingGalleryUrls.length === 0 && galleryFiles.length === 0 && (
+                    <p className="text-xs text-gray-600 italic">Nenhuma imagem extra adicionada.</p>
+                )}
+              </div>
+
+              <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                <div>
+                    <label className="block text-gray-400 text-xs uppercase mb-1">Cliente</label>
+                    <input type="text" value={formData.client} onChange={e => setFormData({...formData, client: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+                </div>
+                <div>
+                    <label className="block text-gray-400 text-xs uppercase mb-1">Tags (separadas por vírgula)</label>
+                    <input type="text" placeholder="Branding, Social Media" value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+                </div>
+              </div>
+
               <div className="md:col-span-2 pt-4">
-                <button type="submit" disabled={uploading} className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50">
-                    {uploading ? 'Salvando...' : (editingProject ? 'Atualizar Projeto' : 'Publicar Projeto')}
+                <button type="submit" disabled={uploading} className="w-full bg-matriz-purple py-3 text-white font-bold rounded uppercase disabled:opacity-50 flex items-center justify-center gap-2">
+                    {uploading ? (
+                        <>Salvando e Enviando Imagens...</>
+                    ) : (
+                        <>{editingProject ? 'Atualizar Projeto' : 'Publicar Projeto'}</>
+                    )}
                 </button>
               </div>
             </form>
@@ -327,6 +382,7 @@ const ProjectManager: React.FC = () => {
         </div>
       )}
 
+      {/* Project List (Table) - Same as before */}
       {loading ? (
         <div className="text-white">Carregando...</div>
       ) : (
