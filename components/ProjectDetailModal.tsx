@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Project } from '../types';
-import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
+import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle } from 'lucide-react';
 import { getEmbedUrl } from '../src/lib/videoHelper';
 
 interface ProjectDetailModalProps {
@@ -12,6 +12,7 @@ interface ProjectDetailModalProps {
 const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClose }) => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Combina imagem de capa com imagens da galeria para navegação completa
   const allImages = project ? [project.imageUrl, ...(project.gallery || [])] : [];
@@ -43,6 +44,20 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
     setFullscreenIndex(newIndex);
     setFullscreenImage(allImages[newIndex]);
   }, [fullscreenIndex, allImages]);
+
+  // Sharing Functions
+  const handleShareWhatsApp = () => {
+    if (!project) return;
+    const text = `Confira este projeto incrível: *${project.title}* - Matriz Visual\nhttps://matrizvisual.com.br`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText('https://matrizvisual.com.br');
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -183,6 +198,28 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
               </div>
 
               <div className="lg:w-80 space-y-8">
+                {/* Share Actions */}
+                <div className="bg-matriz-purple/5 p-4 rounded-sm border border-matriz-purple/20">
+                    <h4 className="text-xs uppercase tracking-widest text-matriz-purple font-bold mb-3 flex items-center gap-2">
+                        <Share2 size={14} /> Compartilhar
+                    </h4>
+                    <div className="flex flex-col gap-2">
+                        <button 
+                            onClick={handleShareWhatsApp}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-black border border-[#25D366]/30 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
+                        >
+                            <MessageCircle size={16} /> WhatsApp
+                        </button>
+                        <button 
+                            onClick={handleCopyLink}
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
+                        >
+                            {linkCopied ? <Check size={16} className="text-green-500" /> : <Link2 size={16} />}
+                            {linkCopied ? 'Link Copiado!' : 'Copiar Link'}
+                        </button>
+                    </div>
+                </div>
+
                 {(project.client || project.date) && (
                   <div className="bg-white/5 p-6 rounded-sm border border-white/5 space-y-4">
                     {project.client && (
