@@ -112,38 +112,44 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   const showDescriptionTitle = (project.description || project.longDescription) && (project.description.length > 10 || (project.longDescription && project.longDescription.length > 10));
 
   const renderFullscreenView = () => (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 animate-fade-in touch-none">
       <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setFullscreenImage(null)}></div>
-      <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-        <button onClick={() => setFullscreenImage(null)} className="fixed top-6 right-6 z-[120] text-white/70 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10 backdrop-blur-md">
-          <X size={24} />
+      
+      <div className="relative z-[115] w-full h-full flex flex-col items-center justify-center">
+        {/* Close Button */}
+        <button onClick={() => setFullscreenImage(null)} className="fixed top-4 right-4 z-[130] text-white hover:text-matriz-purple bg-black/60 p-3 rounded-full border border-white/10 backdrop-blur-md transition-colors shadow-lg">
+          <X size={28} />
         </button>
         
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center p-2 md:p-8">
           <img 
             src={fullscreenImage!} 
             alt={`Visualização em tela cheia do projeto ${project.title}`} 
-            className="max-w-full max-h-full object-contain" 
+            className="max-w-full max-h-full object-contain shadow-2xl" 
             decoding="async"
           />
         </div>
         
-        {/* Navegação de IMAGENS na tela cheia */}
+        {/* Navegação de IMAGENS na tela cheia - MOBILE OTIMIZADO */}
         {allImages.length > 1 && (
           <>
             <button 
                 onClick={prevImage} 
-                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-matriz-purple border border-white/10 rounded-full z-[120] backdrop-blur-sm transition-all active:scale-95"
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 p-4 text-white bg-black/60 hover:bg-matriz-purple border border-white/20 rounded-full z-[130] backdrop-blur-md transition-all active:scale-95 shadow-lg touch-manipulation"
+                aria-label="Imagem Anterior"
             >
-              <ChevronLeft size={32} className="md:w-10 md:h-10" />
+              <ChevronLeft size={32} />
             </button>
+            
             <button 
                 onClick={nextImage} 
-                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-matriz-purple border border-white/10 rounded-full z-[120] backdrop-blur-sm transition-all active:scale-95"
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 p-4 text-white bg-black/60 hover:bg-matriz-purple border border-white/20 rounded-full z-[130] backdrop-blur-md transition-all active:scale-95 shadow-lg touch-manipulation"
+                aria-label="Próxima Imagem"
             >
-              <ChevronRight size={32} className="md:w-10 md:h-10" />
+              <ChevronRight size={32} />
             </button>
-            <div className="absolute bottom-6 bg-black/70 backdrop-blur-md px-4 py-2 text-sm text-white rounded-full border border-white/10 font-bold tracking-widest">
+            
+            <div className="absolute bottom-8 bg-black/70 backdrop-blur-md px-6 py-2 text-sm text-white rounded-full border border-white/10 font-bold tracking-widest z-[120]">
               {fullscreenIndex + 1} / {allImages.length}
             </div>
           </>
