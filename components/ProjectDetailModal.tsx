@@ -143,15 +143,15 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         </button>
         
         {fullscreenVideo && project.videoUrl ? (
-             <div className={`relative flex items-center justify-center 
+             <div className={`
                 ${isVerticalVideo 
-                    ? 'w-full h-[100dvh] p-0 md:h-full md:p-8 md:max-w-md' // Mobile: Full height, no padding. Desktop: contained
-                    : 'w-full h-full p-4 md:p-8 max-w-6xl mx-auto'}`
+                    ? 'fixed inset-0 w-full h-[100dvh] z-[120] bg-black' // Mobile/Vertical: Force fixed full screen ignoring parent
+                    : 'relative w-full h-full p-4 md:p-8 max-w-6xl mx-auto flex items-center justify-center'}` // Desktop/Horizontal: Standard centered
              }>
                 <iframe 
                     src={getEmbedUrl(project.videoUrl)} 
                     title={project.title} 
-                    className={`w-full ${isVerticalVideo ? 'h-full object-cover' : 'aspect-video shadow-2xl'}`} 
+                    className={`w-full h-full ${isVerticalVideo ? 'object-cover' : 'aspect-video shadow-2xl'}`} 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowFullScreen
