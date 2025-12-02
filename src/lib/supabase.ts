@@ -27,6 +27,8 @@ export const getStorageUrl = (path: string) => {
 /**
  * Faz upload de um arquivo para o Bucket 'portfolio-images' do Supabase.
  * OTIMIZA para WebP por padrão, a menos que skipOptimization seja true.
+ * @param file O arquivo para upload
+ * @param skipOptimization Se true, pula a conversão para WebP (útil para reverter para PNG)
  */
 export const uploadImage = async (file: File, skipOptimization = false): Promise<string | null> => {
   try {
@@ -35,6 +37,8 @@ export const uploadImage = async (file: File, skipOptimization = false): Promise
     if (!skipOptimization) {
       // 1. Otimização Padrão (WebP)
       fileToUpload = await optimizeImageForSupabase(file);
+    } else {
+      console.log(`[Upload] Pulando otimização para: ${file.name}`);
     }
 
     // 2. Preparar nome do arquivo
