@@ -288,6 +288,7 @@ const ProjectManager: React.FC = () => {
                   label="Categoria" 
                   value={formData.category} 
                   onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
+                  // Removendo 'Logotipos' da lista de categorias disponíveis para criar, forçando o uso do LogoManager (antigo) se desejado
                   options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
                   required 
                 />
@@ -327,8 +328,18 @@ const ProjectManager: React.FC = () => {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Curta (Card) <span className="text-matriz-purple">*</span></label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={2} required />
+                <label className="block text-gray-400 text-xs uppercase mb-1">
+                    Descrição Curta (Card) 
+                    {/* Descrição opcional se for Logotipos (caso reative no futuro) */}
+                    {formData.category !== ProjectCategory.LOGO && <span className="text-matriz-purple"> *</span>}
+                </label>
+                <textarea 
+                    value={formData.description} 
+                    onChange={e => setFormData({...formData, description: e.target.value})} 
+                    className="w-full bg-black border border-white/10 p-2 text-white rounded" 
+                    rows={2} 
+                    required={formData.category !== ProjectCategory.LOGO}
+                />
               </div>
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Descrição Longa (Detalhes)</label>
@@ -405,11 +416,12 @@ const ProjectManager: React.FC = () => {
         </div>
       )}
 
-      {/* Project List (Table) - Same as before */}
+      {/* Project List (Table) */}
       {loading ? (
         <div className="text-white">Carregando...</div>
       ) : (
         <div className="space-y-3">
+            {/* Table Header (Desktop Only) */}
             <div className="hidden md:grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-3">Imagem</div>
@@ -435,8 +447,9 @@ const ProjectManager: React.FC = () => {
                 <div className="md:hidden flex flex-col gap-3 p-3">
                     <div className="flex items-start gap-4">
                         {isReordering && <GripVertical size={20} className="text-matriz-purple mt-1 flex-shrink-0" />}
-                        <div className="h-16 w-16 overflow-hidden rounded bg-black flex-shrink-0">
-                            <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+                        {/* Imagem Aumentada para Mobile e com object-contain */}
+                        <div className="h-20 w-20 overflow-hidden rounded bg-black/50 border border-white/5 flex-shrink-0 p-1">
+                            <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-white font-bold break-words">{project.title}</p>
@@ -460,11 +473,12 @@ const ProjectManager: React.FC = () => {
                     <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
                         {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
                     </div>
-                    <div className="col-span-3 h-12 w-full overflow-hidden rounded bg-black">
-                        <img src={project.image_url} alt={project.title} className="w-full h-full object-cover" />
+                    {/* Imagem Aumentada para Desktop (h-24 ~ 96px) e com object-contain */}
+                    <div className="col-span-3 h-24 w-full overflow-hidden rounded bg-black/50 border border-white/5 flex items-center justify-center p-1">
+                        <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
                     </div>
                     <div className="col-span-5">
-                      <p className="text-white font-bold truncate">{project.title}</p>
+                      <p className="text-white font-bold truncate text-sm">{project.title}</p>
                       <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 mt-1 inline-block">
                           {project.category}
                       </span>
