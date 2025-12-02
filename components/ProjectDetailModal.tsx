@@ -45,16 +45,25 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
     setFullscreenImage(allImages[newIndex]);
   }, [fullscreenIndex, allImages]);
 
-  // Sharing Functions
+  // Sharing Functions - CORRIGIDO PARA DEEP LINKING
   const handleShareWhatsApp = () => {
     if (!project) return;
-    const text = `Confira este projeto incrível: *${project.title}* - Matriz Visual\nhttps://matrizvisual.com.br`;
+    
+    // Gera a URL específica com o ID do projeto
+    const deepLink = `${window.location.origin}/?project=${project.id}`;
+    
+    const text = `Confira este projeto incrível: *${project.title}* - Matriz Visual\n${deepLink}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText('https://matrizvisual.com.br');
+    if (!project) return;
+    
+    // Gera a URL específica com o ID do projeto
+    const deepLink = `${window.location.origin}/?project=${project.id}`;
+    
+    navigator.clipboard.writeText(deepLink);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
@@ -168,6 +177,19 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({ project, onClos
                 <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">{project.title}</h2>
                 <h3 className="text-xl font-bold text-white mb-4">Sobre o Projeto</h3>
                 <p className="text-gray-300 leading-relaxed mb-8 text-lg">{project.longDescription || project.description}</p>
+                
+                {project.category === 'Web Sites' && (
+                    <div className="mb-8">
+                         <a 
+                            href={project.videoUrl || '#'} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm"
+                         >
+                            <Link2 size={18} /> Acessar Site
+                         </a>
+                    </div>
+                )}
 
                 {hasGallery && (
                   <div className="space-y-4">

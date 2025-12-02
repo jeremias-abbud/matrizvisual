@@ -1,12 +1,12 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase'; // Novo componente da vitrine
 import ProjectDetailModal from './ProjectDetailModal'; // Import the new modal
 import { Project, ProjectCategory } from '../types';
 import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package } from 'lucide-react';
+import { supabase } from '../src/lib/supabase';
 
 const MasterPortfolio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video'>('overview');
@@ -14,11 +14,79 @@ const MasterPortfolio: React.FC = () => {
 
   const handleProjectClick = (project: Project) => {
     setSelectedProject(project);
+    // Opcional: Atualizar URL sem recarregar para criar histórico
+    const newUrl = `${window.location.pathname}?project=${project.id}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
   };
 
   const handleCloseModal = () => {
     setSelectedProject(null);
+    // Limpar URL ao fechar
+    const newUrl = window.location.pathname;
+    window.history.pushState({ path: newUrl }, '', newUrl);
   };
+  
+  // DEEP LINKING LOGIC
+  useEffect(() => {
+    const checkDeepLink = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const projectId = params.get('project');
+
+        if (projectId) {
+            // Tenta buscar na tabela de projetos
+            let { data: projectData, error } = await supabase
+                .from('projects')
+                .select('*')
+                .eq('id', projectId)
+                .single();
+
+            // Se não achou em projetos, ou se o ID parece ser de logo antigo (ex: old_123 ou apenas numérico se não for UUID)
+            if (!projectData) {
+                 // Tenta limpar prefixos comuns se houver
+                 const cleanId = projectId.replace('old_', '').replace('logo_', '');
+                 const { data: logoData } = await supabase
+                    .from('logos')
+                    .select('*')
+                    .eq('id', cleanId)
+                    .single();
+                 
+                 if (logoData) {
+                     // Formata como projeto
+                     setSelectedProject({
+                        id: `logo_${logoData.id}`,
+                        title: logoData.name,
+                        category: ProjectCategory.LOGO,
+                        industry: logoData.industry,
+                        imageUrl: logoData.url,
+                        description: 'Projeto de identidade visual e design de logotipo.',
+                        tags: ['Logotipo', 'Branding'],
+                        client: logoData.name,
+                     });
+                     return;
+                 }
+            }
+
+            if (projectData) {
+                 setSelectedProject({
+                    id: projectData.id,
+                    title: projectData.title,
+                    category: projectData.category as ProjectCategory,
+                    industry: projectData.industry,
+                    imageUrl: projectData.image_url,
+                    description: projectData.description,
+                    tags: projectData.tags || [],
+                    client: projectData.client,
+                    date: projectData.date,
+                    longDescription: projectData.long_description,
+                    gallery: projectData.gallery,
+                    videoUrl: projectData.video_url,
+                 });
+            }
+        }
+    };
+
+    checkDeepLink();
+  }, []);
 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
