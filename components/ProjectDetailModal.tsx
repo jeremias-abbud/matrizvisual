@@ -143,13 +143,15 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         </button>
         
         {fullscreenVideo && project.videoUrl ? (
-             <div className={`relative w-full h-full flex items-center justify-center p-0 md:p-8 
-                ${isVerticalVideo ? 'w-full md:max-w-md md:mx-auto' : 'max-w-6xl mx-auto'}`
+             <div className={`relative flex items-center justify-center 
+                ${isVerticalVideo 
+                    ? 'w-full h-[100dvh] p-0 md:h-full md:p-8 md:max-w-md' // Mobile: Full height, no padding. Desktop: contained
+                    : 'w-full h-full p-4 md:p-8 max-w-6xl mx-auto'}`
              }>
                 <iframe 
                     src={getEmbedUrl(project.videoUrl)} 
                     title={project.title} 
-                    className={`w-full ${isVerticalVideo ? 'h-[100dvh] md:h-[90vh]' : 'aspect-video shadow-2xl'}`} 
+                    className={`w-full ${isVerticalVideo ? 'h-full object-cover' : 'aspect-video shadow-2xl'}`} 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowFullScreen
@@ -243,7 +245,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     allowFullScreen
                   ></iframe>
                    <button onClick={openVideoFullscreen} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 flex items-center gap-2 backdrop-blur-sm z-20" title="Ver em tela cheia">
-                        <Maximize size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Expandir</span>
+                        <Maximize size={20} /> <span className="text-xs font-bold uppercase ml-2">Expandir</span>
                    </button>
               </>
             ) : (
@@ -257,7 +259,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     decoding="async"
                 />
                 <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-2 backdrop-blur-sm" title="Ver em tela cheia">
-                  <Maximize size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Expandir</span>
+                  <Maximize size={20} /> <span className="text-xs font-bold uppercase ml-2">Expandir</span>
                 </button>
               </>
             )}
