@@ -22,7 +22,11 @@ interface Project {
   display_order?: number;
 }
 
-const ProjectManager: React.FC = () => {
+interface ProjectManagerProps {
+    forcedCategory?: ProjectCategory;
+}
+
+const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -37,7 +41,7 @@ const ProjectManager: React.FC = () => {
   // Form States
   const [formData, setFormData] = useState({
     title: '',
-    category: ProjectCategory.DESIGN,
+    category: forcedCategory || ProjectCategory.DESIGN, // Default to forced or Design
     industry: '',
     description: '',
     longDescription: '',
@@ -52,14 +56,28 @@ const ProjectManager: React.FC = () => {
 
   useEffect(() => {
     fetchProjects();
-  }, []);
+  }, [forcedCategory]); // Re-fetch when category changes
+
+  // Update form default category when forcedCategory prop changes
+  useEffect(() => {
+      if (forcedCategory) {
+          setFormData(prev => ({ ...prev, category: forcedCategory }));
+      }
+  }, [forcedCategory]);
 
   const fetchProjects = async () => {
-    const { data } = await supabase
+    setLoading(true);
+    let query = supabase
         .from('projects')
         .select('*')
         .order('display_order', { ascending: true, nullsFirst: true })
         .order('created_at', { ascending: false });
+
+    if (forcedCategory) {
+        query = query.eq('category', forcedCategory);
+    }
+        
+    const { data } = await query;
         
     if (data) setProjects(data);
     setLoading(false);
@@ -101,7 +119,7 @@ const ProjectManager: React.FC = () => {
     setEditingProject(null);
     setFormData({
       title: '',
-      category: ProjectCategory.DESIGN,
+      category: forcedCategory || ProjectCategory.DESIGN,
       industry: '',
       description: '',
       longDescription: '',
@@ -217,7 +235,7 @@ const ProjectManager: React.FC = () => {
     }
   };
 
-  // --- Drag & Drop logic remains same ---
+  // --- Drag & Drop logic ---
   const handleDragStart = (index: number) => setDraggedItemIndex(index);
   const handleDragEnter = (index: number) => {
     if (draggedItemIndex === null || draggedItemIndex === index) return;
@@ -245,10 +263,21 @@ const ProjectManager: React.FC = () => {
   let linkLabel = "Link do Vídeo (YouTube / Vimeo)";
   if (formData.category === ProjectCategory.WEB) linkLabel = "Link do Site (URL)";
 
+  // Determine Page Title
+  let pageTitle = "Gerenciar Portfólio";
+  if (forcedCategory) {
+      if (forcedCategory === ProjectCategory.WEB) pageTitle = "Gerenciar Websites";
+      else if (forcedCategory === ProjectCategory.DESIGN) pageTitle = "Gerenciar Design Gráfico";
+      else if (forcedCategory === ProjectCategory.VIDEO) pageTitle = "Gerenciar Vídeos";
+      else if (forcedCategory === ProjectCategory.PACKAGING) pageTitle = "Gerenciar Embalagens";
+      else if (forcedCategory === ProjectCategory.MODELS) pageTitle = "Gerenciar Modelos";
+      else pageTitle = `Gerenciar ${forcedCategory}`;
+  }
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h2 className="text-2xl font-display font-bold text-white">Gerenciar Portfólio</h2>
+        <h2 className="text-2xl font-display font-bold text-white">{pageTitle}</h2>
         <div className="flex gap-3">
              {isReordering ? (
                  <>
@@ -263,7 +292,7 @@ const ProjectManager: React.FC = () => {
                         <GripVertical size={18} /> Reordenar
                     </button>
                     <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors">
-                        <Plus size={18} /> Adicionar Projeto
+                        <Plus size={18} /> Adicionar Novo
                     </button>
                 </>
              )}
@@ -274,7 +303,7 @@ const ProjectManager: React.FC = () => {
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 overflow-y-auto">
           <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-3xl w-full my-10 relative">
             <div className="flex justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">{editingProject ? 'Editar Projeto' : 'Novo Projeto'}</h3>
+              <h3 className="text-xl font-bold text-white">{editingProject ? 'Editar Projeto' : `Novo ${forcedCategory ? 'Item' : 'Projeto'}`}</h3>
               <button onClick={resetForm} className="text-gray-400 hover:text-white"><X /></button>
             </div>
             
@@ -283,16 +312,31 @@ const ProjectManager: React.FC = () => {
                 <label className="block text-gray-400 text-xs uppercase mb-1">Título <span className="text-matriz-purple">*</span></label>
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
-              <div>
-                <ModernSelect 
-                  label="Categoria" 
-                  value={formData.category} 
-                  onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
-                  // Removendo 'Logotipos' da lista de categorias disponíveis para criar, forçando o uso do LogoManager (antigo) se desejado
-                  options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
-                  required 
-                />
-              </div>
+              
+              {/* Category Select - Hidden/Read-only if forced */}
+              {forcedCategory ? (
+                  <div>
+                      <label className="block text-gray-400 text-xs uppercase mb-1">Categoria</label>
+                      <input 
+                        type="text" 
+                        value={formData.category} 
+                        readOnly 
+                        className="w-full bg-black/50 border border-white/5 p-2 text-gray-400 rounded cursor-not-allowed border-dashed" 
+                      />
+                  </div>
+              ) : (
+                <div>
+                    <ModernSelect 
+                    label="Categoria" 
+                    value={formData.category} 
+                    onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
+                    // Removendo 'Logotipos' da lista de categorias disponíveis para criar, forçando o uso do LogoManager (antigo) se desejado
+                    options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
+                    required 
+                    />
+                </div>
+              )}
+
               <div>
                 <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
               </div>
@@ -303,7 +347,6 @@ const ProjectManager: React.FC = () => {
                     {formData.videoUrl ? <span className="text-green-500 font-normal ml-2">(Opcional: Será usada a capa do vídeo)</span> : <span className="text-matriz-purple ml-1">*</span>}
                 </label>
                 <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
-                    {/* Input não é mais required hardcoded, validamos no submit */}
                     <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
                         <Upload size={24} />
@@ -330,7 +373,6 @@ const ProjectManager: React.FC = () => {
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">
                     Descrição Curta (Card) 
-                    {/* Descrição opcional se for Logotipos (caso reative no futuro) */}
                     {formData.category !== ProjectCategory.LOGO && <span className="text-matriz-purple"> *</span>}
                 </label>
                 <textarea 
@@ -364,7 +406,6 @@ const ProjectManager: React.FC = () => {
                 {/* Previews */}
                 {(existingGalleryUrls.length > 0 || galleryFiles.length > 0) && (
                     <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
-                        {/* Existing Images */}
                         {existingGalleryUrls.map((url, idx) => (
                             <div key={`exist-${idx}`} className="relative aspect-square group border border-white/10 rounded overflow-hidden">
                                 <img src={url} alt="Galeria" className="w-full h-full object-cover" />
@@ -374,7 +415,6 @@ const ProjectManager: React.FC = () => {
                                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center text-white py-0.5">Salva</div>
                             </div>
                         ))}
-                        {/* New Files */}
                         {galleryFiles.map((file, idx) => (
                             <div key={`new-${idx}`} className="relative aspect-square group border border-matriz-purple/50 rounded overflow-hidden">
                                 <img src={URL.createObjectURL(file)} alt="Preview" className="w-full h-full object-cover" />
@@ -429,69 +469,75 @@ const ProjectManager: React.FC = () => {
                 <div className="col-span-3 text-right">Ações</div>
             </div>
             
-            {projects.map((project, index) => (
-              <div 
-                key={project.id} 
-                className={`bg-black/40 border border-white/5 rounded transition-colors ${
-                  isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' : 'hover:bg-white/5'
-                } ${
-                  isReordering && draggedItemIndex === index ? 'opacity-50 border-dashed border-matriz-purple' : ''
-                }`}
-                draggable={isReordering} 
-                onDragStart={() => handleDragStart(index)} 
-                onDragEnter={() => handleDragEnter(index)} 
-                onDragEnd={handleDragEnd} 
-                onDragOver={(e) => e.preventDefault()}
-              >
-                {/* Mobile Card Layout */}
-                <div className="md:hidden flex flex-col gap-3 p-3">
-                    <div className="flex items-start gap-4">
-                        {isReordering && <GripVertical size={20} className="text-matriz-purple mt-1 flex-shrink-0" />}
-                        {/* Imagem Aumentada para Mobile e com object-contain */}
-                        <div className="h-20 w-20 overflow-hidden rounded bg-black/50 border border-white/5 flex-shrink-0 p-1">
+            {projects.length === 0 ? (
+                <div className="text-center py-10 text-gray-500 italic border border-white/5 rounded">
+                    Nenhum item encontrado nesta categoria. Clique em "Adicionar Novo" para começar.
+                </div>
+            ) : (
+                projects.map((project, index) => (
+                <div 
+                    key={project.id} 
+                    className={`bg-black/40 border border-white/5 rounded transition-colors ${
+                    isReordering ? 'cursor-move hover:border-matriz-purple hover:bg-white/10' : 'hover:bg-white/5'
+                    } ${
+                    isReordering && draggedItemIndex === index ? 'opacity-50 border-dashed border-matriz-purple' : ''
+                    }`}
+                    draggable={isReordering} 
+                    onDragStart={() => handleDragStart(index)} 
+                    onDragEnter={() => handleDragEnter(index)} 
+                    onDragEnd={handleDragEnd} 
+                    onDragOver={(e) => e.preventDefault()}
+                >
+                    {/* Mobile Card Layout */}
+                    <div className="md:hidden flex flex-col gap-3 p-3">
+                        <div className="flex items-start gap-4">
+                            {isReordering && <GripVertical size={20} className="text-matriz-purple mt-1 flex-shrink-0" />}
+                            {/* Imagem Aumentada para Mobile e com object-contain */}
+                            <div className="h-20 w-20 overflow-hidden rounded bg-black/50 border border-white/5 flex-shrink-0 p-1">
+                                <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white font-bold break-words">{project.title}</p>
+                                <span className="px-2 py-0.5 mt-1 inline-block bg-matriz-purple/20 text-matriz-purple text-[10px] rounded border border-matriz-purple/30">
+                                    {project.category}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="border-t border-white/5 pt-3 flex justify-end items-center">
+                            {!isReordering && (
+                            <div className="flex justify-end gap-2">
+                                <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
+                                <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                            </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Desktop Table Row Layout */}
+                    <div className="hidden md:grid md:grid-cols-12 gap-4 items-center p-3">
+                        <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
+                            {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
+                        </div>
+                        {/* Imagem Aumentada para Desktop (h-24 ~ 96px) e com object-contain */}
+                        <div className="col-span-3 h-24 w-full overflow-hidden rounded bg-black/50 border border-white/5 flex items-center justify-center p-1">
                             <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-white font-bold break-words">{project.title}</p>
-                            <span className="px-2 py-0.5 mt-1 inline-block bg-matriz-purple/20 text-matriz-purple text-[10px] rounded border border-matriz-purple/30">
-                                {project.category}
-                            </span>
+                        <div className="col-span-5">
+                        <p className="text-white font-bold truncate text-sm">{project.title}</p>
+                        <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 mt-1 inline-block">
+                            {project.category}
+                        </span>
+                        </div>
+                        <div className="col-span-3 flex justify-end gap-2">
+                            {!isReordering && (<>
+                                <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
+                                <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                            </>)}
                         </div>
                     </div>
-                    <div className="border-t border-white/5 pt-3 flex justify-end items-center">
-                        {!isReordering && (
-                        <div className="flex justify-end gap-2">
-                            <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
-                            <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
-                        </div>
-                        )}
-                    </div>
                 </div>
-
-                {/* Desktop Table Row Layout */}
-                <div className="hidden md:grid md:grid-cols-12 gap-4 items-center p-3">
-                    <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
-                        {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
-                    </div>
-                    {/* Imagem Aumentada para Desktop (h-24 ~ 96px) e com object-contain */}
-                    <div className="col-span-3 h-24 w-full overflow-hidden rounded bg-black/50 border border-white/5 flex items-center justify-center p-1">
-                        <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
-                    </div>
-                    <div className="col-span-5">
-                      <p className="text-white font-bold truncate text-sm">{project.title}</p>
-                      <span className="px-2 py-1 bg-matriz-purple/20 text-matriz-purple text-xs rounded border border-matriz-purple/30 mt-1 inline-block">
-                          {project.category}
-                      </span>
-                    </div>
-                    <div className="col-span-3 flex justify-end gap-2">
-                        {!isReordering && (<>
-                            <button onClick={() => handleEdit(project)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
-                            <button onClick={() => handleDelete(project.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
-                        </>)}
-                    </div>
-                </div>
-            </div>
-            ))}
+                ))
+            )}
         </div>
       )}
     </div>
