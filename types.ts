@@ -6,7 +6,8 @@ export enum ProjectCategory {
   DESIGN = 'Design Gráfico',
   WEB = 'Web Sites',
   VIDEO = 'Vídeos',
-  PACKAGING = 'Rótulos & Embalagens'
+  PACKAGING = 'Rótulos & Embalagens',
+  MODELS = 'Modelos e Personagens'
 }
 
 export interface Project {
