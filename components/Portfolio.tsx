@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../src/lib/supabase';
 import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
 import { Project, ProjectCategory } from '../types';
-import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
@@ -173,7 +173,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] animate-fade-in flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/50 hover:shadow-[0_0_30px_rgba(139,92,246,0.15)] rounded-sm h-full" 
                     onClick={() => onProjectClick(project, visibleProjects)}
                 >
-                    {/* 1. IMAGE SECTION */}
+                    {/* 1. IMAGE SECTION (Unified for Mobile & Desktop) */}
                     <div className="aspect-video overflow-hidden relative bg-black/50 border-b border-white/5">
                         <img 
                             src={project.imageUrl} 
@@ -183,9 +183,18 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             className="w-full h-full object-contain p-2 transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
+                        
+                        {/* Play Icon Overlay for Videos */}
+                        {project.category === ProjectCategory.VIDEO && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="bg-matriz-purple/80 p-3 rounded-full text-white shadow-lg backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Play size={20} fill="currentColor" />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* 2. INFO SECTION */}
+                    {/* 2. INFO SECTION (Unified Bottom Layout) */}
                     <div className="p-5 flex flex-col justify-between flex-grow bg-matriz-dark transition-colors duration-300 group-hover:bg-[#151515]">
                         <div>
                             <div className="flex justify-between items-start mb-2">

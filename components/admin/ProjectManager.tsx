@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
@@ -230,9 +230,9 @@ const ProjectManager: React.FC = () => {
     finally { setUploading(false); }
   };
 
-  const linkLabel = formData.category === ProjectCategory.WEB 
-    ? "Link do Site (URL)" 
-    : "Link de Vídeo (YouTube/Vimeo)";
+  // Label Dinâmico
+  let linkLabel = "Link do Vídeo (YouTube / Vimeo)";
+  if (formData.category === ProjectCategory.WEB) linkLabel = "Link do Site (URL)";
 
   return (
     <div>
@@ -299,8 +299,17 @@ const ProjectManager: React.FC = () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">{linkLabel}</label>
-                <input type="text" placeholder="Ex: https://..." value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+                <label className="block text-gray-400 text-xs uppercase mb-1 font-bold flex items-center gap-2">
+                    {formData.category === ProjectCategory.VIDEO && <Video size={14} className="text-matriz-purple" />}
+                    {linkLabel}
+                </label>
+                <input type="text" placeholder={formData.category === ProjectCategory.VIDEO ? "Ex: https://vimeo.com/123456" : "Ex: https://meusite.com"} value={formData.videoUrl} onChange={e => setFormData({...formData, videoUrl: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" />
+                {formData.category === ProjectCategory.VIDEO && (
+                    <div className="mt-2 flex items-start gap-2 text-gray-500 text-xs p-2 bg-blue-500/5 border border-blue-500/10 rounded">
+                        <Info size={14} className="mt-0.5 text-blue-400" />
+                        <p>Recomendamos hospedar vídeos no <strong>Vimeo</strong> ou <strong>YouTube</strong> e colar o link aqui. Isso economiza seu banco de dados e garante carregamento rápido.</p>
+                    </div>
+                )}
               </div>
               
               <div className="md:col-span-2">
