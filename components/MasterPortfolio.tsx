@@ -5,7 +5,7 @@ import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase';
 import ProjectDetailModal from './ProjectDetailModal';
 import { Project, ProjectCategory } from '../types';
-import { PenTool, Monitor, Video, Grid, Sparkles, Users, Share2, Check, Link } from 'lucide-react';
+import { PenTool, Monitor, Video, Grid, Sparkles, Users, Share2, Check, Link, Box } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 
 const MasterPortfolio: React.FC = () => {
@@ -160,8 +160,8 @@ const MasterPortfolio: React.FC = () => {
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
-    { id: 'models', label: 'Modelos e Personagens', icon: <Users size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
+    { id: 'models', label: 'Personagens', icon: <Users size={16} /> },
     { id: 'video', label: 'Vídeos', icon: <Video size={16} /> },
   ];
 
@@ -182,28 +182,42 @@ const MasterPortfolio: React.FC = () => {
               </p>
           </div>
 
-          <div className="flex flex-col items-center mb-12 gap-6">
-            <div className="flex flex-wrap justify-center gap-3">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        data-tab-id={tab.id}
-                        onClick={() => {
-                            setActiveTab(tab.id as any);
-                            // Atualiza a URL sem recarregar quando o usuário clica manualmente
-                            const newUrl = `${window.location.pathname}?tab=${tab.id}`;
-                            window.history.replaceState({ path: newUrl }, '', newUrl);
-                        }}
-                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 font-bold uppercase text-[10px] md:text-xs tracking-widest ${
-                            activeTab === tab.id
-                            ? 'bg-matriz-purple border-matriz-purple text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] transform scale-105'
-                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/30'
-                        }`}
-                    >
-                        {tab.icon}
-                        {tab.label}
-                    </button>
-                ))}
+          <div className="flex flex-col items-center mb-16 gap-6 w-full">
+            {/* GEOMETRIC NAVIGATION CONTAINER */}
+            <div className="w-full max-w-6xl mx-auto overflow-x-auto custom-scrollbar md:overflow-visible py-4 px-2">
+                <div className="flex md:flex-wrap justify-start md:justify-center min-w-max gap-3 md:gap-4">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            data-tab-id={tab.id}
+                            onClick={() => {
+                                setActiveTab(tab.id as any);
+                                const newUrl = `${window.location.pathname}?tab=${tab.id}`;
+                                window.history.replaceState({ path: newUrl }, '', newUrl);
+                            }}
+                            className={`
+                                group relative flex items-center justify-center gap-3 px-6 py-4 min-w-[160px]
+                                border transition-all duration-200 
+                                font-display font-bold uppercase text-xs tracking-widest
+                                ${activeTab === tab.id
+                                    ? 'bg-matriz-purple border-matriz-purple text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] translate-x-[-2px] translate-y-[-2px]'
+                                    : 'bg-matriz-dark border-white/10 text-gray-500 hover:border-matriz-purple/50 hover:text-white hover:bg-white/5'
+                                }
+                            `}
+                        >
+                            {/* Decorative Corners (Tech Feel) */}
+                            <div className={`absolute top-0 left-0 w-1 h-1 transition-colors ${activeTab === tab.id ? 'bg-white/40' : 'bg-transparent group-hover:bg-white/20'}`}></div>
+                            <div className={`absolute bottom-0 right-0 w-1 h-1 transition-colors ${activeTab === tab.id ? 'bg-white/40' : 'bg-transparent group-hover:bg-white/20'}`}></div>
+                            <div className={`absolute top-0 right-0 w-1 h-1 transition-colors ${activeTab === tab.id ? 'bg-white/40' : 'bg-transparent group-hover:bg-white/20'}`}></div>
+                            <div className={`absolute bottom-0 left-0 w-1 h-1 transition-colors ${activeTab === tab.id ? 'bg-white/40' : 'bg-transparent group-hover:bg-white/20'}`}></div>
+
+                            <span className={`${activeTab === tab.id ? 'text-white' : 'text-matriz-purple group-hover:text-white'} transition-colors duration-300`}>
+                                {tab.icon}
+                            </span>
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Share Category Button */}
@@ -223,8 +237,8 @@ const MasterPortfolio: React.FC = () => {
               )}
 
               {activeTab === 'logos' && (
-                  <div className="bg-matriz-dark/30 rounded-lg p-4 md:p-8 border border-white/5">
-                      <LogoGrid headless onProjectClick={handleProjectClick} />
+                  <div className="bg-matriz-dark/30 p-0 md:p-8 border border-white/5">
+                      <LogoGrid headless limit={100} onProjectClick={handleProjectClick} />
                   </div>
               )}
 

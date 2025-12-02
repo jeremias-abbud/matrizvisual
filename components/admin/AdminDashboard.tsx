@@ -76,7 +76,7 @@ const AdminDashboard: React.FC = () => {
             <MenuButton id="sites" label="Websites" icon={Monitor} active={activeTab === 'sites'} />
             <MenuButton id="design" label="Design Gráfico" icon={Palette} active={activeTab === 'design'} />
             <MenuButton id="video" label="Vídeos" icon={Video} active={activeTab === 'video'} />
-            <MenuButton id="models" label="Modelos/Personagens" icon={Users} active={activeTab === 'models'} />
+            <MenuButton id="models" label="Personagens" icon={Users} active={activeTab === 'models'} />
 
             <div className="w-full h-px bg-white/5 my-4"></div>
             
