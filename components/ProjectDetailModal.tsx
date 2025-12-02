@@ -111,6 +111,13 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   const hasGallery = project.gallery && project.gallery.length > 0;
   const showDescriptionTitle = (project.description || project.longDescription) && (project.description.length > 10 || (project.longDescription && project.longDescription.length > 10));
 
+  // Detecta se é um vídeo vertical (Shorts/Reels) para ajustar o player no mobile
+  const isVerticalVideo = project.category === 'Vídeos' && project.videoUrl && (
+    project.videoUrl.includes('/shorts/') || 
+    project.videoUrl.includes('tiktok') || 
+    project.videoUrl.includes('reel')
+  );
+
   const renderFullscreenView = () => (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 animate-fade-in touch-none">
       <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setFullscreenImage(null)}></div>
@@ -190,12 +197,25 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             <X size={24} />
           </button>
           
-          <div className="w-full h-auto aspect-video max-h-[60vh] bg-matriz-black flex items-center justify-center clear-both relative group">
+          <div className={`w-full bg-matriz-black flex items-center justify-center clear-both relative group ${
+              isVerticalVideo 
+                ? 'aspect-[9/16] md:aspect-video h-[75vh] md:h-auto md:max-h-[60vh]' 
+                : 'aspect-video h-auto max-h-[60vh]'
+          }`}>
             {project.videoUrl && project.category === 'Vídeos' ? (
-              <iframe src={getEmbedUrl(project.videoUrl)} title={project.title} className="w-full h-full" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+              <iframe 
+                key={project.id} // FORÇA O REACT A RECRIAR O IFRAME AO TROCAR DE PROJETO
+                src={getEmbedUrl(project.videoUrl)} 
+                title={project.title} 
+                className="w-full h-full" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+              ></iframe>
             ) : (
               <>
                 <img 
+                    key={project.id} // FORÇA O REACT A RECRIAR A IMAGEM AO TROCAR DE PROJETO
                     src={project.imageUrl} 
                     alt={project.title} 
                     className="w-full h-full object-contain cursor-pointer" 
