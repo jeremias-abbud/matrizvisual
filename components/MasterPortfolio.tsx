@@ -1,16 +1,15 @@
 
-
 import React, { useState, useEffect } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase';
 import ProjectDetailModal from './ProjectDetailModal';
 import { Project, ProjectCategory } from '../types';
-import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package, Users, Share2, Check, Link, ChefHat, Briefcase } from 'lucide-react';
+import { PenTool, Monitor, Video, Grid, Sparkles, Package, Users, Share2, Check, Link } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 
 const MasterPortfolio: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video' | 'models' | 'gastronomy' | 'professionals'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video' | 'models'>('overview');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [tabLinkCopied, setTabLinkCopied] = useState(false);
   
@@ -161,12 +160,10 @@ const MasterPortfolio: React.FC = () => {
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
     { id: 'logos', label: 'Logotipos', icon: <Grid size={16} /> },
     { id: 'sites', label: 'Websites', icon: <Monitor size={16} /> },
-    { id: 'gastronomy', label: 'Gastronomia', icon: <ChefHat size={16} /> },
     { id: 'packaging', label: 'Rótulos & Embalagens', icon: <Package size={16} /> },
     { id: 'models', label: 'Modelos e Personagens', icon: <Users size={16} /> },
     { id: 'design', label: 'Design Gráfico', icon: <PenTool size={16} /> },
     { id: 'video', label: 'Vídeos', icon: <Video size={16} /> },
-    { id: 'professionals', label: 'Profissionais', icon: <Briefcase size={16} /> },
   ];
 
   return (
@@ -236,10 +233,6 @@ const MasterPortfolio: React.FC = () => {
                   <Portfolio headless forcedCategory={ProjectCategory.WEB} onProjectClick={handleProjectClick} />
               )}
 
-              {activeTab === 'gastronomy' && (
-                  <Portfolio headless forcedCategory={ProjectCategory.GASTRONOMY} onProjectClick={handleProjectClick} />
-              )}
-
               {activeTab === 'packaging' && (
                   <Portfolio headless forcedCategory={ProjectCategory.PACKAGING} onProjectClick={handleProjectClick} />
               )}
@@ -254,10 +247,6 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'video' && (
                   <Portfolio headless forcedCategory={ProjectCategory.VIDEO} onProjectClick={handleProjectClick} />
-              )}
-
-              {activeTab === 'professionals' && (
-                  <Portfolio headless forcedCategory={ProjectCategory.PROFESSIONALS} onProjectClick={handleProjectClick} />
               )}
           </div>
 

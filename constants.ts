@@ -1,5 +1,4 @@
 
-
 import { Project, ProjectCategory, Service } from './types';
 
 export const INDUSTRIES = [

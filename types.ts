@@ -1,5 +1,4 @@
 
-
 export enum ProjectCategory {
   ALL = 'Todos',
   LOGO = 'Logotipos',
@@ -7,9 +6,7 @@ export enum ProjectCategory {
   WEB = 'Web Sites',
   VIDEO = 'Vídeos',
   PACKAGING = 'Rótulos & Embalagens',
-  MODELS = 'Modelos e Personagens',
-  GASTRONOMY = 'Gastronomia & Culinária',
-  PROFESSIONALS = 'Serviços & Profissionais'
+  MODELS = 'Modelos e Personagens'
 }
 
 export interface Project {
