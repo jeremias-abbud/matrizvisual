@@ -183,9 +183,14 @@ const MasterPortfolio: React.FC = () => {
           </div>
 
           <div className="flex flex-col items-center mb-16 gap-6 w-full">
-            {/* GEOMETRIC NAVIGATION CONTAINER */}
-            <div className="w-full max-w-6xl mx-auto overflow-x-auto custom-scrollbar md:overflow-visible py-4 px-2">
-                <div className="flex md:flex-wrap justify-start md:justify-center min-w-max gap-3 md:gap-4">
+            {/* GEOMETRIC NAVIGATION GRID (RESPONSIVE) */}
+            <div className="w-full max-w-6xl mx-auto py-4 px-2">
+                {/* 
+                   Mobile: Grid 2 cols
+                   Tablet (md): Grid 3 cols 
+                   Desktop (lg): Flex Row Centered 
+                */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:justify-center lg:flex-wrap gap-2 md:gap-4">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
@@ -196,9 +201,9 @@ const MasterPortfolio: React.FC = () => {
                                 window.history.replaceState({ path: newUrl }, '', newUrl);
                             }}
                             className={`
-                                group relative flex items-center justify-center gap-3 px-6 py-4 min-w-[160px]
+                                group relative flex items-center justify-center gap-2 md:gap-3 px-2 md:px-6 py-4 w-full lg:w-auto lg:min-w-[160px]
                                 border transition-all duration-200 
-                                font-display font-bold uppercase text-xs tracking-widest
+                                font-display font-bold uppercase text-[9px] xs:text-[10px] md:text-xs tracking-wide md:tracking-widest
                                 ${activeTab === tab.id
                                     ? 'bg-matriz-purple border-matriz-purple text-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.1)] translate-x-[-2px] translate-y-[-2px]'
                                     : 'bg-matriz-dark border-white/10 text-gray-500 hover:border-matriz-purple/50 hover:text-white hover:bg-white/5'
@@ -214,7 +219,7 @@ const MasterPortfolio: React.FC = () => {
                             <span className={`${activeTab === tab.id ? 'text-white' : 'text-matriz-purple group-hover:text-white'} transition-colors duration-300`}>
                                 {tab.icon}
                             </span>
-                            {tab.label}
+                            <span className="whitespace-nowrap">{tab.label}</span>
                         </button>
                     ))}
                 </div>
