@@ -1,17 +1,17 @@
 
-
 import React, { useState, useEffect } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
 import AllProjectsShowcase from './AllProjectsShowcase';
 import ProjectDetailModal from './ProjectDetailModal';
 import { Project, ProjectCategory } from '../types';
-import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package, Users } from 'lucide-react';
+import { LayoutGrid, PenTool, Monitor, Video, Grid, Sparkles, Package, Users, Share2, Check, Link } from 'lucide-react';
 import { supabase } from '../src/lib/supabase';
 
 const MasterPortfolio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'logos' | 'sites' | 'packaging' | 'design' | 'video' | 'models'>('overview');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [tabLinkCopied, setTabLinkCopied] = useState(false);
   
   // Estado para controlar a navegação (Carrossel)
   const [projectList, setProjectList] = useState<Project[]>([]);
@@ -60,16 +60,39 @@ const MasterPortfolio: React.FC = () => {
 
   const handleCloseModal = () => {
     setSelectedProject(null);
-    const newUrl = window.location.pathname;
+    // Ao fechar, mantemos a aba na URL se ela existir
+    const params = new URLSearchParams(window.location.search);
+    const currentTab = params.get('tab');
+    const newUrl = currentTab ? `${window.location.pathname}?tab=${currentTab}` : window.location.pathname;
     window.history.pushState({ path: newUrl }, '', newUrl);
   };
   
-  // DEEP LINKING LOGIC
+  // DEEP LINKING LOGIC (Projects & Tabs)
   useEffect(() => {
-    const checkDeepLink = async () => {
+    const handleDeepLinks = async () => {
         const params = new URLSearchParams(window.location.search);
         const projectId = params.get('project');
+        const tabId = params.get('tab');
 
+        // 1. Handle Tab Deep Link
+        if (tabId && tabs.some(t => t.id === tabId)) {
+            setActiveTab(tabId as any);
+            // Scroll to portfolio section smoothly after a small delay to ensure rendering
+            setTimeout(() => {
+                const element = document.getElementById('portfolio');
+                if (element) {
+                    const headerOffset = 100;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        }
+
+        // 2. Handle Project Deep Link (Prioridade sobre a aba se ambos existirem)
         if (projectId) {
             let { data: projectData } = await supabase
                 .from('projects')
@@ -97,7 +120,7 @@ const MasterPortfolio: React.FC = () => {
                         client: logoData.name,
                      } as Project;
                      
-                     handleProjectClick(logoProject); // Sem contexto no deep link inicial
+                     handleProjectClick(logoProject); 
                      return;
                  }
             }
@@ -123,8 +146,15 @@ const MasterPortfolio: React.FC = () => {
         }
     };
 
-    checkDeepLink();
+    handleDeepLinks();
   }, []);
+
+  const handleCopyCategoryLink = () => {
+      const url = `${window.location.origin}/?tab=${activeTab}#portfolio`;
+      navigator.clipboard.writeText(url);
+      setTabLinkCopied(true);
+      setTimeout(() => setTabLinkCopied(false), 2000);
+  };
 
   const tabs = [
     { id: 'overview', label: 'Visão Geral', icon: <Sparkles size={16} /> },
@@ -153,22 +183,39 @@ const MasterPortfolio: React.FC = () => {
               </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-              {tabs.map((tab) => (
-                  <button
-                      key={tab.id}
-                      data-tab-id={tab.id}
-                      onClick={() => setActiveTab(tab.id as any)}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all duration-300 font-bold uppercase text-xs tracking-widest ${
-                          activeTab === tab.id
-                          ? 'bg-matriz-purple border-matriz-purple text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] transform scale-105'
-                          : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/30'
-                      }`}
-                  >
-                      {tab.icon}
-                      {tab.label}
-                  </button>
-              ))}
+          <div className="flex flex-col items-center mb-12 gap-6">
+            <div className="flex flex-wrap justify-center gap-3">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        data-tab-id={tab.id}
+                        onClick={() => {
+                            setActiveTab(tab.id as any);
+                            // Atualiza a URL sem recarregar quando o usuário clica manualmente
+                            const newUrl = `${window.location.pathname}?tab=${tab.id}`;
+                            window.history.replaceState({ path: newUrl }, '', newUrl);
+                        }}
+                        className={`flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all duration-300 font-bold uppercase text-[10px] md:text-xs tracking-widest ${
+                            activeTab === tab.id
+                            ? 'bg-matriz-purple border-matriz-purple text-white shadow-[0_0_20px_rgba(139,92,246,0.4)] transform scale-105'
+                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/30'
+                        }`}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Share Category Button */}
+            <button 
+                onClick={handleCopyCategoryLink}
+                className="flex items-center gap-2 text-xs text-gray-500 hover:text-matriz-purple transition-colors border-b border-transparent hover:border-matriz-purple pb-0.5"
+                title="Copiar link direto para esta categoria"
+            >
+                {tabLinkCopied ? <Check size={14} /> : <Link size={14} />}
+                {tabLinkCopied ? 'Link Copiado!' : `Copiar link de "${tabs.find(t => t.id === activeTab)?.label}"`}
+            </button>
           </div>
 
           <div className="animate-fade-in min-h-[500px]">
