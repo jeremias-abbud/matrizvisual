@@ -24,3 +24,36 @@ export const getEmbedUrl = (url: string): string => {
   // Se não for nenhum dos dois, retorna a URL original
   return url;
 };
+
+/**
+ * Tenta obter a URL da miniatura (thumbnail) de um vídeo do YouTube ou Vimeo.
+ * Isso permite usar a capa automática do provedor em vez de fazer upload de uma imagem,
+ * economizando armazenamento no Supabase.
+ */
+export const getVideoThumbnail = async (url: string): Promise<string | null> => {
+    if (!url) return null;
+
+    // 1. YouTube
+    const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        // Retorna a imagem de máxima resolução
+        return `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
+    }
+
+    // 2. Vimeo (Requer fetch na API pública simples)
+    const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(\d+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+        try {
+            const response = await fetch(`https://vimeo.com/api/v2/video/${vimeoMatch[1]}.json`);
+            if (!response.ok) return null;
+            const data = await response.json();
+            // Retorna a thumbnail grande
+            return data[0]?.thumbnail_large || null;
+        } catch (e) {
+            console.error("Erro ao buscar capa do Vimeo:", e);
+            return null;
+        }
+    }
+
+    return null;
+};

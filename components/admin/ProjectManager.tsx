@@ -5,6 +5,7 @@ import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon,
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
+import { getVideoThumbnail } from '../../src/lib/videoHelper';
 
 interface Project {
   id: string;
@@ -133,11 +134,27 @@ const ProjectManager: React.FC = () => {
     setUploading(true);
 
     try {
-        // 1. Upload Cover Image
+        // 1. Determine Cover Image URL
         let coverImageUrl: string | null = null;
+        
+        // a) Se usuário fez upload manual
         if (coverImageFile) {
             coverImageUrl = await uploadImage(coverImageFile);
             if (!coverImageUrl) throw new Error('Falha no upload da capa');
+        } 
+        // b) Se não fez upload, mas tem link de vídeo -> Tenta pegar a thumbnail automática
+        else if (!editingProject && formData.videoUrl) {
+            const videoThumb = await getVideoThumbnail(formData.videoUrl);
+            if (videoThumb) {
+                coverImageUrl = videoThumb;
+            }
+        }
+
+        // Validação Final: Precisa de uma imagem (seja upload, seja do vídeo, ou já existente na edição)
+        if (!coverImageUrl && !editingProject) {
+            alert('É obrigatório ter uma imagem de capa. Faça o upload OU insira um link de vídeo válido (YouTube/Vimeo).');
+            setUploading(false);
+            return;
         }
 
         // 2. Upload New Gallery Images
@@ -178,12 +195,6 @@ const ProjectManager: React.FC = () => {
             if (data) setProjects(prev => prev.map(p => p.id === editingProject.id ? data[0] : p));
 
         } else {
-            if (!coverImageUrl && !formData.videoUrl) {
-                alert('Para um novo projeto, adicione uma imagem de capa.');
-                setUploading(false);
-                return;
-            }
-
             const { data, error } = await supabase
                 .from('projects')
                 .insert([{
@@ -286,14 +297,16 @@ const ProjectManager: React.FC = () => {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1">
-                    {editingProject ? 'Trocar Imagem de Capa (Opcional)' : 'Imagem de Capa *'}
+                <label className="block text-gray-400 text-xs uppercase mb-1 font-bold">
+                    {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
+                    {formData.videoUrl ? <span className="text-green-500 font-normal ml-2">(Opcional: Será usada a capa do vídeo)</span> : <span className="text-matriz-purple ml-1">*</span>}
                 </label>
                 <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
-                    <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required={!editingProject} />
+                    {/* Input não é mais required hardcoded, validamos no submit */}
+                    <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                     <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
                         <Upload size={24} />
-                        <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem de capa'}</span>
+                        <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem (ou deixe vazio para usar capa do vídeo)'}</span>
                     </div>
                 </div>
               </div>
@@ -307,7 +320,8 @@ const ProjectManager: React.FC = () => {
                 {formData.category === ProjectCategory.VIDEO && (
                     <div className="mt-2 flex items-start gap-2 text-gray-500 text-xs p-2 bg-blue-500/5 border border-blue-500/10 rounded">
                         <Info size={14} className="mt-0.5 text-blue-400" />
-                        <p>Recomendamos hospedar vídeos no <strong>Vimeo</strong> ou <strong>YouTube</strong> e colar o link aqui. Isso economiza seu banco de dados e garante carregamento rápido.</p>
+                        <p>Recomendamos hospedar vídeos no <strong>Vimeo</strong> ou <strong>YouTube</strong> e colar o link aqui. 
+                        A capa será gerada automaticamente se você não enviar uma imagem acima.</p>
                     </div>
                 )}
               </div>
