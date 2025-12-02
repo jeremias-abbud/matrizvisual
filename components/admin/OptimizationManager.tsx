@@ -112,7 +112,7 @@ const OptimizationManager: React.FC = () => {
         
         if (!fileToUpload) throw new Error("Falha ao preparar arquivo.");
 
-        // Upload, pulando otimização se for reversão para PNG
+        // Upload, passando TRUE para skipOptimization se for reversão para PNG
         const newUrl = await uploadImage(fileToUpload, reverseToPng);
         if (!newUrl) throw new Error("Falha no upload");
 
@@ -203,7 +203,7 @@ const OptimizationManager: React.FC = () => {
                                </div>
                                <div className="flex items-center gap-4">
                                    {asset.isWebP ? (
-                                     <button onClick={() => processAsset(asset, true)} disabled={processing} className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50">
+                                     <button onClick={() => processAsset(asset, true)} disabled={processing} className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 disabled:opacity-50 border border-blue-400/30 px-2 py-1 rounded hover:bg-blue-400/10">
                                        <ArrowLeft size={12}/> Reverter p/ PNG
                                      </button>
                                    ) : (

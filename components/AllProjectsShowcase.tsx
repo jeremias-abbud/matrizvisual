@@ -22,15 +22,15 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         setLoading(true);
         
         // 1. Buscar projetos gerais (Design, Video, Web)
-        // ALTERAÇÃO CRÍTICA: Ordenamos por data de criação no banco para garantir que
-        // os novos projetos (que não têm ordem manual ainda) sejam trazidos.
+        // Buscamos os 10 mais recentes
         const { data: projectsData } = await supabase
           .from('projects')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(10); // Buscamos mais itens para garantir que temos material recente suficiente
+          .limit(10); 
 
         // 2. Buscar logotipos (tabela antiga/restaurada)
+        // Buscamos os 10 mais recentes
         const { data: logosData } = await supabase
           .from('logos')
           .select('*')
@@ -52,7 +52,6 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             gallery: item.gallery,
             videoUrl: item.video_url,
             createdAt: new Date(item.created_at).getTime(),
-            displayOrder: item.display_order
         }));
 
         // Formatar Logotipos para parecerem Projetos
@@ -66,32 +65,15 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             tags: ['Logotipo', 'Branding'],
             client: item.name,
             createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
-            displayOrder: item.display_order
         }));
 
-        // 3. Juntar e Ordenar (Lógica Híbrida)
-        // Primeiro: Itens com Ordem Manual (1, 2, 3...)
-        // Segundo: Itens sem ordem (NULL), ordenados por data (mais novos primeiro)
+        // 3. Juntar e Ordenar (ESTRITAMENTE CRONOLÓGICO)
+        // Ignoramos display_order aqui. O objetivo é mostrar o que é NOVO.
         const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
-            const orderA = a.displayOrder;
-            const orderB = b.displayOrder;
-
-            // Se ambos têm ordem manual, respeita a numeração
-            if (orderA !== null && orderA !== undefined && orderB !== null && orderB !== undefined) {
-                return orderA - orderB;
-            }
-
-            // Se apenas A tem ordem, ele vem primeiro
-            if (orderA !== null && orderA !== undefined) return -1;
-
-            // Se apenas B tem ordem, ele vem primeiro
-            if (orderB !== null && orderB !== undefined) return 1;
-
-            // Se nenhum tem ordem manual, ganha o mais recente (Data)
             return b.createdAt - a.createdAt;
         });
 
-        // Pegar apenas os 3 primeiros para exibir na capa
+        // Pegar apenas os 3 primeiros (mais novos) para exibir na capa
         if (allItems.length > 0) {
           setLatestProjects(allItems.slice(0, 3));
         } else {

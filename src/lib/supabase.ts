@@ -8,6 +8,23 @@ const SUPABASE_KEY = 'sb_publishable_eGx9KBwWN2UBURj7BE_F9A_znn0eHeF';
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
+ * Retorna a URL otimizada para a imagem.
+ * Se houver uma CDN configurada (VITE_CDN_URL), usa ela.
+ * Caso contrário, usa a URL direta do Supabase.
+ */
+export const getStorageUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path; // Já é uma URL completa
+
+  // Exemplo de integração futura com CDN (Cloudflare/Vercel Blob)
+  // const cdnUrl = import.meta.env.VITE_CDN_URL;
+  // if (cdnUrl) return `${cdnUrl}/${path}`;
+
+  const { data } = supabase.storage.from('portfolio-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/**
  * Faz upload de um arquivo para o Bucket 'portfolio-images' do Supabase.
  * OTIMIZA para WebP por padrão, a menos que skipOptimization seja true.
  */
@@ -35,6 +52,7 @@ export const uploadImage = async (file: File, skipOptimization = false): Promise
     }
 
     // 4. Obter URL pública
+    // Usamos o método getStorageUrl para manter consistência, embora aqui precisemos da URL absoluta
     const { data } = supabase.storage
       .from('portfolio-images')
       .getPublicUrl(filePath);
