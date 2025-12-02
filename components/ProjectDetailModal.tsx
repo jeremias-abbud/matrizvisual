@@ -22,6 +22,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   hasPrev
 }) => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [fullscreenVideo, setFullscreenVideo] = useState<boolean>(false); // Novo estado para vídeo
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
 
@@ -31,15 +32,22 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   const handleClose = useCallback(() => {
     if (fullscreenImage) {
       setFullscreenImage(null);
+    } else if (fullscreenVideo) {
+      setFullscreenVideo(false);
     } else {
       onClose();
     }
-  }, [fullscreenImage, onClose]);
+  }, [fullscreenImage, fullscreenVideo, onClose]);
 
   const openFullscreen = (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
     setFullscreenIndex(index);
     setFullscreenImage(allImages[index]);
+  };
+
+  const openVideoFullscreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFullscreenVideo(true);
   };
 
   const nextImage = useCallback((e?: React.MouseEvent) => {
@@ -77,7 +85,13 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!project) return;
       
-      // Se estiver em fullscreen (Navega entre IMAGENS)
+      // Se estiver em fullscreen VIDEO
+      if (fullscreenVideo) {
+         if (e.key === 'Escape') setFullscreenVideo(false);
+         return;
+      }
+
+      // Se estiver em fullscreen IMAGEM (Navega entre IMAGENS)
       if (fullscreenImage) {
         if (e.key === 'Escape') setFullscreenImage(null);
         if (e.key === 'ArrowRight') nextImage();
@@ -93,7 +107,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [project, onClose, fullscreenImage, nextImage, prevImage, onNext, onPrev]);
+  }, [project, onClose, fullscreenImage, fullscreenVideo, nextImage, prevImage, onNext, onPrev]);
 
   useEffect(() => {
     if (project) {
@@ -120,25 +134,38 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
   const renderFullscreenView = () => (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-0 animate-fade-in touch-none">
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setFullscreenImage(null)}></div>
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => { setFullscreenImage(null); setFullscreenVideo(false); }}></div>
       
       <div className="relative z-[115] w-full h-full flex flex-col items-center justify-center">
         {/* Close Button */}
-        <button onClick={() => setFullscreenImage(null)} className="fixed top-4 right-4 z-[130] text-white hover:text-matriz-purple bg-black/60 p-3 rounded-full border border-white/10 backdrop-blur-md transition-colors shadow-lg">
+        <button onClick={() => { setFullscreenImage(null); setFullscreenVideo(false); }} className="fixed top-4 right-4 z-[130] text-white hover:text-matriz-purple bg-black/60 p-3 rounded-full border border-white/10 backdrop-blur-md transition-colors shadow-lg">
           <X size={28} />
         </button>
         
-        <div className="relative w-full h-full flex items-center justify-center p-2 md:p-8">
-          <img 
-            src={fullscreenImage!} 
-            alt={`Visualização em tela cheia do projeto ${project.title}`} 
-            className="max-w-full max-h-full object-contain shadow-2xl" 
-            decoding="async"
-          />
-        </div>
+        {fullscreenVideo && project.videoUrl ? (
+             <div className={`relative w-full h-full flex items-center justify-center p-0 md:p-8 ${isVerticalVideo ? 'max-w-md mx-auto' : 'max-w-6xl mx-auto'}`}>
+                <iframe 
+                    src={getEmbedUrl(project.videoUrl)} 
+                    title={project.title} 
+                    className={`w-full ${isVerticalVideo ? 'h-full md:h-[90vh]' : 'aspect-video shadow-2xl'}`} 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                ></iframe>
+             </div>
+        ) : (
+            <div className="relative w-full h-full flex items-center justify-center p-2 md:p-8">
+            <img 
+                src={fullscreenImage!} 
+                alt={`Visualização em tela cheia do projeto ${project.title}`} 
+                className="max-w-full max-h-full object-contain shadow-2xl" 
+                decoding="async"
+            />
+            </div>
+        )}
         
-        {/* Navegação de IMAGENS na tela cheia - MOBILE OTIMIZADO */}
-        {allImages.length > 1 && (
+        {/* Navegação de IMAGENS na tela cheia - MOBILE OTIMIZADO (Só aparece se for imagem) */}
+        {!fullscreenVideo && allImages.length > 1 && (
           <>
             <button 
                 onClick={prevImage} 
@@ -203,15 +230,20 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                 : 'aspect-video h-auto max-h-[60vh]'
           }`}>
             {project.videoUrl && project.category === 'Vídeos' ? (
-              <iframe 
-                key={project.id} // FORÇA O REACT A RECRIAR O IFRAME AO TROCAR DE PROJETO
-                src={getEmbedUrl(project.videoUrl)} 
-                title={project.title} 
-                className="w-full h-full" 
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
+              <>
+                  <iframe 
+                    key={project.id} // FORÇA O REACT A RECRIAR O IFRAME AO TROCAR DE PROJETO
+                    src={getEmbedUrl(project.videoUrl)} 
+                    title={project.title} 
+                    className="w-full h-full" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowFullScreen
+                  ></iframe>
+                   <button onClick={openVideoFullscreen} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 flex items-center gap-2 backdrop-blur-sm z-20" title="Ver em tela cheia">
+                        <Maximize size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Expandir</span>
+                   </button>
+              </>
             ) : (
               <>
                 <img 
@@ -363,7 +395,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
           </div>
         </div>
       </div>
-      {fullscreenImage && renderFullscreenView()}
+      {(fullscreenImage || fullscreenVideo) && renderFullscreenView()}
     </>
   );
 };
