@@ -115,8 +115,8 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
       <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setFullscreenImage(null)}></div>
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center">
-        <button onClick={() => setFullscreenImage(null)} className="fixed top-6 right-6 z-[120] text-white/50 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10">
-          <X size={32} />
+        <button onClick={() => setFullscreenImage(null)} className="fixed top-6 right-6 z-[120] text-white/70 hover:text-white transition-colors bg-black/50 hover:bg-matriz-purple p-3 rounded-full border border-white/10 backdrop-blur-md">
+          <X size={24} />
         </button>
         
         <div className="relative w-full h-full flex items-center justify-center">
@@ -131,13 +131,19 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         {/* Navegação de IMAGENS na tela cheia */}
         {allImages.length > 1 && (
           <>
-            <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full z-[120]">
-              <ChevronLeft size={48} />
+            <button 
+                onClick={prevImage} 
+                className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-matriz-purple border border-white/10 rounded-full z-[120] backdrop-blur-sm transition-all active:scale-95"
+            >
+              <ChevronLeft size={32} className="md:w-10 md:h-10" />
             </button>
-            <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 p-4 text-white/50 hover:text-white transition-colors hover:bg-white/5 rounded-full z-[120]">
-              <ChevronRight size={48} />
+            <button 
+                onClick={nextImage} 
+                className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/50 hover:bg-matriz-purple border border-white/10 rounded-full z-[120] backdrop-blur-sm transition-all active:scale-95"
+            >
+              <ChevronRight size={32} className="md:w-10 md:h-10" />
             </button>
-            <div className="absolute bottom-6 bg-black/70 backdrop-blur-md px-4 py-2 text-sm text-white rounded-full border border-white/10">
+            <div className="absolute bottom-6 bg-black/70 backdrop-blur-md px-4 py-2 text-sm text-white rounded-full border border-white/10 font-bold tracking-widest">
               {fullscreenIndex + 1} / {allImages.length}
             </div>
           </>
@@ -151,22 +157,22 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
         
-        {/* Botão Anterior (Projeto) */}
+        {/* Botão Anterior (Projeto) - Visível apenas em Desktop ou Tablet grande */}
         {hasPrev && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
-                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
                 title="Projeto Anterior"
             >
                 <ChevronLeft size={32} />
             </button>
         )}
 
-        {/* Botão Próximo (Projeto) */}
+        {/* Botão Próximo (Projeto) - Visível apenas em Desktop ou Tablet grande */}
         {hasNext && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
                 title="Próximo Projeto"
             >
                 <ChevronRight size={32} />
@@ -174,7 +180,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         )}
 
         <div className="relative bg-matriz-dark w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar">
-          <button onClick={onClose} className="sticky top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 float-right mr-4">
+          <button onClick={onClose} className="sticky top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 float-right mr-4 backdrop-blur-sm">
             <X size={24} />
           </button>
           
@@ -190,7 +196,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     onClick={(e) => openFullscreen(e, 0)}
                     decoding="async"
                 />
-                <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-0 group-hover:opacity-100 flex items-center gap-2" title="Ver em tela cheia">
+                <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-2 backdrop-blur-sm" title="Ver em tela cheia">
                   <Maximize size={20} /> <span className="text-xs font-bold uppercase hidden md:inline">Expandir</span>
                 </button>
               </>
@@ -312,21 +318,21 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </div>
           </div>
           
-          {/* Navegação Mobile (Fixo no rodapé do modal) */}
-          <div className="md:hidden flex justify-between p-4 border-t border-white/10 bg-matriz-black/50 sticky bottom-0">
+          {/* Navegação Mobile entre PROJETOS (Fixo no rodapé do modal) */}
+          <div className="lg:hidden flex justify-between p-4 border-t border-white/10 bg-matriz-black/80 backdrop-blur sticky bottom-0 z-40">
                 <button 
                     onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
                     disabled={!hasPrev}
-                    className={`flex items-center gap-2 text-sm font-bold uppercase ${hasPrev ? 'text-white' : 'text-gray-600'}`}
+                    className={`flex items-center gap-2 text-sm font-bold uppercase border border-white/10 px-4 py-2 rounded-full ${hasPrev ? 'text-white bg-black/50' : 'text-gray-600 bg-black/20'}`}
                 >
-                    <ChevronLeft size={20} /> Anterior
+                    <ChevronLeft size={18} /> Anterior
                 </button>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
                     disabled={!hasNext}
-                    className={`flex items-center gap-2 text-sm font-bold uppercase ${hasNext ? 'text-white' : 'text-gray-600'}`}
+                    className={`flex items-center gap-2 text-sm font-bold uppercase border border-white/10 px-4 py-2 rounded-full ${hasNext ? 'text-white bg-black/50' : 'text-gray-600 bg-black/20'}`}
                 >
-                    Próximo <ChevronRight size={20} />
+                    Próximo <ChevronRight size={18} />
                 </button>
           </div>
         </div>
