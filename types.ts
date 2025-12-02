@@ -7,7 +7,9 @@ export enum ProjectCategory {
   WEB = 'Web Sites',
   VIDEO = 'Vídeos',
   PACKAGING = 'Rótulos & Embalagens',
-  MODELS = 'Modelos e Personagens'
+  MODELS = 'Modelos e Personagens',
+  GASTRONOMY = 'Gastronomia & Culinária',
+  PROFESSIONALS = 'Serviços & Profissionais'
 }
 
 export interface Project {
@@ -24,6 +26,7 @@ export interface Project {
   client?: string;
   date?: string;
   videoUrl?: string; // YouTube/Vimeo/MP4 URL
+  createdAt?: number; // Timestamp for sorting
 }
 
 export interface Service {
