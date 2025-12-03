@@ -243,7 +243,8 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'logos' && (
                   <div className="bg-matriz-dark/30 p-0 md:p-8 border border-white/5">
-                      <LogoGrid headless limit={100} onProjectClick={handleProjectClick} />
+                      {/* REMOVIDO LIMIT=100 PARA ATIVAR PAGINAÇÃO AUTOMÁTICA (8 por vez) */}
+                      <LogoGrid headless onProjectClick={handleProjectClick} />
                   </div>
               )}
 

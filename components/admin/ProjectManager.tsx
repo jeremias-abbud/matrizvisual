@@ -40,7 +40,7 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   // Form States
   const [formData, setFormData] = useState({
     title: '',
-    category: forcedCategory || ProjectCategory.DESIGN, // Default to forced or Design
+    category: forcedCategory || ProjectCategory.DESIGN,
     industry: '',
     description: '',
     longDescription: '',
@@ -50,14 +50,13 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   });
   
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]); // New files to upload
-  const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]); // URLs already on server
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [existingGalleryUrls, setExistingGalleryUrls] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProjects();
-  }, [forcedCategory]); // Re-fetch when category changes
+  }, [forcedCategory]);
 
-  // Update form default category when forcedCategory prop changes
   useEffect(() => {
       if (forcedCategory) {
           setFormData(prev => ({ ...prev, category: forcedCategory }));
@@ -105,7 +104,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
       videoUrl: project.video_url || '',
     });
     
-    // Set gallery state
     setExistingGalleryUrls(project.gallery || []);
     setGalleryFiles([]);
     setCoverImageFile(null);
@@ -131,7 +129,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
     setExistingGalleryUrls([]);
   };
 
-  // Gallery Handlers
   const handleGalleryFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files && e.target.files.length > 0) {
           setGalleryFiles(prev => [...prev, ...Array.from(e.target.files!)]);
@@ -151,15 +148,12 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
     setUploading(true);
 
     try {
-        // 1. Determine Cover Image URL
         let coverImageUrl: string | null = null;
         
-        // a) Se usuário fez upload manual
         if (coverImageFile) {
             coverImageUrl = await uploadImage(coverImageFile);
             if (!coverImageUrl) throw new Error('Falha no upload da capa');
         } 
-        // b) Se não fez upload, mas tem link de vídeo -> Tenta pegar a thumbnail automática
         else if (!editingProject && formData.videoUrl) {
             const videoThumb = await getVideoThumbnail(formData.videoUrl);
             if (videoThumb) {
@@ -167,21 +161,18 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
             }
         }
 
-        // Validação Final: Precisa de uma imagem (seja upload, seja do vídeo, ou já existente na edição)
         if (!coverImageUrl && !editingProject) {
             alert('É obrigatório ter uma imagem de capa. Faça o upload OU insira um link de vídeo válido (YouTube/Vimeo).');
             setUploading(false);
             return;
         }
 
-        // 2. Upload New Gallery Images
         const newGalleryUrls: string[] = [];
         for (const file of galleryFiles) {
             const url = await uploadImage(file);
             if (url) newGalleryUrls.push(url);
         }
 
-        // Combine existing URLs with new ones
         const finalGallery = [...existingGalleryUrls, ...newGalleryUrls];
         const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
         const longDesc = formData.longDescription || formData.description;
@@ -234,7 +225,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
     }
   };
 
-  // --- Drag & Drop logic ---
   const handleDragStart = (index: number) => setDraggedItemIndex(index);
   const handleDragEnter = (index: number) => {
     if (draggedItemIndex === null || draggedItemIndex === index) return;
@@ -258,17 +248,15 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
     finally { setUploading(false); }
   };
 
-  // Label Dinâmico
   let linkLabel = "Link do Vídeo (YouTube / Vimeo)";
   if (formData.category === ProjectCategory.WEB) linkLabel = "Link do Site (URL)";
 
-  // Determine Page Title
   let pageTitle = "Gerenciar Portfólio";
   if (forcedCategory) {
       if (forcedCategory === ProjectCategory.WEB) pageTitle = "Gerenciar Websites";
       else if (forcedCategory === ProjectCategory.DESIGN) pageTitle = "Gerenciar Design Gráfico";
       else if (forcedCategory === ProjectCategory.VIDEO) pageTitle = "Gerenciar Vídeos";
-      else if (forcedCategory === ProjectCategory.MODELS) pageTitle = "Gerenciar Modelos";
+      else if (forcedCategory === ProjectCategory.MODELS) pageTitle = "Gerenciar Personagens";
       else pageTitle = `Gerenciar ${forcedCategory}`;
   }
 
@@ -311,7 +299,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
               
-              {/* Category Select - Hidden/Read-only if forced */}
               {forcedCategory ? (
                   <div>
                       <label className="block text-gray-400 text-xs uppercase mb-1">Categoria</label>
@@ -328,7 +315,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                     label="Categoria" 
                     value={formData.category} 
                     onChange={(val) => setFormData({...formData, category: val as ProjectCategory})} 
-                    // Removendo 'Logotipos' da lista de categorias disponíveis para criar, forçando o uso do LogoManager (antigo) se desejado
                     options={Object.values(ProjectCategory).filter(c => c !== ProjectCategory.ALL && c !== ProjectCategory.LOGO)} 
                     required 
                     />
@@ -386,13 +372,11 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                 <textarea value={formData.longDescription} onChange={e => setFormData({...formData, longDescription: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" rows={4} />
               </div>
 
-              {/* GALLERY MANAGER */}
               <div className="md:col-span-2 bg-black/30 p-4 rounded border border-white/5">
                 <label className="block text-gray-400 text-xs uppercase mb-3 font-bold flex items-center gap-2">
                     <ImageIcon size={14} /> Galeria de Imagens (Opcional)
                 </label>
                 
-                {/* Upload Area */}
                 <div className="mb-4">
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-sm text-gray-300 hover:text-white transition-colors">
                         <Plus size={16} /> Adicionar Imagens
@@ -401,7 +385,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                     <span className="ml-3 text-xs text-gray-500">Selecione múltiplas imagens do seu computador</span>
                 </div>
 
-                {/* Previews */}
                 {(existingGalleryUrls.length > 0 || galleryFiles.length > 0) && (
                     <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
                         {existingGalleryUrls.map((url, idx) => (
@@ -454,12 +437,10 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
         </div>
       )}
 
-      {/* Project List (Table) */}
       {loading ? (
         <div className="text-white">Carregando...</div>
       ) : (
         <div className="space-y-3">
-            {/* Table Header (Desktop Only) */}
             <div className="hidden md:grid grid-cols-12 gap-4 bg-white/5 p-3 rounded text-xs uppercase text-gray-400 font-bold">
                 <div className="col-span-1 text-center">#</div>
                 <div className="col-span-3">Imagem</div>
@@ -486,11 +467,9 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                     onDragEnd={handleDragEnd} 
                     onDragOver={(e) => e.preventDefault()}
                 >
-                    {/* Mobile Card Layout */}
                     <div className="md:hidden flex flex-col gap-3 p-3">
                         <div className="flex items-start gap-4">
                             {isReordering && <GripVertical size={20} className="text-matriz-purple mt-1 flex-shrink-0" />}
-                            {/* Imagem Aumentada para Mobile e com object-contain */}
                             <div className="h-20 w-20 overflow-hidden rounded bg-black/50 border border-white/5 flex-shrink-0 p-1">
                                 <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
                             </div>
@@ -511,12 +490,10 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                         </div>
                     </div>
 
-                    {/* Desktop Table Row Layout */}
                     <div className="hidden md:grid md:grid-cols-12 gap-4 items-center p-3">
                         <div className="col-span-1 text-center text-gray-500 font-mono text-xs">
                             {isReordering ? <GripVertical size={16} className="mx-auto text-matriz-purple" /> : (index + 1)}
                         </div>
-                        {/* Imagem Aumentada para Desktop (h-24 ~ 96px) e com object-contain */}
                         <div className="col-span-3 h-24 w-full overflow-hidden rounded bg-black/50 border border-white/5 flex items-center justify-center p-1">
                             <img src={project.image_url} alt={project.title} className="w-full h-full object-contain" />
                         </div>
