@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Upload, RefreshCw, Save, Sliders, Monitor, Smartphone, Moon, Sun, Image as ImageIcon, Navigation, Star, Box, Link2 } from 'lucide-react';
 import { useSiteAssets } from '../../src/hooks/useSiteAssets';
+import { formatAsFavicon } from '../../src/lib/imageOptimizer';
 import type { SiteAsset } from '../../src/hooks/useSiteAssets';
 
 type AssetKey = 'logo_navbar' | 'logo_hero' | 'favicon' | 'about_img_1' | 'about_img_2' | 'social_share';
@@ -24,7 +25,24 @@ const SiteAssetsManager: React.FC = () => {
 
   const handleImageUpload = async (key: AssetKey, file: File) => {
     setUploadingKey(key);
-    const publicUrl = await uploadImage(file);
+    
+    let fileToUpload = file;
+    let skipOptimization = false;
+
+    // Lógica especial para FAVICON
+    if (key === 'favicon') {
+        try {
+            console.log("Formatando favicon para PNG 192x192...");
+            fileToUpload = await formatAsFavicon(file);
+            skipOptimization = true; // Já foi tratado manualmente, não converter para WebP
+        } catch (e) {
+            console.error("Erro ao formatar favicon", e);
+        }
+    }
+
+    // Upload (passando skipOptimization se for favicon)
+    const publicUrl = await uploadImage(fileToUpload, skipOptimization);
+    
     if (publicUrl) {
       const { error } = await supabase
         .from('site_assets')
@@ -33,7 +51,6 @@ const SiteAssetsManager: React.FC = () => {
         
       if (!error) {
         // Força a busca de todos os assets novamente, atualizando o estado global.
-        // O useEffect que depende de `assetsMap` irá atualizar o `localAssets` automaticamente.
         await refreshAssets();
       } else {
         alert('Erro ao salvar imagem.');
@@ -104,6 +121,11 @@ const SiteAssetsManager: React.FC = () => {
             <Upload size={14} /> Trocar Imagem
           </label>
         </div>
+        {key === 'favicon' && (
+            <p className="text-[10px] text-gray-500 text-center">
+                * Será automaticamente convertido para PNG 192x192 para o Google.
+            </p>
+        )}
       </div>
     );
   };

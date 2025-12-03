@@ -76,3 +76,38 @@ export async function convertWebPToPNG(webpUrl: string): Promise<File | null> {
     return null;
   }
 }
+
+/**
+ * Formata qualquer imagem para ser um FAVICON perfeito (PNG, 192x192).
+ * Isso resolve problemas de indexação do Google.
+ */
+export async function formatAsFavicon(file: File): Promise<File> {
+  try {
+    const imageBitmap = await createImageBitmap(file);
+    
+    const canvas = document.createElement('canvas');
+    // 192x192 é o tamanho recomendado pelo Google para Favicons de alta qualidade
+    canvas.width = 192;
+    canvas.height = 192;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas context failed');
+
+    // Limpar e desenhar (Redimensionando suavemente)
+    ctx.clearRect(0, 0, 192, 192);
+    ctx.drawImage(imageBitmap, 0, 0, 192, 192);
+    
+    const pngBlob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/png', 1.0);
+    });
+
+    if (!pngBlob) throw new Error('Blob creation failed');
+
+    // Retorna sempre com o nome favicon.png
+    return new File([pngBlob], 'favicon.png', { type: 'image/png' });
+
+  } catch (error) {
+    console.error('[Favicon] Erro ao formatar:', error);
+    return file; // Retorna original em caso de falha crítica
+  }
+}

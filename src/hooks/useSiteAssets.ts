@@ -12,7 +12,7 @@ export interface SiteAsset {
 const FALLBACK_ASSETS: Record<string, SiteAsset> = {
   logo_navbar: { key: 'logo_navbar', label: 'Logo (Barra de Navegação)', image_url: '/logo.png', style_config: { height_desktop: '4rem', height_mobile: '3rem' } },
   logo_hero: { key: 'logo_hero', label: 'Logo (Seção Principal/Hero)', image_url: '/logo.png', style_config: { height_desktop: '10rem', height_mobile: '8rem', glow: true } },
-  favicon: { key: 'favicon', label: 'Ícone da Aba (Favicon)', image_url: '/logo.png' },
+  favicon: { key: 'favicon', label: 'Ícone da Aba (Favicon)', image_url: '/favicon.png' },
   about_img_1: { key: 'about_img_1', label: 'Imagem Sobre Nós (Esquerda/Topo)', image_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop' },
   about_img_2: { key: 'about_img_2', label: 'Imagem Sobre Nós (Direita/Baixo)', image_url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop' },
   social_share: { key: 'social_share', label: 'Imagem de Compartilhamento (Social)', image_url: '/social-share.jpg' },

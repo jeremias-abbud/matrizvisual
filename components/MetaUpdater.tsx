@@ -5,7 +5,7 @@ const MetaUpdater: React.FC = () => {
   const { assetsMap } = useSiteAssets();
 
   useEffect(() => {
-    // 1. Update Favicon
+    // 1. Update Favicon (Ícone da aba)
     const faviconUrl = assetsMap.favicon?.image_url;
     if (faviconUrl) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
@@ -15,12 +15,13 @@ const MetaUpdater: React.FC = () => {
         document.getElementsByTagName('head')[0].appendChild(link);
       }
       link.href = faviconUrl;
+      link.type = 'image/png'; // Garante que o navegador saiba que é um PNG
     }
 
     // 2. Update Social Share Image (OG & Twitter)
     const shareUrl = assetsMap.social_share?.image_url;
     if (shareUrl) {
-      // OG:Image
+      // OG:Image (Facebook/WhatsApp)
       let ogImage: HTMLMetaElement | null = document.querySelector("meta[property='og:image']");
       if (ogImage) {
         ogImage.content = shareUrl;
@@ -44,7 +45,7 @@ const MetaUpdater: React.FC = () => {
     }
   }, [assetsMap]);
 
-  return null;
+  return null; // Este componente não renderiza nada visualmente
 };
 
 export default MetaUpdater;
