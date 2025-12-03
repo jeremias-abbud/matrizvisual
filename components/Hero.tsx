@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
 import { smoothScrollTo } from '../src/lib/scroll';
@@ -6,6 +6,8 @@ import { smoothScrollTo } from '../src/lib/scroll';
 const Hero: React.FC = () => {
   const { assetsMap } = useSiteAssets();
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+  const containerRef = useRef<HTMLElement>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const heroLogo = assetsMap.logo_hero;
   const logoStyles = heroLogo?.style_config || {};
@@ -14,13 +16,63 @@ const Hero: React.FC = () => {
     ? (logoStyles.height_mobile || '8rem') 
     : (logoStyles.height_desktop || '10rem');
 
+  // Lógica do Spotlight (Segue o Mouse)
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePosition({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        });
+      }
+    };
+
+    const element = containerRef.current;
+    if (element) {
+      element.addEventListener('mousemove', handleMouseMove);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mousemove', handleMouseMove);
+      }
+    };
+  }, []);
+
   return (
-    <section id="home" className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-28 scroll-mt-28 gap-8">
-      {/* Abstract Background Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matriz-purple/20 rounded-full blur-[128px]"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[96px]"></div>
+    <section 
+      ref={containerRef}
+      id="home" 
+      className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-28 scroll-mt-28 gap-8 group"
+    >
+      {/* --- BACKGROUND ANIMADO --- */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        
+        {/* 1. Grid Base (Estático, escuro) */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+
+        {/* 2. Spotlight Grid (Revelado pelo Mouse) */}
+        <div 
+          className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem]"
+          style={{
+            maskImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, black, transparent)`,
+            WebkitMaskImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, black, transparent)`,
+          }}
+        ></div>
+
+        {/* 3. Luzes "Respirantes" (Auroras) */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matriz-purple/20 rounded-full blur-[128px] animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[96px] animate-pulse delay-1000"></div>
+        
+        {/* 4. Glow do Mouse (Luz direta) */}
+        <div 
+            className="absolute w-[500px] h-[500px] bg-matriz-purple/10 rounded-full blur-[100px] pointer-events-none transition-opacity duration-500 opacity-0 group-hover:opacity-100"
+            style={{
+                top: mousePosition.y - 250,
+                left: mousePosition.x - 250,
+            }}
+        ></div>
       </div>
 
       {/* Main Content Wrapper */}
@@ -61,22 +113,22 @@ const Hero: React.FC = () => {
               </span>
             </div>
             
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down delay-200 w-full">
-              DESTAQUE <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-matriz-silver via-white to-matriz-silver drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight animate-fade-in-down delay-200 w-full relative">
+              <span className="relative z-10">DESTAQUE</span> <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-matriz-silver via-white to-matriz-silver drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] relative z-10">
                   SUA MARCA
               </span>
             </h1>
 
-            <p className="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in delay-300">
+            <p className="font-sans text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in delay-300 relative z-10">
               Profissionalismo para vender mais. Transformamos o visual da sua empresa em uma ferramenta de negócios poderosa.
             </p>
 
-            <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500 w-full">
+            <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in delay-500 w-full relative z-10">
               <a 
                   href="#portfolio" 
                   onClick={(e) => smoothScrollTo(e, '#portfolio')}
-                  className="group relative px-8 py-4 bg-matriz-purple text-white font-bold tracking-widest uppercase overflow-hidden cursor-pointer"
+                  className="group relative px-8 py-4 bg-matriz-purple text-white font-bold tracking-widest uppercase overflow-hidden cursor-pointer shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_40px_rgba(139,92,246,0.6)] transition-all duration-300"
               >
                   <div className="absolute inset-0 w-0 bg-white transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
                   <span className="relative flex items-center justify-center gap-2">
@@ -86,7 +138,7 @@ const Hero: React.FC = () => {
               <a 
                   href="#contact" 
                   onClick={(e) => smoothScrollTo(e, '#contact')}
-                  className="px-8 py-4 border border-matriz-gray text-white hover:border-matriz-silver transition-colors duration-300 font-bold tracking-widest uppercase bg-transparent cursor-pointer text-center"
+                  className="px-8 py-4 border border-matriz-gray text-white hover:border-matriz-silver hover:bg-white/5 transition-all duration-300 font-bold tracking-widest uppercase bg-transparent cursor-pointer text-center"
               >
                   Pedir Orçamento
               </a>
