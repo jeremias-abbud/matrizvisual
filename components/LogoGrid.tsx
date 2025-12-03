@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ZoomIn, Filter, ChevronLeft } from 'lucide-react';
-import { supabase } from '../src/lib/supabase';
-import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { getAllLogos } from '../src/lib/dataService'; // Import DataService
+import { INDUSTRIES } from '../constants';
 import { smoothScrollTo } from '../src/lib/scroll';
-import { Project, ProjectCategory } from '../types';
+import { Project } from '../types';
 
 interface LogoGridProps {
   headless?: boolean;
@@ -19,82 +18,13 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
 
-  const getMockLogos = () => MOCK_PROJECTS.filter(p => p.category === ProjectCategory.LOGO);
-
   useEffect(() => {
     async function fetchAllLogos() {
-      try {
-        setLoading(true);
-
-        const { data: newLogosData, error: newLogosError } = await supabase
-          .from('projects')
-          .select('id, title, image_url, industry, created_at, display_order, description, client, gallery')
-          .eq('category', ProjectCategory.LOGO);
-          
-        if (newLogosError) throw newLogosError;
-        
-        const formattedNewLogos = (newLogosData || []).map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: ProjectCategory.LOGO,
-            industry: item.industry,
-            imageUrl: item.image_url,
-            description: item.description || 'Projeto de Identidade Visual.',
-            longDescription: item.description,
-            client: item.client,
-            gallery: item.gallery,
-            tags: ['Logotipo', 'Branding', 'Identidade Visual'],
-            created_at: item.created_at,
-            display_order: item.display_order,
-            isLegacy: false
-        })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
-        
-        const { data: oldLogosData, error: oldLogosError } = await supabase
-            .from('logos')
-            .select('id, name, url, industry, display_order, created_at');
-
-        if (oldLogosError) throw oldLogosError;
-
-        const formattedOldLogos = (oldLogosData || []).map((item: any) => ({
-            id: `logo_${item.id}`,
-            title: item.name,
-            imageUrl: item.url,
-            industry: item.industry,
-            display_order: item.display_order,
-            created_at: item.created_at,
-            category: ProjectCategory.LOGO,
-            description: 'Projeto de design de logotipo e identidade visual.',
-            tags: ['Logotipo'],
-            client: item.name,
-            gallery: [],
-            isLegacy: true
-        })) as (Project & { created_at?: string, display_order?: number, isLegacy: boolean })[];
-        
-        const combinedLogos = [...formattedNewLogos, ...formattedOldLogos];
-
-        combinedLogos.sort((a, b) => {
-             const orderA = a.display_order ?? -Infinity;
-             const orderB = b.display_order ?? -Infinity;
-             
-             if (orderA !== orderB) {
-                 return orderA - orderB;
-             }
-             const dateA = new Date(a.created_at || 0).getTime();
-             const dateB = new Date(b.created_at || 0).getTime();
-             return dateB - dateA;
-        });
-
-        if (combinedLogos.length > 0) {
-          setLogos(combinedLogos);
-        } else {
-          setLogos(getMockLogos());
-        }
-      } catch (err) {
-        console.error('Error fetching all logos:', err);
-        setLogos(getMockLogos());
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      // CACHE IMPLEMENTADO: Chama a função otimizada do serviço
+      const combinedLogos = await getAllLogos();
+      setLogos(combinedLogos);
+      setLoading(false);
     }
     fetchAllLogos();
   }, []);

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Code2, ChevronLeft, ChevronRight, Filter, Loader2, Globe } from 'lucide-react';
-import { supabase } from '../src/lib/supabase';
-import { FEATURED_WEB_PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { getAllProjects } from '../src/lib/dataService'; // Import DataService
+import { INDUSTRIES } from '../constants'; 
 import { ProjectCategory } from '../types';
 
 interface WebProject {
@@ -30,42 +29,32 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
 
   useEffect(() => {
     async function fetchWebProjects() {
-        try {
-            let query = supabase
-                .from('projects')
-                .select('*')
-                .eq('category', ProjectCategory.WEB)
-                .order('created_at', { ascending: false });
-            
-            if (limit) {
-                query = query.limit(limit);
-            }
+        setLoading(true);
+        // CACHE IMPLEMENTADO
+        const allProjects = await getAllProjects();
+        
+        // Filter in memory instead of DB
+        let webProjects = allProjects.filter(p => p.category === ProjectCategory.WEB);
+        
+        // Sort by created_at desc (already done in service, but good to ensure)
+        webProjects.sort((a: any, b: any) => b.createdAt - a.createdAt);
 
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            if (data && data.length > 0) {
-                 const formattedData = data.map((item: any) => ({
-                    id: item.id,
-                    title: item.title,
-                    description: item.description,
-                    imageUrl: item.image_url,
-                    tech: item.tags || [],
-                    // Prioritiza video_url como link do site, fallback para '#'
-                    liveUrl: item.video_url || '#', 
-                    industry: item.industry
-                 }));
-                 setProjects(formattedData);
-            } else {
-                setProjects(MOCK_PROJECTS);
-            }
-        } catch (err) {
-            console.error('Error fetching web showcase:', err);
-            setProjects(MOCK_PROJECTS);
-        } finally {
-            setLoading(false);
+        if (limit) {
+            webProjects = webProjects.slice(0, limit);
         }
+
+        const formattedData = webProjects.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            imageUrl: item.imageUrl,
+            tech: item.tags || [],
+            liveUrl: item.videoUrl || '#', 
+            industry: item.industry
+        }));
+        
+        setProjects(formattedData);
+        setLoading(false);
     }
     fetchWebProjects();
   }, [limit]);
@@ -90,6 +79,10 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
   const prevProject = () => {
     if (filteredProjects.length === 0) return;
     setActiveIndex((prev) => (prev - 1 + filteredProjects.length) % filteredProjects.length);
+  };
+  
+  const formatUrl = (url: string) => {
+      return url.match(/^https?:\/\//) ? url : `https://${url}`;
   };
 
   if (loading) {
@@ -155,10 +148,10 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
         ) : (
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             
-            {/* PREVIEW WINDOW (Common for Mobile & Desktop) */}
+            {/* PREVIEW WINDOW */}
             <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] overflow-hidden group">
-                    {/* Header do Browser Falso (Estético) */}
+                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] overflow-hidden group border-opacity-20 hover:border-matriz-purple/30 transition-all">
+                    {/* Header do Browser */}
                     <div className="h-8 bg-black/80 border-b border-white/5 flex items-center px-4 gap-2">
                         <div className="flex gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
@@ -180,7 +173,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     )}
                     <iframe
                         key={activeProject.id}
-                        src={activeProject.liveUrl}
+                        src={formatUrl(activeProject.liveUrl)}
                         title={`Website do projeto ${activeProject.title} - Matriz Visual`}
                         onLoad={() => setIsIframeLoading(false)}
                         className={`w-full h-full bg-white transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
@@ -188,7 +181,6 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         loading="lazy"
                     />
                     
-                    {/* Overlay Interativo para Mobile (Permite scroll no iframe mas mostra que é interativo) */}
                     <div className="absolute bottom-4 right-4 z-20 pointer-events-none md:hidden">
                         <span className="bg-black/70 backdrop-blur text-white text-[10px] px-2 py-1 rounded uppercase tracking-wider border border-white/10">
                             Interativo
@@ -197,7 +189,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 </div>
             </div>
             
-            {/* MOBILE INFO & NAVIGATION (Visible only on small screens) */}
+            {/* MOBILE INFO */}
             <div className="lg:hidden order-2 flex flex-col gap-6 mt-2">
                 <div className="flex items-center justify-between gap-4 bg-white/5 p-4 rounded-lg border border-white/5">
                     <button onClick={prevProject} className="p-3 bg-black/50 border border-white/10 rounded-full hover:bg-matriz-purple hover:text-white transition-colors" aria-label="Projeto Anterior">
@@ -223,7 +215,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 <p className="text-gray-400 text-sm leading-relaxed text-center px-4">{activeProject.description}</p>
                 
                 <a 
-                  href={activeProject.liveUrl}
+                  href={formatUrl(activeProject.liveUrl)}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 flex items-center justify-center gap-2 text-sm rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)] animate-pulse hover:animate-none"
@@ -233,7 +225,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 </a>
             </div>
 
-            {/* DESKTOP LIST (Hidden on mobile) */}
+            {/* DESKTOP LIST */}
             <div className="hidden lg:flex lg:w-1/3 flex-col gap-4 order-1 h-full min-h-[500px]">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs uppercase tracking-widest text-gray-500 font-bold">Lista de Projetos</span>
@@ -243,7 +235,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-2 space-y-3">
+                <div className="flex-1 overflow-y-auto max-h-[600px] custom-scrollbar pr-2 space-y-3 border border-matriz-purple/10 rounded-sm p-1">
                     {filteredProjects.map((project, index) => (
                     <button
                         key={project.id}
@@ -289,7 +281,7 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                     </div>
                     
                     <a 
-                        href={activeProject.liveUrl}
+                        href={formatUrl(activeProject.liveUrl)}
                         target="_blank"
                         rel="noreferrer"
                         className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"

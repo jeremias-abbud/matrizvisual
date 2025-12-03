@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../src/lib/supabase';
+import { getAllProjects, getAllLogos } from '../src/lib/dataService'; // Import DataService
 import Portfolio from './Portfolio';
 import WebShowcase from './WebShowcase';
 import LogoGrid from './LogoGrid';
 import { Project, ProjectCategory } from '../types';
 import { Clock, Monitor, Grid, Palette, Video, ArrowRight } from 'lucide-react';
-import { PROJECTS as MOCK_PROJECTS } from '../constants';
 
 interface AllProjectsShowcaseProps {
   onProjectClick: (project: Project, listContext?: Project[]) => void;
@@ -18,70 +16,25 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
 
   useEffect(() => {
     const fetchLatest = async () => {
-      try {
-        setLoading(true);
-        
-        // 1. Buscar projetos gerais (Design, Video, Web)
-        const { data: projectsData } = await supabase
-          .from('projects')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10); 
+      setLoading(true);
+      
+      // CACHE: Usa as funções centralizadas
+      const allProjects = await getAllProjects();
+      const allLogos = await getAllLogos();
 
-        // 2. Buscar logotipos
-        const { data: logosData } = await supabase
-          .from('logos')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(10);
+      // Mescla e Ordena por data (mais recente)
+      const combined = [...allProjects, ...allLogos];
+      
+      // Remove duplicatas (já que allLogos pode conter itens de allProjects)
+      const uniqueItems = Array.from(new Map(combined.map(item => [item.id, item])).values());
 
-        // Formatar Projetos
-        const formattedProjects = (projectsData || []).map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category as ProjectCategory,
-            industry: item.industry,
-            imageUrl: item.image_url,
-            description: item.description,
-            tags: item.tags || [],
-            client: item.client,
-            date: item.date,
-            longDescription: item.long_description,
-            gallery: item.gallery,
-            videoUrl: item.video_url,
-            createdAt: new Date(item.created_at).getTime(),
-        }));
+      uniqueItems.sort((a: any, b: any) => {
+          return (b.createdAt || 0) - (a.createdAt || 0);
+      });
 
-        // Formatar Logotipos
-        const formattedLogos = (logosData || []).map((item: any) => ({
-            id: `logo_${item.id}`,
-            title: item.name,
-            category: ProjectCategory.LOGO,
-            industry: item.industry,
-            imageUrl: item.url,
-            description: 'Projeto de identidade visual e design de logotipo.',
-            tags: ['Logotipo', 'Branding'],
-            client: item.name,
-            createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
-        }));
-
-        // 3. Juntar e Ordenar (ESTRITAMENTE CRONOLÓGICO)
-        const allItems = [...formattedProjects, ...formattedLogos].sort((a, b) => {
-            return b.createdAt - a.createdAt;
-        });
-
-        // Pegar apenas os 3 primeiros
-        if (allItems.length > 0) {
-          setLatestProjects(allItems.slice(0, 3));
-        } else {
-          setLatestProjects(MOCK_PROJECTS.slice(0, 3));
-        }
-      } catch (err) {
-        console.error("Error fetching latest projects:", err);
-        setLatestProjects(MOCK_PROJECTS.slice(0, 3));
-      } finally {
-        setLoading(false);
-      }
+      // Pega os 6 primeiros para mostrar como recentes
+      setLatestProjects(uniqueItems.slice(0, 6));
+      setLoading(false);
     };
     fetchLatest();
   }, []);

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../src/lib/supabase';
-import { PROJECTS as MOCK_PROJECTS, INDUSTRIES } from '../constants'; // Fallback
+import { getAllProjects } from '../src/lib/dataService'; // Import DataService
+import { INDUSTRIES } from '../constants';
 import { Project, ProjectCategory } from '../types';
 import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
@@ -29,40 +28,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
 
   useEffect(() => {
     async function fetchProjects() {
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .order('display_order', { ascending: true, nullsFirst: false }) // Prioriza ordem manual
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (data && data.length > 0) {
-           const formattedData = data.map((item: any) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category as ProjectCategory,
-            industry: item.industry,
-            imageUrl: item.image_url,
-            description: item.description,
-            tags: item.tags || [],
-            client: item.client,
-            date: item.date,
-            longDescription: item.long_description,
-            gallery: item.gallery,
-            videoUrl: item.video_url,
-          }));
-          setProjects(formattedData);
-        } else {
-          setProjects(MOCK_PROJECTS);
-        }
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-        setProjects(MOCK_PROJECTS);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      // CACHE IMPLEMENTADO: Chama o serviço centralizado
+      const data = await getAllProjects();
+      setProjects(data);
+      setLoading(false);
     }
     fetchProjects();
   }, []);
