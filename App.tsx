@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -9,6 +8,7 @@ import Contact from './components/Contact';
 import BackToTop from './components/BackToTop';
 import WhatsAppButton from './components/WhatsAppButton';
 import AdminDashboard from './components/admin/AdminDashboard';
+import MetaUpdater from './components/MetaUpdater';
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -37,6 +37,9 @@ function App() {
 
   return (
     <div className="font-sans antialiased text-white bg-matriz-black selection:bg-matriz-purple selection:text-white">
+      {/* Invisible component to update meta tags based on Admin settings */}
+      <MetaUpdater />
+      
       <Navbar />
       <main>
         <Hero />
