@@ -146,13 +146,15 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                 </button>
             </div>
         ) : (
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+            // AQUI: Adicionado lg:h-[650px] para forçar altura igual no desktop
+            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 lg:h-[650px]">
             
             {/* PREVIEW WINDOW */}
-            <div className="lg:w-2/3 order-1 lg:order-2">
-                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] bg-matriz-gray rounded-lg border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] overflow-hidden group border-opacity-20 hover:border-matriz-purple/30 transition-all">
+            <div className="lg:w-2/3 order-1 lg:order-2 h-full">
+                {/* AQUI: lg:aspect-auto lg:h-full para preencher o pai no desktop */}
+                <div className="relative w-full aspect-[9/16] md:aspect-[16/10] lg:aspect-auto lg:h-full bg-matriz-gray rounded-lg border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] overflow-hidden group border-opacity-20 hover:border-matriz-purple/30 transition-all flex flex-col">
                     {/* Header do Browser */}
-                    <div className="h-8 bg-black/80 border-b border-white/5 flex items-center px-4 gap-2">
+                    <div className="h-8 bg-black/80 border-b border-white/5 flex items-center px-4 gap-2 shrink-0">
                         <div className="flex gap-1.5">
                             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
                             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
@@ -165,26 +167,28 @@ const WebShowcase: React.FC<WebShowcaseProps> = ({ headless = false, limit }) =>
                         </div>
                     </div>
 
-                    {isIframeLoading && (
-                        <div className="absolute inset-0 top-8 flex flex-col items-center justify-center gap-3 bg-matriz-dark text-gray-500 z-10">
-                            <Loader2 className="animate-spin text-matriz-purple" size={32} />
-                            <span className="text-xs uppercase tracking-widest animate-pulse">Carregando Preview...</span>
+                    <div className="relative flex-grow w-full h-full">
+                        {isIframeLoading && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-matriz-dark text-gray-500 z-10">
+                                <Loader2 className="animate-spin text-matriz-purple" size={32} />
+                                <span className="text-xs uppercase tracking-widest animate-pulse">Carregando Preview...</span>
+                            </div>
+                        )}
+                        <iframe
+                            key={activeProject.id}
+                            src={formatUrl(activeProject.liveUrl)}
+                            title={`Website do projeto ${activeProject.title} - Matriz Visual`}
+                            onLoad={() => setIsIframeLoading(false)}
+                            className={`w-full h-full bg-white transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
+                            sandbox="allow-scripts allow-same-origin allow-forms"
+                            loading="lazy"
+                        />
+                        
+                        <div className="absolute bottom-4 right-4 z-20 pointer-events-none md:hidden">
+                            <span className="bg-black/70 backdrop-blur text-white text-[10px] px-2 py-1 rounded uppercase tracking-wider border border-white/10">
+                                Interativo
+                            </span>
                         </div>
-                    )}
-                    <iframe
-                        key={activeProject.id}
-                        src={formatUrl(activeProject.liveUrl)}
-                        title={`Website do projeto ${activeProject.title} - Matriz Visual`}
-                        onLoad={() => setIsIframeLoading(false)}
-                        className={`w-full h-full bg-white transition-opacity duration-500 ${isIframeLoading ? 'opacity-0' : 'opacity-100'}`}
-                        sandbox="allow-scripts allow-same-origin allow-forms"
-                        loading="lazy"
-                    />
-                    
-                    <div className="absolute bottom-4 right-4 z-20 pointer-events-none md:hidden">
-                        <span className="bg-black/70 backdrop-blur text-white text-[10px] px-2 py-1 rounded uppercase tracking-wider border border-white/10">
-                            Interativo
-                        </span>
                     </div>
                 </div>
             </div>
