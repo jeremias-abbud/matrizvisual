@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useSiteAssets } from '../src/hooks/useSiteAssets';
@@ -7,7 +8,8 @@ const Hero: React.FC = () => {
   const { assetsMap } = useSiteAssets();
   const [isLogoLoaded, setIsLogoLoaded] = useState(false);
   const containerRef = useRef<HTMLElement>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [spotlightPos, setSpotlightPos] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
 
   const heroLogo = assetsMap.logo_hero;
   const logoStyles = heroLogo?.style_config || {};
@@ -16,29 +18,72 @@ const Hero: React.FC = () => {
     ? (logoStyles.height_mobile || '8rem') 
     : (logoStyles.height_desktop || '10rem');
 
-  // Lógica do Spotlight (Segue o Mouse)
+  // Detecta Mobile
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Lógica do Spotlight (Híbrida: Mouse no Desktop / Automática no Mobile)
+  useEffect(() => {
+    // DESKTOP: Segue o Mouse
     const handleMouseMove = (event: MouseEvent) => {
-      if (containerRef.current) {
+      if (!isMobile && containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setMousePosition({
+        setSpotlightPos({
           x: event.clientX - rect.left,
           y: event.clientY - rect.top,
         });
       }
     };
 
+    // MOBILE: Animação Automática (Órbita)
+    let animationFrameId: number;
+    let time = 0;
+
+    const animateMobileSpotlight = () => {
+      if (isMobile && containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Movimento em "8" ou Elipse
+        // Ajustamos o raio para cobrir boa parte da tela
+        const radiusX = rect.width * 0.35; 
+        const radiusY = rect.height * 0.25;
+
+        // Velocidade suave
+        time += 0.015;
+
+        setSpotlightPos({
+          x: centerX + Math.cos(time) * radiusX,
+          y: centerY + Math.sin(time * 1.3) * radiusY, // Fatores diferentes criam padrão não-circular
+        });
+
+        animationFrameId = requestAnimationFrame(animateMobileSpotlight);
+      }
+    };
+
     const element = containerRef.current;
     if (element) {
-      element.addEventListener('mousemove', handleMouseMove);
+      if (isMobile) {
+        // Inicia animação automática
+        animateMobileSpotlight();
+      } else {
+        // Ativa listener de mouse
+        element.addEventListener('mousemove', handleMouseMove);
+      }
     }
 
     return () => {
       if (element) {
         element.removeEventListener('mousemove', handleMouseMove);
       }
+      cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <section 
@@ -52,27 +97,31 @@ const Hero: React.FC = () => {
         {/* 1. Grid Base (Estático, escuro) */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
 
-        {/* 2. Spotlight Grid (Revelado pelo Mouse) */}
+        {/* 2. Spotlight Grid (Revelado pelo Mouse ou Automação) */}
         <div 
-          className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.1)_1px,transparent_1px)] bg-[size:4rem_4rem]"
+          className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.15)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.15)_1px,transparent_1px)] bg-[size:4rem_4rem] transition-opacity duration-1000"
           style={{
-            maskImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, black, transparent)`,
-            WebkitMaskImage: `radial-gradient(600px circle at ${mousePosition.x}px ${mousePosition.y}px, black, transparent)`,
+            maskImage: `radial-gradient(${isMobile ? '500px' : '600px'} circle at ${spotlightPos.x}px ${spotlightPos.y}px, black, transparent)`,
+            WebkitMaskImage: `radial-gradient(${isMobile ? '500px' : '600px'} circle at ${spotlightPos.x}px ${spotlightPos.y}px, black, transparent)`,
           }}
         ></div>
 
-        {/* 3. Luzes "Respirantes" (Auroras) */}
+        {/* 3. Luzes "Respirantes" (Auroras de Fundo) */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-matriz-purple/20 rounded-full blur-[128px] animate-pulse"></div>
         <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[96px] animate-pulse delay-1000"></div>
         
-        {/* 4. Glow do Mouse (Luz direta) */}
+        {/* 4. Glow Direto do Spotlight (Acompanha a posição) */}
         <div 
-            className="absolute w-[500px] h-[500px] bg-matriz-purple/10 rounded-full blur-[100px] pointer-events-none transition-opacity duration-500 opacity-0 group-hover:opacity-100"
+            className={`absolute w-[500px] h-[500px] bg-matriz-purple/10 rounded-full blur-[100px] pointer-events-none transition-opacity duration-500 ${isMobile ? 'opacity-60' : 'opacity-0 group-hover:opacity-100'}`}
             style={{
-                top: mousePosition.y - 250,
-                left: mousePosition.x - 250,
+                top: spotlightPos.y - 250,
+                left: spotlightPos.x - 250,
+                transition: isMobile ? 'none' : 'opacity 0.5s ease', // Sem delay no mobile para fluidez
             }}
         ></div>
+        
+        {/* 5. Glow Central Fixo (Apenas Mobile - Garante legibilidade do texto) */}
+        <div className="md:hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-matriz-black/80 blur-[80px] rounded-full z-0"></div>
       </div>
 
       {/* Main Content Wrapper */}
