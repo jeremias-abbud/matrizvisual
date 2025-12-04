@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info, Sparkles, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 import { getVideoThumbnail } from '../../src/lib/videoHelper';
-import { analyzeImageWithGemini } from '../../src/lib/gemini';
 
 interface Project {
   id: string;
@@ -31,7 +30,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false); // Estado para análise de IA
   
   const [isReordering, setIsReordering] = useState(false);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
@@ -143,37 +141,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
 
   const removeExistingGalleryImage = (index: number) => {
       setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // --- IA ANALYSIS HANDLER ---
-  const handleAIAnalysis = async () => {
-    if (!coverImageFile) {
-        alert("Selecione uma imagem de capa primeiro para analisar.");
-        return;
-    }
-
-    setAnalyzing(true);
-    try {
-        const result = await analyzeImageWithGemini(coverImageFile, formData.category);
-        
-        if (result) {
-            setFormData(prev => ({
-                ...prev,
-                title: result.title,
-                description: result.description,
-                longDescription: result.longDescription,
-                tags: result.tags.join(', '),
-                industry: result.industry || prev.industry // Mantém a atual se a IA não achar uma
-            }));
-        } else {
-            alert("Não foi possível analisar a imagem. Tente novamente.");
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao conectar com a IA.");
-    } finally {
-        setAnalyzing(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -340,25 +307,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                             <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem'}</span>
                         </div>
                     </div>
-                    {/* BUTTON TO TRIGGER AI */}
-                    {coverImageFile && !editingProject && (
-                        <button 
-                            type="button" 
-                            onClick={handleAIAnalysis}
-                            disabled={analyzing}
-                            className="bg-gradient-to-br from-matriz-purple to-purple-800 text-white w-24 rounded border border-white/10 flex flex-col items-center justify-center gap-1 hover:shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Preencher campos automaticamente usando Inteligência Artificial"
-                        >
-                            {analyzing ? (
-                                <Loader2 size={24} className="animate-spin" />
-                            ) : (
-                                <Sparkles size={24} />
-                            )}
-                            <span className="text-[10px] font-bold uppercase tracking-widest">
-                                {analyzing ? 'Lendo...' : 'Auto IA'}
-                            </span>
-                        </button>
-                    )}
                 </div>
               </div>
 
