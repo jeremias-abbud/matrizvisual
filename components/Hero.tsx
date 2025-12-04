@@ -89,7 +89,7 @@ const Hero: React.FC = () => {
     <section 
       ref={containerRef}
       id="home" 
-      className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-16 md:pt-20 scroll-mt-28 gap-8 group"
+      className="relative min-h-screen flex flex-col justify-between overflow-hidden bg-matriz-black pt-10 md:pt-14 scroll-mt-28 gap-8 group"
     >
       {/* --- BACKGROUND ANIMADO --- */}
       <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none">
