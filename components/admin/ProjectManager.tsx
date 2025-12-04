@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info, Sparkles, Loader2 } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 import { getVideoThumbnail } from '../../src/lib/videoHelper';
+import { analyzeImageWithGemini } from '../../src/lib/gemini';
 
 interface Project {
   id: string;
@@ -30,6 +31,7 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false); // Estado para análise de IA
   
   const [isReordering, setIsReordering] = useState(false);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
@@ -141,6 +143,37 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
 
   const removeExistingGalleryImage = (index: number) => {
       setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // --- IA ANALYSIS HANDLER ---
+  const handleAIAnalysis = async () => {
+    if (!coverImageFile) {
+        alert("Selecione uma imagem de capa primeiro para analisar.");
+        return;
+    }
+
+    setAnalyzing(true);
+    try {
+        const result = await analyzeImageWithGemini(coverImageFile, formData.category);
+        
+        if (result) {
+            setFormData(prev => ({
+                ...prev,
+                title: result.title,
+                description: result.description,
+                longDescription: result.longDescription,
+                tags: result.tags.join(', '),
+                industry: result.industry || prev.industry // Mantém a atual se a IA não achar uma
+            }));
+        } else {
+            alert("Não foi possível analisar a imagem. Tente novamente.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Erro ao conectar com a IA.");
+    } finally {
+        setAnalyzing(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -295,6 +328,41 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
             
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
               <div className="md:col-span-2">
+                <label className="block text-gray-400 text-xs uppercase mb-1 font-bold">
+                    {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
+                    {formData.videoUrl ? <span className="text-green-500 font-normal ml-2">(Opcional: Será usada a capa do vídeo)</span> : <span className="text-matriz-purple ml-1">*</span>}
+                </label>
+                <div className="flex gap-2">
+                    <div className="flex-1 border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
+                        <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                        <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
+                            <Upload size={24} />
+                            <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem'}</span>
+                        </div>
+                    </div>
+                    {/* BUTTON TO TRIGGER AI */}
+                    {coverImageFile && !editingProject && (
+                        <button 
+                            type="button" 
+                            onClick={handleAIAnalysis}
+                            disabled={analyzing}
+                            className="bg-gradient-to-br from-matriz-purple to-purple-800 text-white w-24 rounded border border-white/10 flex flex-col items-center justify-center gap-1 hover:shadow-[0_0_15px_rgba(139,92,246,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Preencher campos automaticamente usando Inteligência Artificial"
+                        >
+                            {analyzing ? (
+                                <Loader2 size={24} className="animate-spin" />
+                            ) : (
+                                <Sparkles size={24} />
+                            )}
+                            <span className="text-[10px] font-bold uppercase tracking-widest">
+                                {analyzing ? 'Lendo...' : 'Auto IA'}
+                            </span>
+                        </button>
+                    )}
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1">Título <span className="text-matriz-purple">*</span></label>
                 <input type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-black border border-white/10 p-2 text-white rounded" required />
               </div>
@@ -325,20 +393,6 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                 <ModernSelect label="Ramo de Negócio" value={formData.industry} onChange={(val) => setFormData({...formData, industry: val})} options={INDUSTRIES} placeholder="Selecione o Ramo" />
               </div>
               
-              <div className="md:col-span-2">
-                <label className="block text-gray-400 text-xs uppercase mb-1 font-bold">
-                    {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
-                    {formData.videoUrl ? <span className="text-green-500 font-normal ml-2">(Opcional: Será usada a capa do vídeo)</span> : <span className="text-matriz-purple ml-1">*</span>}
-                </label>
-                <div className="border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
-                    <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                    <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
-                        <Upload size={24} />
-                        <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem (ou deixe vazio para usar capa do vídeo)'}</span>
-                    </div>
-                </div>
-              </div>
-
               <div className="md:col-span-2">
                 <label className="block text-gray-400 text-xs uppercase mb-1 font-bold flex items-center gap-2">
                     {formData.category === ProjectCategory.VIDEO && <Video size={14} className="text-matriz-purple" />}
