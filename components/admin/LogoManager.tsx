@@ -196,12 +196,12 @@ const LogoManager: React.FC = () => {
             <p className="text-sm text-gray-500 mt-1">Adicione, edite ou reordene os logotipos da sua galeria.</p>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
              {isReordering ? (
                  <>
                     <button 
                         onClick={() => { setIsReordering(false); fetchLogos(); /* Reset */ }}
-                        className="flex items-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded text-gray-300 hover:text-white border border-white/10 text-sm font-bold uppercase"
                         disabled={uploading}
                     >
                         Cancelar
@@ -209,7 +209,7 @@ const LogoManager: React.FC = () => {
                     <button 
                         onClick={saveOrder}
                         disabled={!hasOrderChanged || uploading}
-                        className={`flex items-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}
+                        className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded text-white font-bold uppercase text-sm transition-colors ${hasOrderChanged ? 'bg-green-600 hover:bg-green-500' : 'bg-gray-600 cursor-not-allowed'}`}
                     >
                         <Save size={18} /> {uploading ? 'Salvando...' : 'Salvar Ordem'}
                     </button>
@@ -218,13 +218,13 @@ const LogoManager: React.FC = () => {
                 <>
                     <button 
                         onClick={() => setIsReordering(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded text-matriz-purple border border-matriz-purple hover:bg-matriz-purple hover:text-white transition-colors text-sm font-bold uppercase"
                     >
                         <GripVertical size={18} /> Reordenar
                     </button>
                     <button 
                         onClick={() => { resetForm(); setShowForm(true); }}
-                        className="flex items-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-matriz-purple px-4 py-2 rounded text-white font-bold uppercase text-sm hover:bg-purple-600 transition-colors"
                     >
                         <Plus size={18} /> Adicionar Novo
                     </button>
@@ -235,7 +235,7 @@ const LogoManager: React.FC = () => {
 
       {showForm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-md w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
+          <div className="bg-matriz-dark border border-white/10 p-6 rounded max-w-md w-full max-h-[90vh] overflow-y-auto custom-scrollbar relative">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-white">
                 {editingId ? 'Editar Logotipo' : 'Novo Logotipo'}
@@ -308,21 +308,36 @@ const LogoManager: React.FC = () => {
                 onDragStart={() => handleDragStart(index)}
                 onDragEnter={() => handleDragEnter(index)}
                 onDragEnd={handleDragEnd}
-                onDragOver={(e) => e.preventDefault()} // Necessary to allow dropping
+                onDragOver={(e) => e.preventDefault()}
             >
-              <div className="flex items-center gap-3">
-                  {isReordering && <GripVertical size={20} className="text-matriz-purple flex-shrink-0" />}
-                  <div className="w-16 h-16 bg-black/20 rounded border border-white/5 flex-shrink-0 flex items-center justify-center p-1">
-                     <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain" />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {isReordering && <GripVertical size={20} className="text-matriz-purple flex-shrink-0" />}
+                      <div className="w-16 h-16 bg-black/20 rounded border border-white/5 flex-shrink-0 flex items-center justify-center p-1">
+                        <img src={logo.url} alt={logo.name} className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                          <p className="text-white font-bold truncate">{logo.name}</p>
+                          {logo.industry && <p className="text-gray-500 text-xs truncate">{logo.industry}</p>}
+                      </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                      <p className="text-white font-bold truncate">{logo.name}</p>
-                      {logo.industry && <p className="text-gray-500 text-xs truncate">{logo.industry}</p>}
-                  </div>
+                  
                   {!isReordering && (
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => handleEdit(logo)} className="p-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors" title="Editar"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(logo.id)} className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors" title="Excluir"><Trash2 size={16} /></button>
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5 sm:pt-0 sm:border-0">
+                        <button 
+                            onClick={() => handleEdit(logo)} 
+                            className="flex-1 sm:flex-none justify-center px-3 py-2 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white rounded transition-colors text-xs font-bold uppercase flex items-center gap-2" 
+                            title="Editar"
+                        >
+                            <Edit2 size={16} /> <span className="sm:hidden">Editar</span>
+                        </button>
+                        <button 
+                            onClick={() => handleDelete(logo.id)} 
+                            className="flex-1 sm:flex-none justify-center px-3 py-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors text-xs font-bold uppercase flex items-center gap-2" 
+                            title="Excluir"
+                        >
+                            <Trash2 size={16} /> <span className="sm:hidden">Excluir</span>
+                        </button>
                       </div>
                   )}
               </div>
