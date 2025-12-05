@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { getAllProjects } from '../src/lib/dataService'; // Import DataService
 import { INDUSTRIES } from '../constants';
 import { Project, ProjectCategory } from '../types';
-import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play, Tag, X } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play, Tag, X, Users, Building2 } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
@@ -16,7 +17,8 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, onProjectClick }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
-  const [activeTag, setActiveTag] = useState<string>(''); // Novo estado para Tag
+  const [activeClient, setActiveClient] = useState<string>(''); // Novo estado para Cliente
+  const [activeTag, setActiveTag] = useState<string>('');
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,14 +41,20 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
     fetchProjects();
   }, []);
 
-  // Resetar paginação e tag ao mudar filtros principais
+  // Resetar filtros dependentes em cascata
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setActiveTag(''); 
+    setActiveClient(''); // Mudou Categoria/Indústria -> Reseta Cliente
+    setActiveTag('');    // Mudou Categoria/Indústria -> Reseta Tag
   }, [activeCategory, activeIndustry]);
+
+  useEffect(() => {
+    setVisibleCount(ITEMS_PER_PAGE);
+    setActiveTag('');    // Mudou Cliente -> Reseta Tag
+  }, [activeClient]);
   
-  // 1. Filtragem Base (Categoria e Indústria)
-  const baseFilteredProjects = useMemo(() => {
+  // 1. Filtragem Nível 1: Categoria e Indústria
+  const projectsFilteredByIndustry = useMemo(() => {
       return projects.filter(project => {
         const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
         const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
@@ -54,24 +62,42 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
       });
   }, [projects, activeCategory, activeIndustry]);
 
-  // 2. Extrair Tags Únicas dos projetos filtrados (Dinâmico)
+  // 2. Extrair Clientes Únicos (Baseado no Nível 1)
+  const availableClients = useMemo(() => {
+      const clients = new Set<string>();
+      projectsFilteredByIndustry.forEach(p => {
+          if (p.client) {
+              clients.add(p.client.trim());
+          }
+      });
+      return Array.from(clients).sort();
+  }, [projectsFilteredByIndustry]);
+
+  // 3. Filtragem Nível 2: Cliente
+  const projectsFilteredByClient = useMemo(() => {
+      return projectsFilteredByIndustry.filter(project => {
+          return activeClient === '' || project.client === activeClient;
+      });
+  }, [projectsFilteredByIndustry, activeClient]);
+
+  // 4. Extrair Tags Únicas (Baseado no Nível 2 - Projetos filtrados por cliente)
   const availableTags = useMemo(() => {
       const tags = new Set<string>();
-      baseFilteredProjects.forEach(p => {
+      projectsFilteredByClient.forEach(p => {
           if (p.tags && Array.isArray(p.tags)) {
               p.tags.forEach(t => tags.add(t.trim()));
           }
       });
       return Array.from(tags).sort();
-  }, [baseFilteredProjects]);
+  }, [projectsFilteredByClient]);
 
-  // 3. Filtragem Final (Incluindo Tag)
+  // 5. Filtragem Final: Tag
   const finalFilteredProjects = useMemo(() => {
-      if (!activeTag) return baseFilteredProjects;
-      return baseFilteredProjects.filter(p => 
+      if (!activeTag) return projectsFilteredByClient;
+      return projectsFilteredByClient.filter(p => 
           p.tags && p.tags.some(t => t.trim() === activeTag)
       );
-  }, [baseFilteredProjects, activeTag]);
+  }, [projectsFilteredByClient, activeTag]);
 
   const visibleProjects = finalFilteredProjects.length > 0 ? finalFilteredProjects.slice(0, visibleCount) : [];
   const hasMore = visibleCount < finalFilteredProjects.length;
@@ -89,8 +115,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
   const handleVisitSite = (e: React.MouseEvent, url?: string) => {
     e.stopPropagation();
     if (!url) return;
-    
-    // Check if URL starts with http/https
     const fullUrl = url.match(/^https?:\/\//) ? url : `https://${url}`;
     window.open(fullUrl, '_blank');
   };
@@ -112,8 +136,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
 
         <div className={`flex flex-col gap-4 mb-8 ${headless ? 'justify-end' : ''}`}>
              
-             {/* FILTROS PRINCIPAIS */}
-             <div className="flex flex-col md:flex-row gap-4 w-full">
+             {/* FILTROS PRINCIPAIS (LINHA 1) */}
+             <div className="flex flex-col xl:flex-row gap-4 w-full">
+                {/* Categorias */}
                 {!forcedCategory && (
                 <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
                     {categories.map((category) => (
@@ -132,27 +157,52 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 </div>
                 )}
 
-                <div className="relative group min-w-[200px]">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                        <Filter size={14} />
+                {/* Dropdowns (Indústria e Cliente) */}
+                <div className="flex flex-col sm:flex-row gap-4 xl:w-auto w-full">
+                    {/* Seletor de Indústria */}
+                    <div className="relative group min-w-[200px] flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                            <Filter size={14} />
+                        </div>
+                        <select 
+                            value={activeIndustry}
+                            onChange={(e) => setActiveIndustry(e.target.value)}
+                            className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm text-ellipsis"
+                        >
+                            <option value="">Todos os Ramos</option>
+                            {INDUSTRIES.map(ind => (
+                                <option key={ind} value={ind}>{ind}</option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                            <ChevronLeft size={14} className="-rotate-90" />
+                        </div>
                     </div>
-                    <select 
-                        value={activeIndustry}
-                        onChange={(e) => setActiveIndustry(e.target.value)}
-                        className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm"
-                    >
-                        <option value="">Todos os Ramos</option>
-                        {INDUSTRIES.map(ind => (
-                            <option key={ind} value={ind}>{ind}</option>
-                        ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-                        <ChevronLeft size={14} className="-rotate-90" />
+
+                    {/* Seletor de Cliente (NOVO) */}
+                    <div className="relative group min-w-[200px] flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                            <Building2 size={14} />
+                        </div>
+                        <select 
+                            value={activeClient}
+                            onChange={(e) => setActiveClient(e.target.value)}
+                            disabled={availableClients.length === 0}
+                            className={`w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none transition-colors uppercase tracking-wide font-bold shadow-sm text-ellipsis ${availableClients.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'}`}
+                        >
+                            <option value="">{availableClients.length === 0 ? 'Sem clientes no filtro' : 'Todos os Clientes'}</option>
+                            {availableClients.map(client => (
+                                <option key={client} value={client}>{client}</option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                            <ChevronLeft size={14} className="-rotate-90" />
+                        </div>
                     </div>
                 </div>
              </div>
 
-             {/* FILTRO DE TAGS (SECUNDÁRIO) - Só aparece se houver tags disponíveis */}
+             {/* FILTRO DE TAGS (LINHA 2) - Só aparece se houver tags disponíveis */}
              {availableTags.length > 0 && (
                  <div className="w-full overflow-x-auto pb-2 custom-scrollbar">
                      <div className="flex items-center gap-2">
@@ -185,13 +235,21 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
              )}
         </div>
 
-        <div className="mb-6 text-gray-500 text-xs md:text-sm flex justify-between items-center border-b border-white/5 pb-2">
-           <div className="flex items-center gap-2">
-             {activeIndustry ? <span className="text-matriz-purple font-bold">{activeIndustry}</span> : 'Todos os Ramos'}
+        <div className="mb-6 text-gray-500 text-xs md:text-sm flex flex-wrap justify-between items-center border-b border-white/5 pb-2 gap-2">
+           <div className="flex items-center gap-2 flex-wrap">
+             {activeIndustry && <span className="text-matriz-purple font-bold">{activeIndustry}</span>}
+             {activeClient && (
+                 <>
+                    <span className="text-gray-600">/</span>
+                    <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded-sm">{activeClient}</span>
+                 </>
+             )}
+             {!activeIndustry && !activeClient && 'Todos os Projetos'}
+             
              {activeTag && <span className="text-gray-600">/</span>}
              {activeTag && <span className="text-white bg-matriz-purple/20 px-2 py-0.5 rounded text-[10px] border border-matriz-purple/30">{activeTag}</span>}
            </div>
-           <span>Exibindo {visibleProjects.length} de {finalFilteredProjects.length}</span>
+           <span className="ml-auto">Exibindo {visibleProjects.length} de {finalFilteredProjects.length}</span>
         </div>
 
         {loading ? (
@@ -270,9 +328,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
           <div className="text-center py-20 animate-fade-in bg-white/5 border border-white/5 rounded-sm">
             <Filter size={48} className="mx-auto text-gray-600 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Nenhum projeto encontrado</h3>
-            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio, Categoria ou Tag.</p>
+            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio, Cliente ou Tag.</p>
             <button 
-                onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); setActiveTag(''); }}
+                onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); setActiveTag(''); setActiveClient(''); }}
                 className="mt-4 text-matriz-purple font-bold uppercase text-sm hover:underline"
             >
                 Limpar Filtros
