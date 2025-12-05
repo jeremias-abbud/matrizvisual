@@ -2,7 +2,6 @@ import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 
 // Safely access environment variable with fallback to prevent crash
-// If import.meta.env is undefined, it uses the hardcoded key as backup
 const getApiKey = () => {
   try {
     // @ts-ignore
@@ -28,12 +27,12 @@ if (apiKey) {
 }
 
 /**
- * Converte um arquivo File (Browser) para Base64 string
+ * Converte um arquivo File ou Blob para Base64 string
  */
-const fileToBase64 = (file: File): Promise<string> => {
+const blobToBase64 = (blob: Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
     reader.onload = () => {
       const result = reader.result as string;
       const base64Data = result.split(',')[1];
@@ -42,6 +41,23 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.onerror = error => reject(error);
   });
 };
+
+/**
+ * Baixa uma imagem da URL e converte para Base64
+ */
+const urlToBase64 = async (url: string): Promise<{ data: string, mimeType: string }> => {
+    try {
+        // Adiciona timestamp para evitar cache
+        const response = await fetch(`${url}?t=${Date.now()}`);
+        if (!response.ok) throw new Error(`Falha ao baixar imagem: ${response.statusText}`);
+        const blob = await response.blob();
+        const data = await blobToBase64(blob);
+        return { data, mimeType: blob.type };
+    } catch (error) {
+        console.error("Erro ao converter URL para base64:", error);
+        throw error;
+    }
+}
 
 export interface AIAnalysisResult {
   title: string;
@@ -53,16 +69,29 @@ export interface AIAnalysisResult {
 }
 
 /**
- * Envia a imagem para o Gemini e retorna os dados preenchidos
+ * Envia a imagem (File ou URL) para o Gemini e retorna os dados preenchidos
  */
-export const analyzeImageWithGemini = async (file: File, categoryContext: string): Promise<AIAnalysisResult | null> => {
+export const analyzeImageWithGemini = async (imageSource: File | string, categoryContext: string): Promise<AIAnalysisResult | null> => {
   if (!ai) {
     throw new Error("Chave de API não configurada.");
   }
 
   try {
-    const base64Data = await fileToBase64(file);
-    const mimeType = file.type;
+    let base64Data = '';
+    let mimeType = '';
+
+    console.log("Preparando imagem para análise...");
+
+    if (imageSource instanceof File) {
+        base64Data = await blobToBase64(imageSource);
+        mimeType = imageSource.type;
+    } else if (typeof imageSource === 'string') {
+        const result = await urlToBase64(imageSource);
+        base64Data = result.data;
+        mimeType = result.mimeType;
+    } else {
+        throw new Error("Fonte de imagem inválida.");
+    }
 
     console.log("Iniciando análise com Gemini 2.5 Flash...");
 

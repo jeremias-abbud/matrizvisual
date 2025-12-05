@@ -149,14 +149,17 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
 
   // --- AI ANALYSIS HANDLER ---
   const handleAIAnalysis = async () => {
-      if (!coverImageFile) {
-          alert("Por favor, selecione uma imagem de capa primeiro para a IA analisar.");
+      // Determina a fonte da imagem: Arquivo novo OU URL existente
+      const imageSource = coverImageFile || (editingProject ? editingProject.image_url : null);
+
+      if (!imageSource) {
+          alert("Por favor, selecione uma imagem de capa primeiro (ou edite um projeto com imagem) para a IA analisar.");
           return;
       }
 
       setAnalyzing(true);
       try {
-          const result = await analyzeImageWithGemini(coverImageFile, formData.category);
+          const result = await analyzeImageWithGemini(imageSource, formData.category);
           
           if (result) {
               setFormData(prev => ({
@@ -296,6 +299,9 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
       else pageTitle = `Gerenciar ${forcedCategory}`;
   }
 
+  // Verifica se pode usar IA: Tem arquivo selecionado OU está editando um projeto com imagem
+  const canUseAI = coverImageFile || (editingProject && editingProject.image_url);
+
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
@@ -340,19 +346,26 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                         <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
                             <Upload size={24} />
-                            <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem'}</span>
+                            <span className="text-sm">{coverImageFile ? coverImageFile.name : (editingProject ? 'Clique para substituir' : 'Clique para enviar imagem')}</span>
                         </div>
                     </div>
                     
-                    {coverImageFile && (
+                    {/* Exibe a imagem atual se estiver editando */}
+                    {editingProject && !coverImageFile && (
+                        <div className="h-20 w-20 rounded border border-white/10 overflow-hidden bg-black/50">
+                            <img src={editingProject.image_url} className="w-full h-full object-contain" alt="Atual" />
+                        </div>
+                    )}
+
+                    {canUseAI && (
                         <button 
                             type="button" 
                             onClick={handleAIAnalysis}
                             disabled={analyzing}
-                            className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-matriz-purple/20 to-blue-500/20 border border-matriz-purple/50 rounded text-sm text-matriz-silver hover:text-white hover:border-matriz-purple transition-all shadow-[0_0_10px_rgba(139,92,246,0.1)] group"
+                            className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-matriz-purple/20 to-blue-500/20 border border-matriz-purple/50 rounded text-sm text-matriz-silver hover:text-white hover:border-matriz-purple transition-all shadow-[0_0_10px_rgba(139,92,246,0.1)] group w-full"
                         >
                             {analyzing ? <Loader2 size={16} className="animate-spin text-matriz-purple" /> : <Sparkles size={16} className="text-yellow-400" />}
-                            {analyzing ? 'Analisando Imagem...' : 'Preencher Campos com IA'}
+                            {analyzing ? 'Analisando Imagem...' : (editingProject ? 'Reescrever com IA (Usar Imagem Atual)' : 'Preencher Campos com IA')}
                         </button>
                     )}
                 </div>
