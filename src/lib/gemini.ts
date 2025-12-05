@@ -2,29 +2,15 @@ import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 import { ProjectCategory } from '../../types';
 
-// Safely access environment variable with fallback to prevent crash
-const getApiKey = () => {
-  try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
-      // @ts-ignore
-      return import.meta.env.VITE_GOOGLE_API_KEY;
-    }
-  } catch (e) {
-    console.warn("Environment variables not accessible");
-  }
-  // Fallback key provided for development/preview to prevent crash
-  return 'AIzaSyAE_X2NljKMegux7iQtiwPGIbXPxfelFUY';
-};
-
-const apiKey = getApiKey();
+// Acessa a chave de forma segura via variável de ambiente (.env)
+const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
 
 let ai: GoogleGenAI | null = null;
 
 if (apiKey) {
   ai = new GoogleGenAI({ apiKey });
 } else {
-  console.warn("VITE_GOOGLE_API_KEY não definida. A funcionalidade de IA ficará indisponível.");
+  console.warn("⚠️ API Key do Google não encontrada. Certifique-se de ter o arquivo .env configurado com VITE_GOOGLE_API_KEY.");
 }
 
 /**
@@ -74,7 +60,7 @@ export interface AIAnalysisResult {
  */
 export const analyzeImageWithGemini = async (imageSource: File | string, categoryContext: string): Promise<AIAnalysisResult | null> => {
   if (!ai) {
-    throw new Error("Chave de API não configurada.");
+    throw new Error("Chave de API não configurada. Verifique o arquivo .env.");
   }
 
   try {
@@ -94,7 +80,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
         throw new Error("Fonte de imagem inválida.");
     }
 
-    console.log("Iniciando análise com Gemini 2.5 Flash...");
+    console.log("Iniciando análise com Gemini 1.5 Flash...");
 
     // Definição de contexto específico baseado na categoria
     let specificInstruction = "";
@@ -150,7 +136,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: {
         parts: [
           { inlineData: { mimeType, data: base64Data } },
