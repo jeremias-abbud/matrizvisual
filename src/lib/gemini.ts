@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
+import { ProjectCategory } from '../../types';
 
 // Safely access environment variable with fallback to prevent crash
 const getApiKey = () => {
@@ -95,16 +96,43 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
 
     console.log("Iniciando análise com Gemini 2.5 Flash...");
 
+    // Definição de contexto específico baseado na categoria
+    let specificInstruction = "";
+    
+    if (categoryContext === ProjectCategory.MODELS || categoryContext.includes('Modelos')) {
+        specificInstruction = `
+          FOCO ESPECÍFICO: Esta imagem é de um MODELO 3D, PERSONAGEM IA ou AVATAR.
+          - Descreva a qualidade da renderização, o estilo artístico (realista, cartoon, cyberpunk, etc.), a iluminação e os detalhes do personagem.
+          - Deixe claro que é um trabalho de criação de personagem/modelo virtual.
+          - NÃO descreva como "panfleto" ou "design gráfico", trate como uma "peça de arte digital/modelagem".
+        `;
+    } else if (categoryContext === ProjectCategory.VIDEO || categoryContext.includes('Vídeo')) {
+        specificInstruction = `
+          FOCO ESPECÍFICO: Esta imagem é a CAPA (Thumbnail) de um VÍDEO COMERCIAL ou PROPAGANDA.
+          - A IA não pode assistir o vídeo, então baseie-se nesta imagem para descrever o ESTILO DA PRODUÇÃO AUDIOVISUAL.
+          - Descreva a atmosfera, a qualidade da filmagem/edição sugerida pela capa e o objetivo publicitário.
+          - Use termos como "Produção dinâmica", "Comercial impactante", "Vídeo para redes sociais".
+          - NÃO descreva a imagem como uma "foto estática", mas como a representação de um vídeo.
+        `;
+    } else {
+        specificInstruction = `
+          FOCO ESPECÍFICO: Design Gráfico, Logotipos ou Web Design.
+          - Descreva o estilo visual, paleta de cores, tipografia e como esse design ajuda a marca do cliente.
+        `;
+    }
+
     const prompt = `
       Você é um Diretor de Arte Sênior da agência "Matriz Visual".
       Analise a imagem anexada. O contexto da categoria é: "${categoryContext}".
+      
+      ${specificInstruction}
       
       Gere um JSON estrito com as seguintes chaves:
       {
         "title": "Um título curto e comercial para o projeto",
         "client": "O nome da marca, empresa ou cliente identificado na imagem (se não houver texto, crie um nome fictício plausível)",
-        "description": "Uma frase curta e vendedora (max 150 caracteres)",
-        "longDescription": "Dois parágrafos descrevendo o estilo visual, cores, tipografia e benefícios do design",
+        "description": "Uma frase curta e vendedora (max 150 caracteres) focada no benefício do trabalho.",
+        "longDescription": "Dois parágrafos descrevendo o trabalho realizado, seguindo o foco específico da categoria acima.",
         "tags": ["tag1", "tag2", "tag3", "tag4"],
         "industry": "Escolha a melhor opção desta lista: ${JSON.stringify(INDUSTRIES)}"
       }
