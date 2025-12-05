@@ -108,11 +108,11 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
         `;
     } else if (categoryContext === ProjectCategory.VIDEO || categoryContext.includes('Vídeo')) {
         specificInstruction = `
-          FOCO ESPECÍFICO: Esta imagem é a CAPA de um VÍDEO CURTO (formato Reels/Shorts ou Comercial de até 30s).
-          - A descrição deve ser SIMPLES, CURTA e DIRETA.
-          - Foco em: Edição dinâmica, impacto visual rápido e retenção de atenção.
-          - Evite floreios poéticos ou textos longos. Use termos como "Vídeo ágil", "Cortes rápidos", "Anúncio para redes sociais".
-          - A 'longDescription' deve ser concisa (máximo 2 ou 3 frases), explicando que é uma peça audiovisual otimizada para engajamento rápido.
+          FOCO ESPECÍFICO: Esta imagem é a CAPA de um PROJETO DE VÍDEO COMPLETO (Edição, Motion, Produção).
+          - IMPORTANTE: O serviço realizado foi a CRIAÇÃO DO VÍDEO em si (Edição, Motion Graphics, Efeitos), não apenas o design da capa estática.
+          - Ao descrever, use termos como "Produção audiovisual", "Edição dinâmica", "Vídeo de alto impacto", "Motion graphics".
+          - Como você só está vendo a capa (imagem estática), mantenha a descrição focada no ESTILO VISUAL, na ATMOSFERA e no OBJETIVO do vídeo (vendas, branding, reels), sem inventar cenas específicas que você não pode ver.
+          - A descrição deve ser simples e direta, ideal para vídeos curtos de redes sociais.
         `;
     } else if (categoryContext === ProjectCategory.WEB || categoryContext.includes('Site') || categoryContext.includes('Web')) {
         specificInstruction = `
