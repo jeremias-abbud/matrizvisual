@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getAllProjects } from '../src/lib/dataService'; // Import DataService
 import { INDUSTRIES } from '../constants';
 import { Project, ProjectCategory } from '../types';
-import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play, Tag, X } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
@@ -16,6 +16,8 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, onProjectClick }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
+  const [activeTag, setActiveTag] = useState<string>(''); // Novo estado para Tag
+  
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -37,18 +39,42 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
     fetchProjects();
   }, []);
 
+  // Resetar paginação e tag ao mudar filtros principais
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
+    setActiveTag(''); 
   }, [activeCategory, activeIndustry]);
   
-  const filteredProjects = projects.filter(project => {
-    const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
-    const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
-    return matchCategory && matchIndustry;
-  });
+  // 1. Filtragem Base (Categoria e Indústria)
+  const baseFilteredProjects = useMemo(() => {
+      return projects.filter(project => {
+        const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
+        const matchIndustry = activeIndustry === '' || project.industry === activeIndustry;
+        return matchCategory && matchIndustry;
+      });
+  }, [projects, activeCategory, activeIndustry]);
 
-  const visibleProjects = filteredProjects.length > 0 ? filteredProjects.slice(0, visibleCount) : [];
-  const hasMore = visibleCount < filteredProjects.length;
+  // 2. Extrair Tags Únicas dos projetos filtrados (Dinâmico)
+  const availableTags = useMemo(() => {
+      const tags = new Set<string>();
+      baseFilteredProjects.forEach(p => {
+          if (p.tags && Array.isArray(p.tags)) {
+              p.tags.forEach(t => tags.add(t.trim()));
+          }
+      });
+      return Array.from(tags).sort();
+  }, [baseFilteredProjects]);
+
+  // 3. Filtragem Final (Incluindo Tag)
+  const finalFilteredProjects = useMemo(() => {
+      if (!activeTag) return baseFilteredProjects;
+      return baseFilteredProjects.filter(p => 
+          p.tags && p.tags.some(t => t.trim() === activeTag)
+      );
+  }, [baseFilteredProjects, activeTag]);
+
+  const visibleProjects = finalFilteredProjects.length > 0 ? finalFilteredProjects.slice(0, visibleCount) : [];
+  const hasMore = visibleCount < finalFilteredProjects.length;
   const canShowLess = visibleCount > ITEMS_PER_PAGE;
 
   const handleLoadMore = () => {
@@ -84,51 +110,88 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
           </div>
         )}
 
-        <div className={`flex flex-col md:flex-row gap-6 w-full items-start md:items-end mb-10 ${headless ? 'justify-end' : ''}`}>
+        <div className={`flex flex-col gap-4 mb-8 ${headless ? 'justify-end' : ''}`}>
              
-             {!forcedCategory && (
-               <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
-                  {categories.map((category) => (
-                  <button
-                      key={category}
-                      onClick={() => setActiveCategory(category)}
-                      className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
-                      activeCategory === category
-                          ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]'
-                          : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
-                      }`}
-                  >
-                      {category}
-                  </button>
-                  ))}
-               </div>
-             )}
-
-             <div className="relative group min-w-[200px]">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
-                    <Filter size={14} />
-                </div>
-                <select 
-                    value={activeIndustry}
-                    onChange={(e) => setActiveIndustry(e.target.value)}
-                    className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm"
-                >
-                    <option value="">Todos os Ramos</option>
-                    {INDUSTRIES.map(ind => (
-                        <option key={ind} value={ind}>{ind}</option>
+             {/* FILTROS PRINCIPAIS */}
+             <div className="flex flex-col md:flex-row gap-4 w-full">
+                {!forcedCategory && (
+                <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
+                    {categories.map((category) => (
+                    <button
+                        key={category}
+                        onClick={() => setActiveCategory(category)}
+                        className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border ${
+                        activeCategory === category
+                            ? 'border-matriz-purple bg-matriz-purple/10 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]'
+                            : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white'
+                        }`}
+                    >
+                        {category}
+                    </button>
                     ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
-                    <ChevronLeft size={14} className="-rotate-90" />
+                </div>
+                )}
+
+                <div className="relative group min-w-[200px]">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+                        <Filter size={14} />
+                    </div>
+                    <select 
+                        value={activeIndustry}
+                        onChange={(e) => setActiveIndustry(e.target.value)}
+                        className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm"
+                    >
+                        <option value="">Todos os Ramos</option>
+                        {INDUSTRIES.map(ind => (
+                            <option key={ind} value={ind}>{ind}</option>
+                        ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                        <ChevronLeft size={14} className="-rotate-90" />
+                    </div>
                 </div>
              </div>
+
+             {/* FILTRO DE TAGS (SECUNDÁRIO) - Só aparece se houver tags disponíveis */}
+             {availableTags.length > 0 && (
+                 <div className="w-full overflow-x-auto pb-2 custom-scrollbar">
+                     <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-1 text-xs text-gray-500 uppercase font-bold mr-2 shrink-0">
+                             <Tag size={12} /> Filtrar por:
+                         </div>
+                         {activeTag && (
+                             <button 
+                                onClick={() => setActiveTag('')}
+                                className="flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/30 text-[10px] font-bold uppercase hover:bg-red-500/20 transition-colors shrink-0"
+                             >
+                                 <X size={10} /> Limpar
+                             </button>
+                         )}
+                         {availableTags.map(tag => (
+                             <button
+                                key={tag}
+                                onClick={() => setActiveTag(activeTag === tag ? '' : tag)}
+                                className={`px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wide transition-all whitespace-nowrap ${
+                                    activeTag === tag
+                                    ? 'bg-matriz-purple text-white border-matriz-purple shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+                                    : 'bg-white/5 text-gray-400 border-white/10 hover:border-white/30 hover:text-white'
+                                }`}
+                             >
+                                 {tag}
+                             </button>
+                         ))}
+                     </div>
+                 </div>
+             )}
         </div>
 
-        <div className="mb-6 text-gray-500 text-sm flex justify-between items-center border-b border-white/5 pb-2">
-           <span>
-             {activeIndustry ? <span className="text-matriz-purple font-bold mr-1">{activeIndustry}</span> : 'Todos os Ramos'}
-           </span>
-           <span>Exibindo {visibleProjects.length} de {filteredProjects.length} projetos</span>
+        <div className="mb-6 text-gray-500 text-xs md:text-sm flex justify-between items-center border-b border-white/5 pb-2">
+           <div className="flex items-center gap-2">
+             {activeIndustry ? <span className="text-matriz-purple font-bold">{activeIndustry}</span> : 'Todos os Ramos'}
+             {activeTag && <span className="text-gray-600">/</span>}
+             {activeTag && <span className="text-white bg-matriz-purple/20 px-2 py-0.5 rounded text-[10px] border border-matriz-purple/30">{activeTag}</span>}
+           </div>
+           <span>Exibindo {visibleProjects.length} de {finalFilteredProjects.length}</span>
         </div>
 
         {loading ? (
@@ -203,13 +266,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             </div>
         )}
         
-        {!loading && filteredProjects.length === 0 && (
+        {!loading && finalFilteredProjects.length === 0 && (
           <div className="text-center py-20 animate-fade-in bg-white/5 border border-white/5 rounded-sm">
             <Filter size={48} className="mx-auto text-gray-600 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Nenhum projeto encontrado</h3>
-            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio ou Categoria.</p>
+            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio, Categoria ou Tag.</p>
             <button 
-                onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); }}
+                onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); setActiveTag(''); }}
                 className="mt-4 text-matriz-purple font-bold uppercase text-sm hover:underline"
             >
                 Limpar Filtros
