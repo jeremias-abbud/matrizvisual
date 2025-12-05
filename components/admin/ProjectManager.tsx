@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
 import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info, Sparkles, Loader2 } from 'lucide-react';
@@ -163,17 +162,18 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
               setFormData(prev => ({
                   ...prev,
                   title: result.title || prev.title,
+                  client: result.client || prev.client,
                   description: result.description || prev.description,
                   longDescription: result.longDescription || prev.longDescription,
                   tags: result.tags ? result.tags.join(', ') : prev.tags,
                   industry: result.industry || prev.industry
               }));
           } else {
-              alert("Não foi possível analisar a imagem. Tente novamente.");
+              alert("A IA não retornou resultados válidos. Tente outra imagem.");
           }
-      } catch (error) {
+      } catch (error: any) {
           console.error(error);
-          alert("Erro na análise de IA.");
+          alert(`Erro na análise de IA: ${error.message || error}`);
       } finally {
           setAnalyzing(false);
       }
@@ -349,9 +349,9 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                             type="button" 
                             onClick={handleAIAnalysis}
                             disabled={analyzing}
-                            className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-matriz-purple/20 to-blue-500/20 border border-matriz-purple/50 rounded text-sm text-matriz-silver hover:text-white hover:border-matriz-purple transition-all"
+                            className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-matriz-purple/20 to-blue-500/20 border border-matriz-purple/50 rounded text-sm text-matriz-silver hover:text-white hover:border-matriz-purple transition-all shadow-[0_0_10px_rgba(139,92,246,0.1)] group"
                         >
-                            {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                            {analyzing ? <Loader2 size={16} className="animate-spin text-matriz-purple" /> : <Sparkles size={16} className="text-yellow-400" />}
                             {analyzing ? 'Analisando Imagem...' : 'Preencher Campos com IA'}
                         </button>
                     )}

@@ -1,8 +1,31 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 
-// Inicializa o cliente Gemini com a chave fornecida pelo usuário
-const ai = new GoogleGenAI({ apiKey: 'AIzaSyAE_X2NljKMegux7iQtiwPGIbXPxfelFUY' });
+// Safely access environment variable with fallback to prevent crash
+// If import.meta.env is undefined, it uses the hardcoded key as backup
+const getApiKey = () => {
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_GOOGLE_API_KEY;
+    }
+  } catch (e) {
+    console.warn("Environment variables not accessible");
+  }
+  // Fallback key provided for development/preview to prevent crash
+  return 'AIzaSyAE_X2NljKMegux7iQtiwPGIbXPxfelFUY';
+};
+
+const apiKey = getApiKey();
+
+let ai: GoogleGenAI | null = null;
+
+if (apiKey) {
+  ai = new GoogleGenAI({ apiKey });
+} else {
+  console.warn("VITE_GOOGLE_API_KEY não definida. A funcionalidade de IA ficará indisponível.");
+}
 
 /**
  * Converte um arquivo File (Browser) para Base64 string
@@ -13,7 +36,6 @@ const fileToBase64 = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
     reader.onload = () => {
       const result = reader.result as string;
-      // Remove o prefixo "data:image/png;base64," para enviar apenas os bytes
       const base64Data = result.split(',')[1];
       resolve(base64Data);
     };
@@ -25,6 +47,7 @@ export interface AIAnalysisResult {
   title: string;
   description: string;
   longDescription: string;
+  client: string;
   tags: string[];
   industry: string;
 }
@@ -33,25 +56,31 @@ export interface AIAnalysisResult {
  * Envia a imagem para o Gemini e retorna os dados preenchidos
  */
 export const analyzeImageWithGemini = async (file: File, categoryContext: string): Promise<AIAnalysisResult | null> => {
+  if (!ai) {
+    throw new Error("Chave de API não configurada.");
+  }
+
   try {
     const base64Data = await fileToBase64(file);
     const mimeType = file.type;
 
+    console.log("Iniciando análise com Gemini 2.5 Flash...");
+
     const prompt = `
-      Analise esta imagem de um projeto de design/portfólio.
-      O contexto da categoria é: "${categoryContext}".
+      Você é um Diretor de Arte Sênior da agência "Matriz Visual".
+      Analise a imagem anexada. O contexto da categoria é: "${categoryContext}".
       
-      Atue como um Diretor de Arte e Copywriter Sênior da agência "Matriz Visual".
-      Gere informações profissionais, persuasivas e vendedoras para preencher o portfólio.
-      
-      Regras:
-      1. Título: Curto, profissional e impactante (Ex: Identidade Visual [Nome], Web Design [Nome]).
-      2. Descrição Curta: Uma frase vendedora de até 150 caracteres, focada no benefício.
-      3. Descrição Longa: 2 parágrafos detalhando o estilo visual, as cores usadas e como isso resolve o problema do cliente.
-      4. Tags: 3 a 5 palavras-chave técnicas relevantes (Ex: Branding, UI/UX, Minimalista, Luxo).
-      5. Indústria: Tente encaixar EXATAMENTE em uma dessas opções: ${JSON.stringify(INDUSTRIES)}. Se não encaixar perfeitamente, escolha a mais próxima.
-      
-      Responda APENAS com o JSON.
+      Gere um JSON estrito com as seguintes chaves:
+      {
+        "title": "Um título curto e comercial para o projeto",
+        "client": "O nome da marca, empresa ou cliente identificado na imagem (se não houver texto, crie um nome fictício plausível)",
+        "description": "Uma frase curta e vendedora (max 150 caracteres)",
+        "longDescription": "Dois parágrafos descrevendo o estilo visual, cores, tipografia e benefícios do design",
+        "tags": ["tag1", "tag2", "tag3", "tag4"],
+        "industry": "Escolha a melhor opção desta lista: ${JSON.stringify(INDUSTRIES)}"
+      }
+
+      Responda APENAS o JSON cru, sem marcação markdown ou blocos de código.
     `;
 
     const response = await ai.models.generateContent({
@@ -64,21 +93,10 @@ export const analyzeImageWithGemini = async (file: File, categoryContext: string
       },
       config: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            title: { type: Type.STRING },
-            description: { type: Type.STRING },
-            longDescription: { type: Type.STRING },
-            tags: { 
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
-            industry: { type: Type.STRING }
-          }
-        }
       }
     });
+
+    console.log("Resposta da IA recebida:", response.text);
 
     if (response.text) {
       return JSON.parse(response.text) as AIAnalysisResult;
@@ -86,8 +104,8 @@ export const analyzeImageWithGemini = async (file: File, categoryContext: string
     
     return null;
 
-  } catch (error) {
-    console.error("Erro na análise de IA:", error);
-    return null;
+  } catch (error: any) {
+    console.error("Erro detalhado na análise de IA:", error);
+    throw new Error(error.message || "Falha na comunicação com a IA");
   }
 };
