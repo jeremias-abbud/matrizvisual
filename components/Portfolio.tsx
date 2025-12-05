@@ -62,21 +62,32 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
       });
   }, [projects, activeCategory, activeIndustry]);
 
-  // 2. Extrair Clientes Únicos (Baseado no Nível 1)
+  // 2. Extrair Clientes Únicos (Baseado no Nível 1) - COM DEDUPLICAÇÃO AVANÇADA
   const availableClients = useMemo(() => {
-      const clients = new Set<string>();
+      const clientMap = new Map<string, string>(); // Chave (lowercase) -> Valor Original
+      
       projectsFilteredByIndustry.forEach(p => {
-          if (p.client) {
-              clients.add(p.client.trim());
+          if (p.client && p.client.trim().length > 0) {
+              const originalName = p.client.trim();
+              const lowerName = originalName.toLowerCase();
+              
+              // Se ainda não temos esse cliente (independente de maiúscula/minúscula), adiciona
+              if (!clientMap.has(lowerName)) {
+                  clientMap.set(lowerName, originalName);
+              }
           }
       });
-      return Array.from(clients).sort();
+      
+      // Retorna os valores originais ordenados alfabeticamente
+      return Array.from(clientMap.values()).sort((a, b) => a.localeCompare(b));
   }, [projectsFilteredByIndustry]);
 
-  // 3. Filtragem Nível 2: Cliente
+  // 3. Filtragem Nível 2: Cliente (Case Insensitive)
   const projectsFilteredByClient = useMemo(() => {
       return projectsFilteredByIndustry.filter(project => {
-          return activeClient === '' || project.client === activeClient;
+          if (activeClient === '') return true;
+          // Comparação flexível para garantir que encontre mesmo se houver pequena variação de case
+          return project.client?.trim().toLowerCase() === activeClient.toLowerCase();
       });
   }, [projectsFilteredByIndustry, activeClient]);
 
