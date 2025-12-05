@@ -114,9 +114,18 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
           - Evite floreios poéticos ou textos longos. Use termos como "Vídeo ágil", "Cortes rápidos", "Anúncio para redes sociais".
           - A 'longDescription' deve ser concisa (máximo 2 ou 3 frases), explicando que é uma peça audiovisual otimizada para engajamento rápido.
         `;
+    } else if (categoryContext === ProjectCategory.WEB || categoryContext.includes('Site') || categoryContext.includes('Web')) {
+        specificInstruction = `
+          FOCO ESPECÍFICO: Esta imagem é de um PROJETO DE WEBSITE COMPLETO (Desenvolvimento + Design).
+          - IMPORTANTE: Considere que o trabalho envolveu a CONSTRUÇÃO e PROGRAMAÇÃO do site, não apenas o design visual.
+          - Use termos como "Site desenvolvido", "Página construída", "Solução web completa", "Site responsivo".
+          - Como você está analisando apenas a imagem da capa, mantenha a descrição SIMPLES e realista. Não invente funcionalidades complexas que não são visíveis.
+          - Foque na estrutura visual, na organização do conteúdo e na aparência profissional.
+          - A 'longDescription' deve ser curta e direta (máximo 3 frases), destacando a entrega de um site funcional e moderno.
+        `;
     } else {
         specificInstruction = `
-          FOCO ESPECÍFICO: Design Gráfico, Logotipos ou Web Design.
+          FOCO ESPECÍFICO: Design Gráfico ou Logotipos.
           - Descreva o estilo visual, paleta de cores, tipografia e como esse design ajuda a marca do cliente.
         `;
     }
