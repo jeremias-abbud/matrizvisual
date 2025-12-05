@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, uploadImage } from '../../src/lib/supabase';
-import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info } from 'lucide-react';
+import { Trash2, Plus, Upload, X, Edit2, GripVertical, Save, Image as ImageIcon, Video, Info, Sparkles, Loader2 } from 'lucide-react';
 import { ProjectCategory } from '../../types';
 import { INDUSTRIES } from '../../constants';
 import ModernSelect from './ModernSelect';
 import { getVideoThumbnail } from '../../src/lib/videoHelper';
+import { analyzeImageWithGemini } from '../../src/lib/gemini';
 
 interface Project {
   id: string;
@@ -30,6 +31,9 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  
+  // AI State
+  const [analyzing, setAnalyzing] = useState(false);
   
   const [isReordering, setIsReordering] = useState(false);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
@@ -141,6 +145,37 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
 
   const removeExistingGalleryImage = (index: number) => {
       setExistingGalleryUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // --- AI ANALYSIS HANDLER ---
+  const handleAIAnalysis = async () => {
+      if (!coverImageFile) {
+          alert("Por favor, selecione uma imagem de capa primeiro para a IA analisar.");
+          return;
+      }
+
+      setAnalyzing(true);
+      try {
+          const result = await analyzeImageWithGemini(coverImageFile, formData.category);
+          
+          if (result) {
+              setFormData(prev => ({
+                  ...prev,
+                  title: result.title || prev.title,
+                  description: result.description || prev.description,
+                  longDescription: result.longDescription || prev.longDescription,
+                  tags: result.tags ? result.tags.join(', ') : prev.tags,
+                  industry: result.industry || prev.industry
+              }));
+          } else {
+              alert("Não foi possível analisar a imagem. Tente novamente.");
+          }
+      } catch (error) {
+          console.error(error);
+          alert("Erro na análise de IA.");
+      } finally {
+          setAnalyzing(false);
+      }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -299,7 +334,7 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                     {editingProject ? 'Trocar Imagem de Capa' : 'Imagem de Capa'}
                     {formData.videoUrl ? <span className="text-green-500 font-normal ml-2">(Opcional: Será usada a capa do vídeo)</span> : <span className="text-matriz-purple ml-1">*</span>}
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2">
                     <div className="flex-1 border border-dashed border-white/20 p-4 text-center rounded bg-black/50 hover:bg-black cursor-pointer relative group transition-colors">
                         <input type="file" accept="image/*" onChange={e => setCoverImageFile(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                         <div className="flex flex-col items-center gap-2 text-gray-400 group-hover:text-white">
@@ -307,6 +342,18 @@ const ProjectManager: React.FC<ProjectManagerProps> = ({ forcedCategory }) => {
                             <span className="text-sm">{coverImageFile ? coverImageFile.name : 'Clique para enviar imagem'}</span>
                         </div>
                     </div>
+                    
+                    {coverImageFile && (
+                        <button 
+                            type="button" 
+                            onClick={handleAIAnalysis}
+                            disabled={analyzing}
+                            className="flex items-center justify-center gap-2 py-2 px-4 bg-gradient-to-r from-matriz-purple/20 to-blue-500/20 border border-matriz-purple/50 rounded text-sm text-matriz-silver hover:text-white hover:border-matriz-purple transition-all"
+                        >
+                            {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                            {analyzing ? 'Analisando Imagem...' : 'Preencher Campos com IA'}
+                        </button>
+                    )}
                 </div>
               </div>
 

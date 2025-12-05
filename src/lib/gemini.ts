@@ -1,9 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 
-// Inicializa o cliente Gemini
-// Assume que a chave está disponível no ambiente
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Inicializa o cliente Gemini com a chave fornecida pelo usuário
+const ai = new GoogleGenAI({ apiKey: 'AIzaSyAE_X2NljKMegux7iQtiwPGIbXPxfelFUY' });
 
 /**
  * Converte um arquivo File (Browser) para Base64 string
@@ -42,15 +41,15 @@ export const analyzeImageWithGemini = async (file: File, categoryContext: string
       Analise esta imagem de um projeto de design/portfólio.
       O contexto da categoria é: "${categoryContext}".
       
-      Atue como um Diretor de Arte e Copywriter Sênior.
-      Gere informações profissionais para preencher o portfólio da agência "Matriz Visual".
+      Atue como um Diretor de Arte e Copywriter Sênior da agência "Matriz Visual".
+      Gere informações profissionais, persuasivas e vendedoras para preencher o portfólio.
       
       Regras:
       1. Título: Curto, profissional e impactante (Ex: Identidade Visual [Nome], Web Design [Nome]).
-      2. Descrição Curta: Uma frase vendedora de até 150 caracteres.
-      3. Descrição Longa: 2 parágrafos detalhando o estilo, cores e o problema resolvido.
-      4. Tags: 3 a 5 palavras-chave técnicas (Ex: Branding, UI/UX, Minimalista).
-      5. Indústria: Tente encaixar EXATAMENTE em uma dessas opções: ${JSON.stringify(INDUSTRIES)}. Se não encaixar perfeitamente, escolha a mais próxima ou deixe em branco.
+      2. Descrição Curta: Uma frase vendedora de até 150 caracteres, focada no benefício.
+      3. Descrição Longa: 2 parágrafos detalhando o estilo visual, as cores usadas e como isso resolve o problema do cliente.
+      4. Tags: 3 a 5 palavras-chave técnicas relevantes (Ex: Branding, UI/UX, Minimalista, Luxo).
+      5. Indústria: Tente encaixar EXATAMENTE em uma dessas opções: ${JSON.stringify(INDUSTRIES)}. Se não encaixar perfeitamente, escolha a mais próxima.
       
       Responda APENAS com o JSON.
     `;
