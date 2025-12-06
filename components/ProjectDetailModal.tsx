@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Project } from '../types';
-import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle, Globe } from 'lucide-react';
+import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle, Globe, Play } from 'lucide-react';
 import { getEmbedUrl } from '../src/lib/videoHelper';
 
 interface ProjectDetailModalProps {
@@ -22,11 +22,10 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   hasPrev
 }) => {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
-  const [fullscreenVideo, setFullscreenVideo] = useState<boolean>(false); // Novo estado para vídeo
+  const [fullscreenVideo, setFullscreenVideo] = useState<boolean>(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Combina imagem de capa com imagens da galeria para navegação completa
   const allImages = project ? [project.imageUrl, ...(project.gallery || [])] : [];
 
   const handleClose = useCallback(() => {
@@ -64,7 +63,6 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     setFullscreenImage(allImages[newIndex]);
   }, [fullscreenIndex, allImages]);
 
-  // Sharing Functions
   const handleShareWhatsApp = () => {
     if (!project) return;
     const deepLink = `${window.location.origin}/?project=${project.id}`;
@@ -85,13 +83,11 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!project) return;
       
-      // Se estiver em fullscreen VIDEO
       if (fullscreenVideo) {
          if (e.key === 'Escape') setFullscreenVideo(false);
          return;
       }
 
-      // Se estiver em fullscreen IMAGEM (Navega entre IMAGENS)
       if (fullscreenImage) {
         if (e.key === 'Escape') setFullscreenImage(null);
         if (e.key === 'ArrowRight') nextImage();
@@ -99,7 +95,6 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         return;
       }
 
-      // Se estiver apenas no modal (Navega entre PROJETOS)
       if (e.key === 'Escape') onClose();
       if (e.key === 'ArrowRight' && onNext) onNext();
       if (e.key === 'ArrowLeft' && onPrev) onPrev();
@@ -123,9 +118,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
   if (!project) return null;
   
   const hasGallery = project.gallery && project.gallery.length > 0;
-  const showDescriptionTitle = (project.description || project.longDescription) && (project.description.length > 10 || (project.longDescription && project.longDescription.length > 10));
-
-  // Detecta se é um vídeo vertical (Shorts/Reels) para ajustar o player no mobile
+  
   const isVerticalVideo = project.category === 'Vídeos' && project.videoUrl && (
     project.videoUrl.includes('/shorts/') || 
     project.videoUrl.includes('tiktok') || 
@@ -137,7 +130,6 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => { setFullscreenImage(null); setFullscreenVideo(false); }}></div>
       
       <div className="relative z-[115] w-full h-full flex flex-col items-center justify-center">
-        {/* Close Button */}
         <button onClick={() => { setFullscreenImage(null); setFullscreenVideo(false); }} className="fixed top-4 right-4 z-[130] text-white hover:text-matriz-purple bg-black/60 p-3 rounded-full border border-white/10 backdrop-blur-md transition-colors shadow-lg">
           <X size={28} />
         </button>
@@ -145,8 +137,8 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         {fullscreenVideo && project.videoUrl ? (
              <div className={`
                 ${isVerticalVideo 
-                    ? 'fixed inset-0 w-full h-[100dvh] z-[120] bg-black' // Mobile/Vertical: Force fixed full screen ignoring parent
-                    : 'relative w-full h-full p-4 md:p-8 max-w-6xl mx-auto flex items-center justify-center'}` // Desktop/Horizontal: Standard centered
+                    ? 'fixed inset-0 w-full h-[100dvh] z-[120] bg-black p-0' 
+                    : 'relative w-full h-full p-4 md:p-8 max-w-6xl mx-auto flex items-center justify-center'}`
              }>
                 <iframe 
                     src={getEmbedUrl(project.videoUrl)} 
@@ -168,7 +160,6 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </div>
         )}
         
-        {/* Navegação de IMAGENS na tela cheia - MOBILE OTIMIZADO (Só aparece se for imagem) */}
         {!fullscreenVideo && allImages.length > 1 && (
           <>
             <button 
@@ -198,121 +189,141 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4">
         <div className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
         
-        {/* Botão Anterior (Projeto) - Visível apenas em Desktop ou Tablet grande */}
+        {/* Desktop Nav Arrows */}
         {hasPrev && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
-                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-lg"
                 title="Projeto Anterior"
             >
                 <ChevronLeft size={32} />
             </button>
         )}
 
-        {/* Botão Próximo (Projeto) - Visível apenas em Desktop ou Tablet grande */}
         {hasNext && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110"
+                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-lg"
                 title="Próximo Projeto"
             >
                 <ChevronRight size={32} />
             </button>
         )}
 
-        <div className="relative bg-matriz-dark w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-lg border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar">
-          <button onClick={onClose} className="sticky top-4 right-4 z-[50] p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 float-right mr-4 backdrop-blur-sm">
+        {/* Modal Container */}
+        <div className="relative bg-matriz-dark w-full max-w-5xl h-[100dvh] md:h-auto md:max-h-[90vh] md:rounded-lg border-x md:border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar flex flex-col md:block overflow-y-auto">
+          
+          <button onClick={onClose} className="fixed md:absolute top-4 right-4 z-[60] p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 backdrop-blur-md shadow-lg">
             <X size={24} />
           </button>
           
-          <div className={`w-full bg-matriz-black flex items-center justify-center clear-both relative group ${
-              isVerticalVideo 
-                ? 'aspect-[9/16] md:aspect-video h-[75vh] md:h-auto md:max-h-[60vh]' 
-                : 'aspect-video h-auto max-h-[60vh]'
-          }`}>
+          {/* MEDIA AREA - Expanded for Mobile Visibility */}
+          <div className={`w-full bg-black/40 flex items-center justify-center relative group shrink-0
+              ${isVerticalVideo 
+                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[60vh]' 
+                : 'min-h-[40vh] md:h-auto md:max-h-[60vh]'}
+          `}>
+            {/* Background Grid Pattern for Transparency */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+
             {project.videoUrl && project.category === 'Vídeos' ? (
               <>
                   <iframe 
-                    key={project.id} // FORÇA O REACT A RECRIAR O IFRAME AO TROCAR DE PROJETO
+                    key={project.id}
                     src={getEmbedUrl(project.videoUrl)} 
                     title={project.title} 
-                    className="w-full h-full" 
+                    className="w-full h-full relative z-10" 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                     allowFullScreen
                   ></iframe>
-                   <button onClick={openVideoFullscreen} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 flex items-center gap-2 backdrop-blur-sm z-20" title="Ver em tela cheia">
+                   <button onClick={openVideoFullscreen} className="absolute top-4 left-4 p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 flex items-center gap-2 backdrop-blur-md z-20 shadow-lg">
                         <Maximize size={20} /> <span className="text-xs font-bold uppercase ml-2">Expandir</span>
                    </button>
               </>
             ) : (
               <>
                 <img 
-                    key={project.id} // FORÇA O REACT A RECRIAR A IMAGEM AO TROCAR DE PROJETO
+                    key={project.id}
                     src={project.imageUrl} 
                     alt={project.title} 
-                    className="w-full h-full object-contain cursor-pointer" 
+                    className="w-full h-full object-contain cursor-pointer relative z-10 p-4 md:p-8" 
                     onClick={(e) => openFullscreen(e, 0)}
                     decoding="async"
                 />
-                <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-2 backdrop-blur-sm" title="Ver em tela cheia">
+                <button onClick={(e) => openFullscreen(e, 0)} className="absolute top-4 left-4 p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-all border border-white/10 flex items-center gap-2 backdrop-blur-md z-20 shadow-lg cursor-pointer">
                   <Maximize size={20} /> <span className="text-xs font-bold uppercase ml-2">Expandir</span>
                 </button>
               </>
             )}
           </div>
           
-          <div className="p-6 md:p-10">
+          {/* CONTENT AREA */}
+          <div className="p-6 md:p-10 flex-grow bg-matriz-dark">
             <div className="flex flex-col lg:flex-row gap-10">
               
               <div className="flex-1">
-                <div className="flex flex-wrap gap-2 mb-4 items-center">
-                  <span className="inline-block px-3 py-1 bg-matriz-purple text-white text-xs font-bold uppercase tracking-widest rounded-sm">{project.category}</span>
-                  {project.industry && <span className="inline-block px-3 py-1 bg-black/60 border border-white/20 text-white text-xs font-bold uppercase tracking-widest rounded-sm">{project.industry}</span>}
+                {/* Header Info */}
+                <div className="mb-6 border-b border-white/5 pb-6">
+                    <div className="flex flex-wrap gap-2 mb-3 items-center">
+                        <span className="inline-block px-3 py-1 bg-matriz-purple/20 text-matriz-purple border border-matriz-purple/30 text-[10px] font-bold uppercase tracking-widest rounded-sm">
+                            {project.category}
+                        </span>
+                        {project.industry && (
+                            <span className="inline-block px-3 py-1 bg-white/5 border border-white/10 text-gray-400 text-[10px] font-bold uppercase tracking-widest rounded-sm">
+                                {project.industry}
+                            </span>
+                        )}
+                    </div>
+                    <h2 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight">
+                        {project.title}
+                    </h2>
                 </div>
-                <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6">{project.title}</h2>
                 
-                {showDescriptionTitle && (
-                    <h3 className="text-xl font-bold text-white mb-4">Sobre o Projeto</h3>
-                )}
-                <p className="text-gray-300 leading-relaxed mb-8 text-lg">{project.longDescription || project.description}</p>
+                {/* Description */}
+                <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed mb-8 text-sm md:text-base">
+                    <p>{project.longDescription || project.description}</p>
+                </div>
                 
+                {/* Web Action */}
                 {project.category === 'Web Sites' && (
-                    <div className="mb-8">
+                    <div className="mb-8 p-4 bg-black/30 border border-white/5 rounded-sm">
                          <a 
                             href={project.videoUrl || '#'} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm"
+                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
                          >
-                            <Globe size={18} /> Acessar Site
+                            <Globe size={18} /> Acessar Site Online
                          </a>
                     </div>
                 )}
 
+                {/* Gallery Grid */}
                 {hasGallery && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white mb-2">Galeria do Projeto</h3>
-                    <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar pt-2">
-                      {/* O índice aqui começa em 1, pois 0 é a capa */}
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <Share2 size={14} className="text-matriz-purple"/> Galeria do Projeto
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2 md:gap-4">
                       {project.gallery!.map((img, idx) => (
                         <button 
                             key={idx} 
                             onClick={(e) => openFullscreen(e, idx + 1)} 
-                            className="relative flex-shrink-0 w-32 h-20 rounded-sm overflow-hidden border-2 border-transparent hover:border-matriz-purple/50 bg-black group"
+                            className="relative aspect-square rounded-sm overflow-hidden border border-white/10 hover:border-matriz-purple/50 bg-black group transition-all"
                         >
                           <img 
                             src={img} 
-                            alt={`Detalhe do projeto ${project.title} - Imagem ${idx + 1}`} 
+                            alt={`Detalhe ${idx + 1}`} 
                             loading="lazy" 
                             decoding="async" 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                           />
-                          <div className="absolute inset-0 bg-black/20 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                            <Maximize size={24} className="text-white" />
+                          <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <Maximize size={20} className="text-white drop-shadow-lg" />
                           </div>
                         </button>
                       ))}
@@ -321,57 +332,64 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                 )}
               </div>
 
-              <div className="lg:w-80 space-y-8">
-                {/* Share Actions */}
-                <div className="bg-matriz-purple/5 p-4 rounded-sm border border-matriz-purple/20">
-                    <h4 className="text-xs uppercase tracking-widest text-matriz-purple font-bold mb-3 flex items-center gap-2">
-                        <Share2 size={14} /> Compartilhar
+              {/* Sidebar Info */}
+              <div className="lg:w-80 space-y-6 pt-6 lg:pt-0 lg:border-l lg:border-white/5 lg:pl-10">
+                {/* Share Box */}
+                <div className="bg-matriz-purple/5 p-5 rounded-sm border border-matriz-purple/20">
+                    <h4 className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold mb-4 flex items-center gap-2">
+                        Compartilhar Projeto
                     </h4>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-3">
                         <button 
                             onClick={handleShareWhatsApp}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-black border border-[#25D366]/30 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
+                            className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-black border border-[#25D366]/30 rounded-sm transition-all text-xs font-bold uppercase tracking-wide hover:shadow-[0_0_15px_rgba(37,211,102,0.3)]"
                         >
-                            <MessageCircle size={16} /> WhatsApp
+                            <MessageCircle size={16} /> Enviar no WhatsApp
                         </button>
                         <button 
                             onClick={handleCopyLink}
                             className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
                         >
                             {linkCopied ? <Check size={16} className="text-green-500" /> : <Link2 size={16} />}
-                            {linkCopied ? 'Link Copiado!' : 'Copiar Link'}
+                            {linkCopied ? 'Link Copiado!' : 'Copiar Link Direto'}
                         </button>
                     </div>
                 </div>
 
-                {(project.client || project.date) && (
-                  <div className="bg-white/5 p-6 rounded-sm border border-white/5 space-y-4">
+                {/* Metadata */}
+                <div className="space-y-4">
                     {project.client && (
-                      <div className="flex items-start gap-3">
-                        <User className="text-matriz-purple mt-1 flex-shrink-0" size={20} />
+                      <div className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-sm transition-colors border border-transparent hover:border-white/5">
+                        <div className="p-2 bg-matriz-purple/10 rounded-full text-matriz-purple">
+                            <User size={16} />
+                        </div>
                         <div>
-                          <h4 className="text-xs uppercase tracking-widest text-gray-400 font-bold">Cliente</h4>
-                          <p className="text-white text-lg">{project.client}</p>
+                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Cliente</h4>
+                          <p className="text-white text-sm font-medium">{project.client}</p>
                         </div>
                       </div>
                     )}
                     {project.date && (
-                      <div className="flex items-start gap-3">
-                        <Calendar className="text-matriz-purple mt-1 flex-shrink-0" size={20} />
+                      <div className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-sm transition-colors border border-transparent hover:border-white/5">
+                        <div className="p-2 bg-matriz-purple/10 rounded-full text-matriz-purple">
+                            <Calendar size={16} />
+                        </div>
                         <div>
-                          <h4 className="text-xs uppercase tracking-widest text-gray-400 font-bold">Data</h4>
-                          <p className="text-white text-lg">{project.date}</p>
+                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Data</h4>
+                          <p className="text-white text-sm font-medium">{project.date}</p>
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
+                </div>
+
                 {project.tags && project.tags.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-bold text-white mb-4">Tecnologias & Ferramentas</h3>
+                  <div className="pt-4 border-t border-white/5">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Tags</h3>
                     <div className="flex flex-wrap gap-2">
                       {project.tags.map(tag => (
-                        <span key={tag} className="px-3 py-1 bg-matriz-purple/10 border border-matriz-purple/20 text-matriz-purple text-xs font-bold rounded-full">{tag}</span>
+                        <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 text-gray-300 text-[10px] font-bold rounded-full hover:border-matriz-purple/50 hover:text-white transition-colors cursor-default">
+                            #{tag}
+                        </span>
                       ))}
                     </div>
                   </div>
@@ -380,21 +398,29 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             </div>
           </div>
           
-          {/* Navegação Mobile entre PROJETOS (Fixo no rodapé do modal) */}
-          <div className="lg:hidden flex justify-between p-4 border-t border-white/10 bg-matriz-black/80 backdrop-blur sticky bottom-0 z-40">
+          {/* Mobile Navigation Footer (Sticky) */}
+          <div className="lg:hidden grid grid-cols-2 gap-4 p-4 border-t border-white/10 bg-matriz-black/95 backdrop-blur-xl sticky bottom-0 z-40">
                 <button 
                     onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
                     disabled={!hasPrev}
-                    className={`flex items-center gap-2 text-sm font-bold uppercase border border-white/10 px-4 py-2 rounded-full ${hasPrev ? 'text-white bg-black/50' : 'text-gray-600 bg-black/20'}`}
+                    className={`flex items-center justify-center gap-2 text-xs font-bold uppercase border px-4 py-3 rounded-sm transition-colors ${
+                        hasPrev 
+                        ? 'border-white/10 text-white bg-white/5 hover:bg-white/10' 
+                        : 'border-white/5 text-gray-600 bg-transparent cursor-not-allowed'
+                    }`}
                 >
-                    <ChevronLeft size={18} /> Anterior
+                    <ChevronLeft size={16} /> Anterior
                 </button>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
                     disabled={!hasNext}
-                    className={`flex items-center gap-2 text-sm font-bold uppercase border border-white/10 px-4 py-2 rounded-full ${hasNext ? 'text-white bg-black/50' : 'text-gray-600 bg-black/20'}`}
+                    className={`flex items-center justify-center gap-2 text-xs font-bold uppercase border px-4 py-3 rounded-sm transition-colors ${
+                        hasNext 
+                        ? 'border-matriz-purple/50 text-white bg-matriz-purple/10 hover:bg-matriz-purple/20' 
+                        : 'border-white/5 text-gray-600 bg-transparent cursor-not-allowed'
+                    }`}
                 >
-                    Próximo <ChevronRight size={18} />
+                    Próximo <ChevronRight size={16} />
                 </button>
           </div>
         </div>

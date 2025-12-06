@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
-import { getAllProjects, getAllLogos } from '../src/lib/dataService'; // Import DataService
+import { getAllProjects, getAllLogos } from '../src/lib/dataService'; 
 import Portfolio from './Portfolio';
 import WebShowcase from './WebShowcase';
 import LogoGrid from './LogoGrid';
 import { Project, ProjectCategory } from '../types';
-import { Clock, Monitor, Grid, Palette, Video, ArrowRight } from 'lucide-react';
+import { Clock, Monitor, Grid, Palette, Video, ArrowRight, Eye, Play } from 'lucide-react';
 
 interface AllProjectsShowcaseProps {
   onProjectClick: (project: Project, listContext?: Project[]) => void;
@@ -13,35 +14,38 @@ interface AllProjectsShowcaseProps {
 const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClick }) => {
   const [latestProjects, setLatestProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State for pagination
+  const [visibleCount, setVisibleCount] = useState(6);
 
   useEffect(() => {
     const fetchLatest = async () => {
       setLoading(true);
-      
-      // CACHE: Usa as funções centralizadas
       const allProjects = await getAllProjects();
       const allLogos = await getAllLogos();
 
-      // Mescla e Ordena por data (mais recente)
       const combined = [...allProjects, ...allLogos];
       
-      // Remove duplicatas (já que allLogos pode conter itens de allProjects)
       const uniqueItems = Array.from(new Map(combined.map(item => [item.id, item])).values());
 
       uniqueItems.sort((a: any, b: any) => {
           return (b.createdAt || 0) - (a.createdAt || 0);
       });
 
-      // Pega os 6 primeiros para mostrar como recentes
-      setLatestProjects(uniqueItems.slice(0, 6));
+      // Keep full list for pagination
+      setLatestProjects(uniqueItems);
       setLoading(false);
     };
     fetchLatest();
   }, []);
   
+  const handleLoadMore = () => {
+      setVisibleCount(prev => prev + 6);
+  };
+
   const SectionHeader = ({ icon, title }: { icon: React.ReactNode, title: string }) => (
     <div className="flex items-center gap-4 mb-8">
-      <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+      <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-sm text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.1)]">
         {icon}
       </div>
       <h3 className="font-display text-2xl md:text-3xl font-bold text-white">{title}</h3>
@@ -52,37 +56,84 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
   return (
     <div className="space-y-20">
       
-      {/* 1. Latest Projects Section */}
+      {/* 1. Latest Projects Section (Using Cinema Style) */}
       <section>
         <SectionHeader icon={<Clock size={24} />} title="Destaques & Recentes" />
         {loading ? (
            <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-matriz-purple"></div></div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {latestProjects.map(project => (
-               <button 
-                  key={project.id} 
-                  onClick={() => onProjectClick(project, latestProjects)}
-                  className="group relative overflow-hidden bg-matriz-dark border border-matriz-purple/10 shadow-[0_4px_20px_rgba(139,92,246,0.05)] flex flex-col text-left transition-all duration-300 hover:border-matriz-purple/50 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] rounded-sm"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {latestProjects.slice(0, visibleCount).map(project => (
+                <div 
+                    key={project.id} 
+                    className="group bg-[#080808] border border-white/5 rounded-sm overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] h-full" 
+                    onClick={() => onProjectClick(project, latestProjects)}
                 >
-                  <div className="aspect-video overflow-hidden relative bg-black/50">
-                      <img 
-                      src={project.imageUrl} 
-                      alt={`Projeto de ${project.category}: ${project.title} - ${project.industry || 'Matriz Visual'}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-contain bg-matriz-black p-2 transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-matriz-purple/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  </div>
-                  <div className="p-4 flex-grow flex flex-col relative z-10 bg-matriz-dark border-t border-white/5 group-hover:border-matriz-purple/20 transition-colors">
-                      <span className="text-matriz-purple text-xs font-bold uppercase tracking-wider mb-2">{project.category}</span>
-                      <h4 className="text-lg font-bold text-white mb-2 flex-grow group-hover:text-matriz-purple transition-colors">{project.title}</h4>
-                      <p className="text-gray-400 text-sm line-clamp-2">{project.description}</p>
-                  </div>
-               </button>
-            ))}
-          </div>
+                    {/* CINEMA IMAGE CONTAINER */}
+                    <div className="relative aspect-video bg-[#050505] border-b border-white/5 overflow-hidden">
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                        
+                        <img 
+                            src={project.imageUrl} 
+                            alt={`Projeto: ${project.title}`}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105 relative z-10"
+                        />
+                        
+                        <div className="absolute top-3 left-3 z-20 flex gap-2">
+                            <span className="px-2 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-bold text-matriz-purple uppercase tracking-wider rounded-sm shadow-lg">
+                                {project.category}
+                            </span>
+                        </div>
+
+                        {project.category === ProjectCategory.VIDEO && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                                <div className="bg-matriz-purple/90 p-4 rounded-full text-white shadow-2xl backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Play size={20} fill="currentColor" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* INFO CONTAINER */}
+                    <div className="flex flex-col flex-grow p-5 bg-[#080808] group-hover:bg-[#0a0a0a] transition-colors">
+                        <div className="flex-grow">
+                            <div className="flex justify-between items-start gap-3 mb-2">
+                                <h3 className="font-display text-lg font-bold text-white leading-tight group-hover:text-matriz-purple transition-colors line-clamp-2">
+                                    {project.title}
+                                </h3>
+                            </div>
+                            {project.industry && (
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-3">
+                                    {project.industry}
+                                </p>
+                            )}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                            <button className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs uppercase font-bold tracking-widest rounded-sm transition-all flex items-center justify-center gap-2 group/btn">
+                                <Eye size={14} className="text-gray-400 group-hover/btn:text-white" /> Ver Detalhes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                ))}
+            </div>
+            
+            {/* Load More Button for Recents */}
+            {visibleCount < latestProjects.length && (
+                <div className="mt-12 flex justify-center">
+                    <button 
+                        onClick={handleLoadMore}
+                        className="group px-8 py-4 border border-matriz-purple/20 bg-matriz-purple/5 hover:bg-matriz-purple text-white transition-all duration-300 text-xs font-bold uppercase tracking-[0.2em]"
+                    >
+                        Carregar Mais
+                    </button>
+                </div>
+            )}
+          </>
         )}
       </section>
 
@@ -98,7 +149,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       <section>
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-md text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-sm text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.2)]">
                     <Grid size={24} />
                 </div>
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-white">Galeria de Logotipos</h3>
@@ -113,7 +164,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         <LogoGrid headless limit={8} onProjectClick={onProjectClick} />
       </section>
 
-      {/* 4. Other Projects (Design & Video) */}
+      {/* 4. Other Projects */}
       <section>
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <div>

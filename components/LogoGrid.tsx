@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ZoomIn, Filter, ChevronLeft } from 'lucide-react';
-import { getAllLogos } from '../src/lib/dataService'; // Import DataService
+import { getAllLogos } from '../src/lib/dataService';
 import { INDUSTRIES } from '../constants';
 import { smoothScrollTo } from '../src/lib/scroll';
 import { Project } from '../types';
@@ -21,7 +22,6 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
   useEffect(() => {
     async function fetchAllLogos() {
       setLoading(true);
-      // CACHE IMPLEMENTADO: Chama a função otimizada do serviço
       const combinedLogos = await getAllLogos();
       setLogos(combinedLogos);
       setLoading(false);
@@ -58,7 +58,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                  Galeria de <span className="text-gray-500">Logotipos</span>
                </h3>
                <p className="text-gray-400 mt-4 max-w-xl text-sm leading-relaxed">
-                 Cada logotipo é criado para ser único. Confira nossa coleção de marcas desenvolvidas para empreendedores que desejam se destacar no mercado.
+                 Marcas únicas para negócios que querem se destacar.
                </p>
              </div>
           </div>
@@ -73,7 +73,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                   <select 
                       value={activeIndustry}
                       onChange={(e) => setActiveIndustry(e.target.value)}
-                      className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
+                      className="w-full appearance-none bg-black/40 border border-white/10 text-gray-300 text-xs pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold"
                   >
                       <option value="">Todos os Ramos</option>
                       {INDUSTRIES.map(ind => (
@@ -93,49 +93,45 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
             </div>
         ) : (
             <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                {/* VITRINE GRID: Cards 'Glass' with reduced padding */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
                 {visibleLogos.map((logo) => (
                     <div 
                     key={logo.id} 
                     onClick={() => onProjectClick && onProjectClick(logo, visibleLogos)}
-                    className="group relative aspect-square bg-matriz-dark border border-matriz-purple/10 rounded-sm flex items-center justify-center p-6 overflow-hidden transition-all duration-300 hover:border-matriz-purple/50 hover:bg-matriz-purple/5 hover:shadow-[0_0_25px_rgba(139,92,246,0.15)] animate-fade-in cursor-pointer backdrop-blur-sm shadow-[0_4px_20px_rgba(139,92,246,0.05)]"
+                    className="group relative aspect-square bg-[#080808] border border-white/5 rounded-sm flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-300 hover:border-matriz-purple/40 hover:bg-[#0a0a0a]"
                     >
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <div className="absolute inset-0 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] pointer-events-none"></div>
+                        {/* Background Grid */}
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none"></div>
 
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                        <div className="bg-matriz-purple p-1.5 rounded-full text-white shadow-[0_0_10px_rgba(139,92,246,0.5)]">
-                            <ZoomIn size={16} />
+                        {/* Image */}
+                        <div className="w-full h-full p-6 md:p-10 flex items-center justify-center relative z-10">
+                            <img 
+                                src={logo.imageUrl} 
+                                alt={`Logotipo: ${logo.title}`}
+                                className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-lg" 
+                                loading="lazy"
+                                decoding="async"
+                            />
                         </div>
-                    </div>
-
-                    <img 
-                        src={logo.imageUrl} 
-                        alt={`Logotipo criado para ${logo.title} - ${logo.industry || 'Design Gráfico'}`}
-                        className="w-full h-full object-contain opacity-70 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-110 relative z-10 filter drop-shadow-sm group-hover:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]" 
-                        loading="lazy"
-                        decoding="async"
-                    />
-                    
-                    <div className="absolute bottom-2 left-0 w-full text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-2 z-20">
-                        <span className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold block truncate drop-shadow-md">{logo.title}</span>
-                        {logo.industry && (
-                            <span className="text-[8px] uppercase tracking-wide text-gray-400 block truncate">{logo.industry}</span>
-                        )}
-                    </div>
-                    
-                    <div className="absolute inset-0 border border-matriz-purple/0 group-hover:border-matriz-purple/50 transition-colors duration-300 rounded-sm pointer-events-none"></div>
+                        
+                        {/* Minimal Label on Hover */}
+                        <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                            <div className="bg-black/90 backdrop-blur-md border border-white/10 rounded-sm py-1.5 px-2 text-center">
+                                <span className="text-[9px] uppercase tracking-widest text-white font-bold block truncate">{logo.title}</span>
+                            </div>
+                        </div>
                     </div>
                 ))}
                 </div>
 
                 {!loading && filteredLogos.length === 0 && (
-                    <div className="text-center py-12 bg-white/5 border border-white/5 rounded-sm">
+                    <div className="text-center py-16 bg-white/5 border border-white/5 rounded-sm">
                         <Filter size={32} className="mx-auto text-gray-600 mb-2" />
-                        <p className="text-gray-500 text-sm">Nenhum logotipo encontrado neste ramo.</p>
+                        <p className="text-gray-500 text-xs font-bold uppercase tracking-wider">Nenhum logotipo encontrado</p>
                         <button 
                             onClick={() => setActiveIndustry('')}
-                            className="mt-2 text-matriz-purple font-bold uppercase text-xs hover:underline"
+                            className="mt-4 text-matriz-purple font-bold uppercase text-xs hover:underline"
                         >
                             Limpar Filtro
                         </button>
@@ -147,10 +143,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                     {hasMore && (
                         <button 
                         onClick={handleLoadMore}
-                        className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
+                        className="group relative px-8 py-4 border border-matriz-purple/20 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden"
                         >
-                        <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
-                            <Plus size={18} className="group-hover:rotate-180 transition-transform duration-500" />
+                        <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-xs">
+                            <Plus size={14} className="group-hover:rotate-180 transition-transform duration-500" />
                             Carregar Mais
                         </div>
                         </button>
@@ -159,10 +155,10 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                     {canShowLess && (
                         <button 
                         onClick={handleShowLess}
-                        className="group relative px-8 py-4 border border-white/10 bg-transparent hover:bg-white/10 hover:border-white text-gray-300 hover:text-white transition-all duration-300 overflow-hidden"
+                        className="group relative px-8 py-4 border border-white/10 bg-transparent hover:bg-white/5 hover:border-white text-gray-400 hover:text-white transition-all duration-300 overflow-hidden"
                         >
-                        <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
-                            <Minus size={18} className="group-hover:scale-75 transition-transform duration-500" />
+                        <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-xs">
+                            <Minus size={14} />
                             Ver Menos
                         </div>
                         </button>
