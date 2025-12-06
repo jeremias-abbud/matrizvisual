@@ -2,18 +2,32 @@ import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 import { ProjectCategory } from '../../types';
 
-// Safely access environment variable to prevent crashes
-// We use a fallback logic: Check if import.meta.env exists before accessing the key
-const apiKey = (import.meta && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) 
-  ? import.meta.env.VITE_GOOGLE_API_KEY 
-  : 'AIzaSyCKbD4qUptSR3JM8uIsh_-XpGNLhVQPyHw'; // Fallback to provided key if env fails in this environment
+// --- CONFIGURAÇÃO SEGURA DA API KEY ---
+// Esta função impede que o site trave se as variáveis de ambiente não estiverem carregadas.
+const getApiKey = (): string => {
+  const fallbackKey = 'AIzaSyCKbD4qUptSR3JM8uIsh_-XpGNLhVQPyHw';
+  
+  try {
+    // @ts-ignore: Ignora verificação estrita de tipos para import.meta
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_GOOGLE_API_KEY;
+    }
+  } catch (error) {
+    // Silencia erros de acesso ao ambiente
+    console.warn("Aviso: Não foi possível ler variáveis de ambiente. Usando chave alternativa.");
+  }
+  
+  return fallbackKey;
+};
 
+const apiKey = getApiKey();
 let ai: GoogleGenAI | null = null;
 
 if (apiKey) {
   ai = new GoogleGenAI({ apiKey });
 } else {
-  console.warn("⚠️ API Key do Google não encontrada. Certifique-se de ter o arquivo .env configurado com VITE_GOOGLE_API_KEY.");
+  console.error("ERRO CRÍTICO: Chave da API Gemini não encontrada.");
 }
 
 /**
@@ -37,7 +51,6 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
  */
 const urlToBase64 = async (url: string): Promise<{ data: string, mimeType: string }> => {
     try {
-        // Adiciona timestamp para evitar cache
         const response = await fetch(`${url}?t=${Date.now()}`);
         if (!response.ok) throw new Error(`Falha ao baixar imagem: ${response.statusText}`);
         const blob = await response.blob();
@@ -63,14 +76,14 @@ export interface AIAnalysisResult {
  */
 export const analyzeImageWithGemini = async (imageSource: File | string, categoryContext: string): Promise<AIAnalysisResult | null> => {
   if (!ai) {
-    throw new Error("Chave de API não configurada ou inválida.");
+    throw new Error("Chave de API não configurada. Verifique o arquivo .env ou a configuração de fallback.");
   }
 
   try {
     let base64Data = '';
     let mimeType = '';
 
-    console.log("Preparando imagem para análise...");
+    console.log("Iniciando processamento da imagem...");
 
     if (imageSource instanceof File) {
         base64Data = await blobToBase64(imageSource);
@@ -83,59 +96,54 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
         throw new Error("Fonte de imagem inválida.");
     }
 
-    console.log("Iniciando análise com Gemini 1.5 Flash...");
+    console.log("Enviando para Gemini 1.5 Flash...");
 
     // Definição de contexto específico baseado na categoria
     let specificInstruction = "";
     
-    if (categoryContext === ProjectCategory.MODELS || categoryContext.includes('Modelos')) {
+    if (categoryContext === ProjectCategory.MODELS || categoryContext.includes('Modelos') || categoryContext.includes('Personagens')) {
         specificInstruction = `
-          FOCO ESPECÍFICO: Esta imagem é de um MODELO 3D, PERSONAGEM IA ou AVATAR.
-          - Descreva a qualidade da renderização, o estilo artístico (realista, cartoon, cyberpunk, etc.), a iluminação e os detalhes do personagem.
-          - Deixe claro que é um trabalho de criação de personagem/modelo virtual.
-          - NÃO descreva como "panfleto" ou "design gráfico", trate como uma "peça de arte digital/modelagem".
+          CONTEXTO: Esta imagem é de um PERSONAGEM 3D, IA ou AVATAR VIRTUAL.
+          - Descreva o realismo, o estilo artístico (cyberpunk, cartoon, realista), a iluminação e os detalhes da modelagem.
+          - Deixe claro que é um trabalho de criação de personagem virtual.
         `;
     } else if (categoryContext === ProjectCategory.VIDEO || categoryContext.includes('Vídeo')) {
         specificInstruction = `
-          FOCO ESPECÍFICO: Esta imagem é a CAPA de um PROJETO DE VÍDEO COMPLETO (Edição, Motion, Produção).
-          - IMPORTANTE: O serviço realizado foi a CRIAÇÃO DO VÍDEO em si (Edição, Motion Graphics, Efeitos), não apenas o design da capa estática.
-          - Ao descrever, use termos como "Produção audiovisual", "Edição dinâmica", "Vídeo de alto impacto", "Motion graphics".
-          - Como você só está vendo a capa (imagem estática), mantenha a descrição focada no ESTILO VISUAL, na ATMOSFERA e no OBJETIVO do vídeo (vendas, branding, reels), sem inventar cenas específicas que você não pode ver.
-          - A descrição deve ser simples e direta, ideal para vídeos curtos de redes sociais.
+          CONTEXTO: Esta imagem é a CAPA de um VÍDEO (Edição, Motion Graphics).
+          - O serviço é a PRODUÇÃO DO VÍDEO, não apenas a arte da capa.
+          - Use termos como "Edição dinâmica", "Motion Graphics", "Produção Audiovisual".
+          - Descreva a atmosfera e o estilo do vídeo baseando-se na capa.
+          - Mantenha a descrição simples e direta (ideal para Reels/Shorts).
         `;
     } else if (categoryContext === ProjectCategory.WEB || categoryContext.includes('Site') || categoryContext.includes('Web')) {
         specificInstruction = `
-          FOCO ESPECÍFICO: Esta imagem é de um PROJETO DE WEBSITE COMPLETO (Desenvolvimento + Design).
-          - IMPORTANTE: Considere que o trabalho envolveu a CONSTRUÇÃO e PROGRAMAÇÃO do site, não apenas o design visual.
-          - Use termos como "Site desenvolvido", "Página construída", "Solução web completa", "Site responsivo".
-          - Como você está analisando apenas a imagem da capa, mantenha a descrição SIMPLES e realista. Não invente funcionalidades complexas que não são visíveis.
-          - Foque na estrutura visual, na organização do conteúdo e na aparência profissional.
-          - A 'longDescription' deve ser curta e direta (máximo 3 frases), destacando a entrega de um site funcional e moderno.
+          CONTEXTO: Esta imagem é de um WEBSITE (Desenvolvimento + Design).
+          - O serviço inclui a PROGRAMAÇÃO e CONSTRUÇÃO do site.
+          - Use termos como "Site Responsivo", "Desenvolvimento Web", "Alta Performance".
+          - Descreva a estrutura, as cores e a usabilidade visível na imagem.
         `;
     } else {
         specificInstruction = `
-          FOCO ESPECÍFICO: Design Gráfico ou Logotipos.
-          - Descreva o estilo visual, paleta de cores, tipografia e como esse design ajuda a marca do cliente.
+          CONTEXTO: Design Gráfico / Identidade Visual.
+          - Descreva as cores, tipografia e o impacto visual da peça.
         `;
     }
 
     const prompt = `
-      Você é um Diretor de Arte Sênior da agência "Matriz Visual".
-      Analise a imagem anexada. O contexto da categoria é: "${categoryContext}".
+      Atue como um Diretor Criativo da agência "Matriz Visual".
+      Analise esta imagem. Categoria do projeto: "${categoryContext}".
       
       ${specificInstruction}
       
-      Gere um JSON estrito com as seguintes chaves:
+      Retorne APENAS um JSON válido com esta estrutura exata:
       {
-        "title": "Um título curto e comercial para o projeto",
-        "client": "O nome da marca, empresa ou cliente identificado na imagem (se não houver texto, crie um nome fictício plausível)",
-        "description": "Uma frase curta e vendedora (max 150 caracteres) focada no benefício do trabalho.",
-        "longDescription": "Um parágrafo curto descrevendo o trabalho realizado, seguindo o foco específico da categoria acima.",
+        "title": "Um título comercial curto (ex: Identidade Visual [Marca])",
+        "client": "Nome da marca/cliente identificado na imagem (ou um nome fictício realista se não houver)",
+        "description": "Frase curta de impacto (max 150 chars) focada no resultado.",
+        "longDescription": "Um parágrafo (max 3 linhas) descrevendo tecnicamente o trabalho realizado e o estilo.",
         "tags": ["tag1", "tag2", "tag3", "tag4"],
         "industry": "Escolha a melhor opção desta lista: ${JSON.stringify(INDUSTRIES)}"
       }
-
-      Responda APENAS o JSON cru, sem marcação markdown ou blocos de código.
     `;
 
     const response = await ai.models.generateContent({
@@ -151,7 +159,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
       }
     });
 
-    console.log("Resposta da IA recebida:", response.text);
+    console.log("Resposta da IA:", response.text);
 
     if (response.text) {
       return JSON.parse(response.text) as AIAnalysisResult;
@@ -160,7 +168,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
     return null;
 
   } catch (error: any) {
-    console.error("Erro detalhado na análise de IA:", error);
+    console.error("Erro na análise de IA:", error);
     throw new Error(error.message || "Falha na comunicação com a IA");
   }
 };
