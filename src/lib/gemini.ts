@@ -1,33 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 import { ProjectCategory } from '../../types';
 
-// Função segura para obter a API Key.
-// Usa try-catch para evitar erros se import.meta.env não estiver definido.
-const getApiKey = (): string => {
-  const fallbackKey = 'AIzaSyCKbD4qUptSR3JM8uIsh_-XpGNLhVQPyHw';
-  
-  try {
-    // @ts-ignore: Ignora verificação estrita de tipos para import.meta
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
-      // @ts-ignore
-      return import.meta.env.VITE_GOOGLE_API_KEY;
-    }
-  } catch (error) {
-    // Silencia erros de acesso ao ambiente e segue para o fallback
-  }
-  
-  return fallbackKey;
-};
-
-const apiKey = getApiKey();
-let ai: GoogleGenAI | null = null;
-
-if (apiKey) {
-  ai = new GoogleGenAI({ apiKey });
-} else {
-  console.error("ERRO CRÍTICO: Chave da API Gemini não encontrada.");
-}
+// ==============================================================================
+// ARQUITETURA SERVERLESS (NETLIFY FUNCTIONS)
+// Este arquivo NÃO contém chaves de API. Ele delega o processamento para o backend.
+// ==============================================================================
 
 /**
  * Converte um arquivo File ou Blob para Base64 string
@@ -71,18 +48,14 @@ export interface AIAnalysisResult {
 }
 
 /**
- * Envia a imagem (File ou URL) para o Gemini e retorna os dados preenchidos
+ * Envia a imagem para a Netlify Function (Serverless)
  */
 export const analyzeImageWithGemini = async (imageSource: File | string, categoryContext: string): Promise<AIAnalysisResult | null> => {
-  if (!ai) {
-    throw new Error("Chave de API não configurada. Verifique o arquivo .env ou a configuração de fallback.");
-  }
-
   try {
     let base64Data = '';
     let mimeType = '';
 
-    console.log("Iniciando processamento da imagem...");
+    console.log("[Client] Preparando imagem para envio seguro...");
 
     if (imageSource instanceof File) {
         base64Data = await blobToBase64(imageSource);
@@ -94,8 +67,6 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
     } else {
         throw new Error("Fonte de imagem inválida.");
     }
-
-    console.log("Enviando para Gemini 2.5 Flash...");
 
     // Definição de contexto específico baseado na categoria
     let specificInstruction = "";
@@ -128,13 +99,13 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
         `;
     }
 
-    const prompt = `
+    const promptText = `
       Atue como um Diretor Criativo da agência "Matriz Visual".
       Analise esta imagem. Categoria do projeto: "${categoryContext}".
       
       ${specificInstruction}
       
-      Retorne APENAS um JSON válido com esta estrutura exata:
+      Gere um JSON estrito com as seguintes chaves:
       {
         "title": "Um título comercial curto (ex: Identidade Visual [Marca])",
         "client": "Nome da marca/cliente identificado na imagem (ou um nome fictício realista se não houver)",
@@ -145,29 +116,52 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
       }
     `;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: {
-        parts: [
-          { inlineData: { mimeType, data: base64Data } },
-          { text: prompt }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
-      }
+    console.log("[Client] Enviando requisição para Netlify Function (.netlify/functions/gemini-query)...");
+
+    // CHAMADA PARA O BACKEND SEGURO
+    const response = await fetch('/.netlify/functions/gemini-query', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [
+                    { inlineData: { mimeType, data: base64Data } },
+                    { text: promptText }
+                ]
+            }]
+        })
     });
 
-    console.log("Resposta da IA:", response.text);
+    if (!response.ok) {
+        let errorMsg = `Erro do servidor: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            if (errorData.error) errorMsg = errorData.error;
+        } catch (e) {}
+        throw new Error(errorMsg);
+    }
 
-    if (response.text) {
-      return JSON.parse(response.text) as AIAnalysisResult;
+    const data = await response.json();
+    console.log("[Client] Resposta recebida do servidor.");
+
+    if (data && data.text) {
+        // O backend retorna o texto JSON puro, precisamos fazer o parse aqui
+        try {
+            // Limpeza básica caso a IA coloque blocos de markdown ```json ... ```
+            const cleanJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+            return JSON.parse(cleanJson) as AIAnalysisResult;
+        } catch (e) {
+            console.error("Erro ao fazer parse do JSON retornado pela IA", e);
+            throw new Error("A IA retornou um formato inválido.");
+        }
     }
     
     return null;
 
   } catch (error: any) {
-    console.error("Erro na análise de IA:", error);
-    throw new Error(error.message || "Falha na comunicação com a IA");
+    console.error("Erro na análise via Serverless:", error);
+    throw new Error(error.message || "Falha na comunicação com o servidor.");
   }
 };
