@@ -14,8 +14,7 @@ const getApiKey = (): string => {
       return import.meta.env.VITE_GOOGLE_API_KEY;
     }
   } catch (error) {
-    // Silencia erros de acesso ao ambiente
-    console.warn("Aviso: Não foi possível ler variáveis de ambiente. Usando chave alternativa.");
+    // Silencia erros de acesso ao ambiente e segue para o fallback
   }
   
   return fallbackKey;

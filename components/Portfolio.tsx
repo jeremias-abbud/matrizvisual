@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { getAllProjects } from '../src/lib/dataService'; // Import DataService
 import { INDUSTRIES } from '../constants';
