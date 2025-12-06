@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, ZoomIn, Filter, ChevronLeft } from 'lucide-react';
 import { getAllLogos } from '../src/lib/dataService';

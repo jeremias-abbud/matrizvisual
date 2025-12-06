@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { getAllProjects, getAllLogos } from '../src/lib/dataService'; 
 import Portfolio from './Portfolio';

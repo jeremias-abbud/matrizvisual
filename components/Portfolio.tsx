@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { getAllProjects } from '../src/lib/dataService';
+import { getAllProjects } from '../src/lib/dataService'; // Import DataService
 import { INDUSTRIES } from '../constants';
 import { Project, ProjectCategory } from '../types';
-import { ArrowRight, ChevronLeft, Plus, Minus, Globe, Filter, Play, Tag, X, Users, Building2, Eye } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Plus, Minus, PlayCircle, Globe, Palette, Filter, Play, Tag, X, Users, Building2, Eye } from 'lucide-react';
 import { smoothScrollTo } from '../src/lib/scroll';
 
 const ITEMS_PER_PAGE = 6;
@@ -17,7 +16,7 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory, onProjectClick }) => {
   const [activeCategory, setActiveCategory] = useState<ProjectCategory>(forcedCategory || ProjectCategory.ALL);
   const [activeIndustry, setActiveIndustry] = useState<string>('');
-  const [activeClient, setActiveClient] = useState<string>('');
+  const [activeClient, setActiveClient] = useState<string>(''); // Novo estado para Cliente
   const [activeTag, setActiveTag] = useState<string>('');
   
   const [projects, setProjects] = useState<Project[]>([]);
@@ -33,6 +32,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
   useEffect(() => {
     async function fetchProjects() {
       setLoading(true);
+      // CACHE IMPLEMENTADO: Chama o serviço centralizado
       const data = await getAllProjects();
       setProjects(data);
       setLoading(false);
@@ -40,17 +40,19 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
     fetchProjects();
   }, []);
 
+  // Resetar filtros dependentes em cascata
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setActiveClient(''); 
-    setActiveTag('');    
+    setActiveClient(''); // Mudou Categoria/Indústria -> Reseta Cliente
+    setActiveTag('');    // Mudou Categoria/Indústria -> Reseta Tag
   }, [activeCategory, activeIndustry]);
 
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-    setActiveTag('');    
+    setActiveTag('');    // Mudou Cliente -> Reseta Tag
   }, [activeClient]);
   
+  // 1. Filtragem Nível 1: Categoria e Indústria
   const projectsFilteredByIndustry = useMemo(() => {
       return projects.filter(project => {
         const matchCategory = activeCategory === ProjectCategory.ALL || project.category === activeCategory;
@@ -59,27 +61,36 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
       });
   }, [projects, activeCategory, activeIndustry]);
 
+  // 2. Extrair Clientes Únicos (Baseado no Nível 1) - COM DEDUPLICAÇÃO AVANÇADA
   const availableClients = useMemo(() => {
-      const clientMap = new Map<string, string>();
+      const clientMap = new Map<string, string>(); // Chave (lowercase) -> Valor Original
+      
       projectsFilteredByIndustry.forEach(p => {
           if (p.client && p.client.trim().length > 0) {
               const originalName = p.client.trim();
               const lowerName = originalName.toLowerCase();
+              
+              // Se ainda não temos esse cliente (independente de maiúscula/minúscula), adiciona
               if (!clientMap.has(lowerName)) {
                   clientMap.set(lowerName, originalName);
               }
           }
       });
+      
+      // Retorna os valores originais ordenados alfabeticamente
       return Array.from(clientMap.values()).sort((a, b) => a.localeCompare(b));
   }, [projectsFilteredByIndustry]);
 
+  // 3. Filtragem Nível 2: Cliente
   const projectsFilteredByClient = useMemo(() => {
       return projectsFilteredByIndustry.filter(project => {
           if (activeClient === '') return true;
+          // Comparação flexível para garantir que encontre mesmo se houver pequena variação de case
           return project.client?.trim().toLowerCase() === activeClient.toLowerCase();
       });
   }, [projectsFilteredByIndustry, activeClient]);
 
+  // 4. Extrair Tags Únicas (Baseado no Nível 2 - Projetos filtrados por cliente)
   const availableTags = useMemo(() => {
       const tags = new Set<string>();
       projectsFilteredByClient.forEach(p => {
@@ -90,6 +101,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
       return Array.from(tags).sort();
   }, [projectsFilteredByClient]);
 
+  // 5. Filtragem Final: Tag
   const finalFilteredProjects = useMemo(() => {
       if (!activeTag) return projectsFilteredByClient;
       return projectsFilteredByClient.filter(p => 
@@ -132,19 +144,21 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
           </div>
         )}
 
-        {/* --- FILTERS --- */}
-        <div className={`flex flex-col gap-4 mb-10 ${headless ? 'justify-end' : ''}`}>
+        <div className={`flex flex-col gap-4 mb-8 ${headless ? 'justify-end' : ''}`}>
+             
+             {/* FILTROS PRINCIPAIS (LINHA 1) */}
              <div className="flex flex-col xl:flex-row gap-4 w-full">
+                {/* Categorias */}
                 {!forcedCategory && (
                 <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
                     {categories.map((category) => (
                     <button
                         key={category}
                         onClick={() => setActiveCategory(category)}
-                        className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all border rounded-sm ${
+                        className={`px-3 py-2 text-xs md:text-sm uppercase tracking-wider transition-all border rounded-sm ${
                         activeCategory === category
                             ? 'border-matriz-purple bg-matriz-purple text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]'
-                            : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white bg-black/40'
+                            : 'border-white/10 text-gray-500 hover:border-white/30 hover:text-white bg-[#0a0a0a]'
                         }`}
                     >
                         {category}
@@ -153,7 +167,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 </div>
                 )}
 
+                {/* Dropdowns (Indústria e Cliente) */}
                 <div className="flex flex-col sm:flex-row gap-4 xl:w-auto w-full">
+                    {/* Seletor de Indústria */}
                     <div className="relative group min-w-[200px] flex-1">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                             <Filter size={14} />
@@ -161,7 +177,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                         <select 
                             value={activeIndustry}
                             onChange={(e) => setActiveIndustry(e.target.value)}
-                            className="w-full appearance-none bg-black/40 border border-white/10 text-gray-300 text-xs pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm"
+                            className="w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none cursor-pointer hover:bg-white/5 transition-colors uppercase tracking-wide font-bold shadow-sm text-ellipsis"
                         >
                             <option value="">Todos os Ramos</option>
                             {INDUSTRIES.map(ind => (
@@ -173,6 +189,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                         </div>
                     </div>
 
+                    {/* Seletor de Cliente (NOVO) */}
                     <div className="relative group min-w-[200px] flex-1">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
                             <Building2 size={14} />
@@ -181,9 +198,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             value={activeClient}
                             onChange={(e) => setActiveClient(e.target.value)}
                             disabled={availableClients.length === 0}
-                            className={`w-full appearance-none bg-black/40 border border-white/10 text-gray-300 text-xs pl-9 pr-8 py-3 rounded-sm focus:border-matriz-purple focus:outline-none transition-colors uppercase tracking-wide font-bold shadow-sm ${availableClients.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'}`}
+                            className={`w-full appearance-none bg-matriz-dark border border-white/10 text-gray-300 text-sm pl-9 pr-8 py-2.5 rounded-sm focus:border-matriz-purple focus:outline-none transition-colors uppercase tracking-wide font-bold shadow-sm text-ellipsis ${availableClients.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-white/5'}`}
                         >
-                            <option value="">{availableClients.length === 0 ? 'Sem clientes' : 'Todos os Clientes'}</option>
+                            <option value="">{availableClients.length === 0 ? 'Sem clientes no filtro' : 'Todos os Clientes'}</option>
                             {availableClients.map(client => (
                                 <option key={client} value={client}>{client}</option>
                             ))}
@@ -195,11 +212,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 </div>
              </div>
 
+             {/* FILTRO DE TAGS (LINHA 2) - Só aparece se houver tags disponíveis */}
              {availableTags.length > 0 && (
                  <div className="w-full overflow-x-auto pb-2 custom-scrollbar">
                      <div className="flex items-center gap-2">
                          <div className="flex items-center gap-1 text-xs text-gray-500 uppercase font-bold mr-2 shrink-0">
-                             <Tag size={12} /> Filtrar:
+                             <Tag size={12} /> Filtrar por:
                          </div>
                          {activeTag && (
                              <button 
@@ -227,7 +245,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
              )}
         </div>
 
-        <div className="mb-8 text-gray-500 text-xs flex flex-wrap justify-between items-center border-b border-white/5 pb-3 gap-2">
+        <div className="mb-6 text-gray-500 text-xs md:text-sm flex flex-wrap justify-between items-center border-b border-white/5 pb-2 gap-2">
            <div className="flex items-center gap-2 flex-wrap">
              {activeIndustry && <span className="text-matriz-purple font-bold">{activeIndustry}</span>}
              {activeClient && (
@@ -236,12 +254,12 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     <span className="text-white font-bold bg-white/10 px-2 py-0.5 rounded-sm">{activeClient}</span>
                  </>
              )}
-             {!activeIndustry && !activeClient && 'Mostrando Todos'}
+             {!activeIndustry && !activeClient && 'Todos os Projetos'}
              
              {activeTag && <span className="text-gray-600">/</span>}
              {activeTag && <span className="text-white bg-matriz-purple/20 px-2 py-0.5 rounded text-[10px] border border-matriz-purple/30">{activeTag}</span>}
            </div>
-           <span className="ml-auto font-mono opacity-50">{visibleProjects.length} / {finalFilteredProjects.length}</span>
+           <span className="ml-auto">Exibindo {visibleProjects.length} de {finalFilteredProjects.length}</span>
         </div>
 
         {loading ? (
@@ -253,23 +271,23 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             {visibleProjects.map((project) => (
                 <div 
                     key={project.id} 
-                    className="group bg-[#080808] border border-white/5 rounded-sm overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] h-full" 
+                    className="group bg-[#050505] border border-white/5 rounded-sm overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] h-full" 
                     onClick={() => onProjectClick(project, visibleProjects)}
                 >
                     {/* --- CINEMA IMAGE CONTAINER --- */}
-                    <div className="relative aspect-video md:aspect-[4/3] bg-[#050505] border-b border-white/5 overflow-hidden">
+                    <div className="relative aspect-video bg-[#020202] border-b border-white/5 overflow-hidden">
                         {/* Grid Pattern */}
-                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+                        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none"></div>
                         
                         <img 
                             src={project.imageUrl} 
                             alt={`Projeto: ${project.title}`}
                             loading="lazy"
                             decoding="async"
-                            className="w-full h-full object-contain p-6 transition-transform duration-700 group-hover:scale-105 relative z-10"
+                            className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover:scale-105 relative z-10"
                         />
                         
-                        {/* Tags Overlay (Top Left) */}
+                        {/* Tags Overlay */}
                         <div className="absolute top-3 left-3 z-20 flex gap-2">
                             <span className="px-2 py-1 bg-black/80 backdrop-blur-md border border-white/10 text-[9px] font-bold text-matriz-purple uppercase tracking-wider rounded-sm shadow-lg">
                                 {project.category}
@@ -287,7 +305,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                     </div>
 
                     {/* --- INFO CONTAINER --- */}
-                    <div className="flex flex-col flex-grow p-5 bg-[#080808] group-hover:bg-[#0a0a0a] transition-colors">
+                    <div className="flex flex-col flex-grow p-5 bg-matriz-dark group-hover:bg-[#121212] transition-colors">
                         <div className="flex-grow">
                             <div className="flex justify-between items-start gap-3 mb-2">
                                 <h3 className="font-display text-lg font-bold text-white leading-tight group-hover:text-matriz-purple transition-colors line-clamp-2">
@@ -295,7 +313,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                                 </h3>
                             </div>
                             {project.industry && (
-                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-3">
+                                <p className="text-[10px] text-gray-500 uppercase tracking-wider font-medium mb-3 border border-white/5 inline-block px-2 py-0.5 rounded-sm bg-black/30">
                                     {project.industry}
                                 </p>
                             )}
@@ -309,10 +327,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                             {project.category === ProjectCategory.WEB && (project.videoUrl || project.id) && (
                                 <button
                                     onClick={(e) => handleVisitSite(e, project.videoUrl)}
-                                    className="px-4 py-3 bg-matriz-purple/10 border border-matriz-purple/30 text-matriz-purple hover:bg-matriz-purple hover:text-white transition-all text-xs uppercase font-bold tracking-widest rounded-sm flex items-center justify-center gap-2"
-                                    title="Acessar Site"
+                                    className="flex-1 py-3 bg-matriz-purple hover:bg-white hover:text-matriz-black text-white text-xs uppercase font-bold tracking-widest rounded-sm transition-all flex items-center justify-center gap-2 shadow-[0_0_10px_rgba(139,92,246,0.2)]"
                                 >
-                                    <Globe size={14} />
+                                    <Globe size={14} /> Acessar
                                 </button>
                             )}
                         </div>
@@ -323,13 +340,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
         )}
         
         {!loading && finalFilteredProjects.length === 0 && (
-          <div className="text-center py-24 bg-white/5 border border-white/5 rounded-sm">
+          <div className="text-center py-20 animate-fade-in bg-white/5 border border-white/5 rounded-sm">
             <Filter size={48} className="mx-auto text-gray-600 mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Nenhum projeto encontrado</h3>
-            <p className="text-gray-500 text-sm">Tente ajustar seus filtros.</p>
+            <p className="text-gray-500">Tente mudar o filtro de Ramo de Negócio, Cliente ou Tag.</p>
             <button 
                 onClick={() => { setActiveIndustry(''); setActiveCategory(ProjectCategory.ALL); setActiveTag(''); setActiveClient(''); }}
-                className="mt-6 text-matriz-purple font-bold uppercase text-xs hover:underline tracking-widest"
+                className="mt-4 text-matriz-purple font-bold uppercase text-sm hover:underline"
             >
                 Limpar Filtros
             </button>
@@ -337,14 +354,14 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
         )}
 
         {!loading && (hasMore || canShowLess) && (
-          <div className="mt-16 flex justify-center gap-4 animate-fade-in">
+          <div className="mt-12 flex justify-center gap-4 animate-fade-in">
             {hasMore && (
               <button 
                 onClick={handleLoadMore}
-                className="group relative px-8 py-4 border border-matriz-purple/30 bg-matriz-purple/10 hover:bg-matriz-purple text-white transition-all duration-300 overflow-hidden shadow-[0_0_20px_rgba(139,92,246,0.1)] hover:shadow-[0_0_30px_rgba(139,92,246,0.4)]"
+                className="group relative px-8 py-4 border border-white/10 bg-white/5 hover:bg-matriz-purple hover:border-matriz-purple text-white transition-all duration-300 overflow-hidden shadow-lg hover:shadow-[0_0_20px_rgba(139,92,246,0.3)]"
               >
-                <div className="flex items-center gap-3 relative z-10 font-bold tracking-[0.2em] uppercase text-xs">
-                  <Plus size={14} className="group-hover:rotate-180 transition-transform duration-500" />
+                <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
+                  <Plus size={18} className="group-hover:rotate-180 transition-transform duration-500" />
                   Carregar Mais
                 </div>
               </button>
@@ -353,10 +370,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
             {canShowLess && (
               <button 
                 onClick={handleShowLess}
-                className="group relative px-8 py-4 border border-white/10 bg-transparent hover:bg-white/5 text-gray-400 hover:text-white transition-all duration-300"
+                className="group relative px-8 py-4 border border-white/10 bg-transparent hover:bg-white/10 hover:border-white text-gray-300 hover:text-white transition-all duration-300 overflow-hidden"
               >
-                <div className="flex items-center gap-3 relative z-10 font-bold tracking-[0.2em] uppercase text-xs">
-                  <Minus size={14} />
+                <div className="flex items-center gap-3 relative z-10 font-bold tracking-widest uppercase text-sm">
+                  <Minus size={18} className="group-hover:scale-75 transition-transform duration-500" />
                   Ver Menos
                 </div>
               </button>
