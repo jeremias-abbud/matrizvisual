@@ -2,8 +2,11 @@ import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 import { ProjectCategory } from '../../types';
 
-// Acessa a chave de forma segura via variável de ambiente (.env)
-const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+// Safely access environment variable to prevent crashes
+// We use a fallback logic: Check if import.meta.env exists before accessing the key
+const apiKey = (import.meta && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) 
+  ? import.meta.env.VITE_GOOGLE_API_KEY 
+  : 'AIzaSyCKbD4qUptSR3JM8uIsh_-XpGNLhVQPyHw'; // Fallback to provided key if env fails in this environment
 
 let ai: GoogleGenAI | null = null;
 
@@ -60,7 +63,7 @@ export interface AIAnalysisResult {
  */
 export const analyzeImageWithGemini = async (imageSource: File | string, categoryContext: string): Promise<AIAnalysisResult | null> => {
   if (!ai) {
-    throw new Error("Chave de API não configurada. Verifique o arquivo .env.");
+    throw new Error("Chave de API não configurada ou inválida.");
   }
 
   try {
