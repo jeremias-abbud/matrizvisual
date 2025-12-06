@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Project } from '../types';
 import { X, Calendar, User, ChevronLeft, ChevronRight, Maximize, Share2, Link2, Check, MessageCircle, Globe, Play } from 'lucide-react';
@@ -214,19 +213,19 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         )}
 
         {/* Modal Container */}
-        <div className="relative bg-matriz-dark w-full max-w-5xl h-[100dvh] md:h-auto md:max-h-[90vh] md:rounded-lg border-x md:border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar flex flex-col md:block overflow-y-auto">
+        <div className="relative bg-matriz-dark w-full max-w-5xl h-[100dvh] md:h-auto md:max-h-[85vh] md:rounded-lg border-x md:border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar flex flex-col md:block overflow-y-auto">
           
           <button onClick={onClose} className="fixed md:absolute top-4 right-4 z-[60] p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 backdrop-blur-md shadow-lg">
             <X size={24} />
           </button>
           
-          {/* MEDIA AREA - Expanded for Mobile Visibility */}
+          {/* MEDIA AREA */}
           <div className={`w-full bg-black/40 flex items-center justify-center relative group shrink-0
               ${isVerticalVideo 
-                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[60vh]' 
-                : 'min-h-[40vh] md:h-auto md:max-h-[60vh]'}
+                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[45vh]' 
+                : 'min-h-[40vh] md:h-auto md:max-h-[45vh]'}
           `}>
-            {/* Background Grid Pattern for Transparency */}
+            {/* Background Grid Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
 
             {project.videoUrl && project.category === 'Vídeos' ? (

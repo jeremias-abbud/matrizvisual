@@ -23,7 +23,7 @@ export const smoothScrollTo = (e: React.MouseEvent<HTMLAnchorElement | HTMLButto
   if (element) {
     // Calcula a altura real da barra de navegação no momento do clique
     const nav = document.querySelector('nav');
-    // Usa a altura do nav + 20px de respiro, ou 100px como fallback seguro se o nav não for encontrado
+    // Usa a altura do nav + 20px de respiro, ou 100px como fallback seguro
     const headerOffset = nav ? nav.offsetHeight + 20 : 100; 
     
     const elementPosition = element.getBoundingClientRect().top;

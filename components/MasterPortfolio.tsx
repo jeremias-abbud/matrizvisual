@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Portfolio from './Portfolio';
 import LogoGrid from './LogoGrid';
@@ -81,7 +80,7 @@ const MasterPortfolio: React.FC = () => {
             setTimeout(() => {
                 const element = document.getElementById('portfolio');
                 if (element) {
-                    // Cálculo dinâmico da altura do nav (CORREÇÃO APLICADA)
+                    // Cálculo dinâmico da altura do nav
                     const nav = document.querySelector('nav');
                     const headerOffset = nav ? nav.offsetHeight + 20 : 100;
                     
@@ -92,7 +91,7 @@ const MasterPortfolio: React.FC = () => {
                         behavior: 'smooth'
                     });
                 }
-            }, 300); 
+            }, 300); // Aumentei levemente o delay para garantir que o layout esteja pronto
         }
 
         // 2. Handle Project Deep Link (Prioridade sobre a aba se ambos existirem)
@@ -246,6 +245,7 @@ const MasterPortfolio: React.FC = () => {
 
               {activeTab === 'logos' && (
                   <div className="bg-matriz-dark/30 p-0 md:p-8 border border-white/5">
+                      {/* REMOVIDO LIMIT=100 PARA ATIVAR PAGINAÇÃO AUTOMÁTICA (8 por vez) */}
                       <LogoGrid headless onProjectClick={handleProjectClick} />
                   </div>
               )}
