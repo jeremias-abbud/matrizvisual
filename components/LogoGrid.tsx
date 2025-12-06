@@ -98,7 +98,7 @@ const LogoGrid: React.FC<LogoGridProps> = ({ headless = false, limit, onProjectC
                 {visibleLogos.map((logo) => (
                     <div 
                     key={logo.id} 
-                    onClick={() => onProjectClick && onProjectClick(logo, visibleLogos)}
+                    onClick={() => onProjectClick && onProjectClick(logo, filteredLogos)}
                     className="group relative aspect-square bg-[#080808] border border-white/5 rounded-sm flex items-center justify-center overflow-hidden cursor-pointer transition-all duration-300 hover:border-matriz-purple/40 hover:bg-[#0a0a0a]"
                     >
                         {/* Background Grid */}

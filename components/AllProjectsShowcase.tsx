@@ -43,6 +43,15 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
       setVisibleCount(prev => prev + 6);
   };
 
+  // Funcao para lidar com o clique em "Ver Galeria Completa"
+  // Ela carrega TODOS os logotipos e abre o primeiro no modal, permitindo carrossel
+  const handleOpenLogoGallery = async () => {
+      const logos = await getAllLogos();
+      if (logos && logos.length > 0) {
+          onProjectClick(logos[0], logos);
+      }
+  };
+
   const SectionHeader = ({ icon, title }: { icon: React.ReactNode, title: string }) => (
     <div className="flex items-center gap-4 mb-8">
       <div className="p-3 bg-matriz-purple/10 border border-matriz-purple/20 rounded-sm text-matriz-purple shadow-[0_0_15px_rgba(139,92,246,0.1)]">
@@ -155,7 +164,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
                 <h3 className="font-display text-2xl md:text-3xl font-bold text-white">Galeria de Logotipos</h3>
             </div>
             <button 
-              onClick={() => (document.querySelector('button[data-tab-id="logos"]') as HTMLButtonElement)?.click()}
+              onClick={handleOpenLogoGallery}
               className="group text-matriz-purple font-bold uppercase text-sm tracking-wider flex items-center gap-2 hover:bg-matriz-purple/10 px-4 py-2 rounded-full transition-all"
             >
               Ver Galeria Completa <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

@@ -191,11 +191,11 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4">
         <div className="absolute inset-0 bg-black/90 backdrop-blur-md transition-opacity" onClick={onClose}></div>
         
-        {/* Desktop Nav Arrows */}
+        {/* Desktop Nav Arrows (Outside Modal) */}
         {hasPrev && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
-                className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-lg"
+                className="hidden xl:flex absolute left-8 top-1/2 -translate-y-1/2 z-[105] p-4 bg-black/50 border border-white/10 text-white/50 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-2xl backdrop-blur-sm"
                 title="Projeto Anterior"
             >
                 <ChevronLeft size={32} />
@@ -205,26 +205,22 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
         {hasNext && (
             <button 
                 onClick={(e) => { e.stopPropagation(); onNext && onNext(); }}
-                className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-[105] p-3 bg-black/50 border border-white/10 text-white/70 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-lg"
+                className="hidden xl:flex absolute right-8 top-1/2 -translate-y-1/2 z-[105] p-4 bg-black/50 border border-white/10 text-white/50 hover:text-white hover:bg-matriz-purple rounded-full transition-all hover:scale-110 shadow-2xl backdrop-blur-sm"
                 title="Próximo Projeto"
             >
                 <ChevronRight size={32} />
             </button>
         )}
 
-        {/* Modal Container */}
-        <div className="relative bg-matriz-dark w-full max-w-5xl h-[100dvh] md:h-auto md:max-h-[85vh] md:rounded-lg border-x md:border border-white/10 shadow-2xl animate-fade-in-down custom-scrollbar flex flex-col md:block overflow-y-auto">
+        {/* --- MAIN MODAL CONTAINER (Split Layout on Desktop) --- */}
+        <div className="relative bg-matriz-dark w-full max-w-7xl h-[100dvh] md:h-auto md:max-h-[90vh] lg:h-[85vh] md:rounded-lg border-x md:border border-white/10 shadow-2xl animate-fade-in-down flex flex-col lg:flex-row overflow-hidden">
           
-          <button onClick={onClose} className="fixed md:absolute top-4 right-4 z-[60] p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 backdrop-blur-md shadow-lg">
+          <button onClick={onClose} className="absolute top-4 right-4 z-50 p-2 bg-black/60 hover:bg-matriz-purple rounded-full text-white transition-colors border border-white/10 backdrop-blur-md shadow-lg">
             <X size={24} />
           </button>
           
-          {/* MEDIA AREA - ATUALIZADO PARA 70VH NO DESKTOP */}
-          <div className={`w-full bg-black/40 flex items-center justify-center relative group shrink-0
-              ${isVerticalVideo 
-                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[70vh]' 
-                : 'min-h-[40vh] md:h-auto md:max-h-[70vh]'}
-          `}>
+          {/* --- LEFT COLUMN: MEDIA (Fixed on Desktop) --- */}
+          <div className="w-full lg:w-[60%] h-[40vh] md:h-[50vh] lg:h-full bg-black/40 relative group shrink-0 flex items-center justify-center border-b lg:border-b-0 lg:border-r border-white/5">
             {/* Background Grid Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>
 
@@ -249,7 +245,7 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     key={project.id}
                     src={project.imageUrl} 
                     alt={project.title} 
-                    className="w-full h-full object-contain cursor-pointer relative z-10 p-4 md:p-8" 
+                    className="w-full h-full object-contain cursor-pointer relative z-10 p-4 lg:p-12" 
                     onClick={(e) => openFullscreen(e, 0)}
                     decoding="async"
                 />
@@ -260,14 +256,13 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             )}
           </div>
           
-          {/* CONTENT AREA */}
-          <div className="p-6 md:p-10 flex-grow bg-matriz-dark">
-            <div className="flex flex-col lg:flex-row gap-10">
-              
-              <div className="flex-1">
+          {/* --- RIGHT COLUMN: CONTENT (Scrollable on Desktop) --- */}
+          <div className="w-full lg:w-[40%] h-full flex flex-col bg-matriz-dark overflow-y-auto custom-scrollbar relative">
+            <div className="p-6 md:p-8 lg:p-10 space-y-8 pb-20 lg:pb-10">
+                
                 {/* Header Info */}
-                <div className="mb-6 border-b border-white/5 pb-6">
-                    <div className="flex flex-wrap gap-2 mb-3 items-center">
+                <div>
+                    <div className="flex flex-wrap gap-2 mb-4 items-center">
                         <span className="inline-block px-3 py-1 bg-matriz-purple/20 text-matriz-purple border border-matriz-purple/30 text-[10px] font-bold uppercase tracking-widest rounded-sm">
                             {project.category}
                         </span>
@@ -277,24 +272,44 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                             </span>
                         )}
                     </div>
-                    <h2 className="text-2xl md:text-4xl font-display font-bold text-white leading-tight">
+                    <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight">
                         {project.title}
                     </h2>
                 </div>
+
+                {/* Metadata Box */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-white/5 border border-white/5 rounded-sm">
+                    {project.client && (
+                      <div>
+                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 flex items-center gap-2">
+                             <User size={12}/> Cliente
+                          </h4>
+                          <p className="text-white text-sm font-medium truncate">{project.client}</p>
+                      </div>
+                    )}
+                    {project.date && (
+                      <div>
+                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-1 flex items-center gap-2">
+                             <Calendar size={12}/> Data
+                          </h4>
+                          <p className="text-white text-sm font-medium truncate">{project.date}</p>
+                      </div>
+                    )}
+                </div>
                 
                 {/* Description */}
-                <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed mb-8 text-sm md:text-base">
+                <div className="prose prose-invert max-w-none text-gray-300 leading-relaxed text-sm">
                     <p>{project.longDescription || project.description}</p>
                 </div>
                 
                 {/* Web Action */}
                 {project.category === 'Web Sites' && (
-                    <div className="mb-8 p-4 bg-black/30 border border-white/5 rounded-sm">
+                    <div className="pt-2">
                          <a 
                             href={project.videoUrl || '#'} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-matriz-purple text-white font-bold uppercase tracking-widest hover:bg-white hover:text-matriz-black transition-all duration-300 rounded-sm shadow-[0_0_15px_rgba(139,92,246,0.3)] text-sm"
                          >
                             <Globe size={18} /> Acessar Site Online
                          </a>
@@ -303,11 +318,11 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
 
                 {/* Gallery Grid */}
                 {hasGallery && (
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <div className="space-y-4 pt-6 border-t border-white/5">
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <Share2 size={14} className="text-matriz-purple"/> Galeria do Projeto
                     </h3>
-                    <div className="grid grid-cols-3 gap-2 md:gap-4">
+                    <div className="grid grid-cols-3 gap-2">
                       {project.gallery!.map((img, idx) => (
                         <button 
                             key={idx} 
@@ -329,76 +344,38 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* Sidebar Info */}
-              <div className="lg:w-80 space-y-6 pt-6 lg:pt-0 lg:border-l lg:border-white/5 lg:pl-10">
-                {/* Share Box */}
-                <div className="bg-matriz-purple/5 p-5 rounded-sm border border-matriz-purple/20">
-                    <h4 className="text-[10px] uppercase tracking-widest text-matriz-purple font-bold mb-4 flex items-center gap-2">
-                        Compartilhar Projeto
-                    </h4>
-                    <div className="flex flex-col gap-3">
-                        <button 
-                            onClick={handleShareWhatsApp}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-black border border-[#25D366]/30 rounded-sm transition-all text-xs font-bold uppercase tracking-wide hover:shadow-[0_0_15px_rgba(37,211,102,0.3)]"
-                        >
-                            <MessageCircle size={16} /> Enviar no WhatsApp
-                        </button>
-                        <button 
-                            onClick={handleCopyLink}
-                            className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
-                        >
-                            {linkCopied ? <Check size={16} className="text-green-500" /> : <Link2 size={16} />}
-                            {linkCopied ? 'Link Copiado!' : 'Copiar Link Direto'}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="space-y-4">
-                    {project.client && (
-                      <div className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-sm transition-colors border border-transparent hover:border-white/5">
-                        <div className="p-2 bg-matriz-purple/10 rounded-full text-matriz-purple">
-                            <User size={16} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Cliente</h4>
-                          <p className="text-white text-sm font-medium">{project.client}</p>
-                        </div>
-                      </div>
-                    )}
-                    {project.date && (
-                      <div className="flex items-start gap-3 p-3 hover:bg-white/5 rounded-sm transition-colors border border-transparent hover:border-white/5">
-                        <div className="p-2 bg-matriz-purple/10 rounded-full text-matriz-purple">
-                            <Calendar size={16} />
-                        </div>
-                        <div>
-                          <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Data</h4>
-                          <p className="text-white text-sm font-medium">{project.date}</p>
-                        </div>
-                      </div>
-                    )}
+                {/* Share Actions */}
+                <div className="pt-6 border-t border-white/5 space-y-3">
+                    <button 
+                        onClick={handleShareWhatsApp}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-black border border-[#25D366]/30 rounded-sm transition-all text-xs font-bold uppercase tracking-wide hover:shadow-[0_0_15px_rgba(37,211,102,0.3)]"
+                    >
+                        <MessageCircle size={16} /> Enviar no WhatsApp
+                    </button>
+                    <button 
+                        onClick={handleCopyLink}
+                        className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10 rounded-sm transition-all text-xs font-bold uppercase tracking-wide"
+                    >
+                        {linkCopied ? <Check size={16} className="text-green-500" /> : <Link2 size={16} />}
+                        {linkCopied ? 'Link Copiado!' : 'Copiar Link Direto'}
+                    </button>
                 </div>
 
                 {project.tags && project.tags.length > 0 && (
-                  <div className="pt-4 border-t border-white/5">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 pt-2">
                       {project.tags.map(tag => (
-                        <span key={tag} className="px-3 py-1 bg-white/5 border border-white/10 text-gray-300 text-[10px] font-bold rounded-full hover:border-matriz-purple/50 hover:text-white transition-colors cursor-default">
+                        <span key={tag} className="px-2 py-1 bg-white/5 border border-white/10 text-gray-500 text-[9px] font-bold rounded-full cursor-default">
                             #{tag}
                         </span>
                       ))}
-                    </div>
                   </div>
                 )}
-              </div>
             </div>
           </div>
           
           {/* Mobile Navigation Footer (Sticky) */}
-          <div className="lg:hidden grid grid-cols-2 gap-4 p-4 border-t border-white/10 bg-matriz-black/95 backdrop-blur-xl sticky bottom-0 z-40">
+          <div className="lg:hidden grid grid-cols-2 gap-4 p-4 border-t border-white/10 bg-matriz-black/95 backdrop-blur-xl sticky bottom-0 z-40 shrink-0">
                 <button 
                     onClick={(e) => { e.stopPropagation(); onPrev && onPrev(); }}
                     disabled={!hasPrev}

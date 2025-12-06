@@ -272,7 +272,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ headless = false, forcedCategory,
                 <div 
                     key={project.id} 
                     className="group bg-[#050505] border border-white/5 rounded-sm overflow-hidden flex flex-col cursor-pointer transition-all duration-500 hover:border-matriz-purple/30 hover:shadow-[0_0_30px_rgba(139,92,246,0.1)] h-full" 
-                    onClick={() => onProjectClick(project, visibleProjects)}
+                    onClick={() => onProjectClick(project, finalFilteredProjects)}
                 >
                     {/* --- CINEMA IMAGE CONTAINER --- */}
                     <div className="relative aspect-video bg-[#020202] border-b border-white/5 overflow-hidden">
