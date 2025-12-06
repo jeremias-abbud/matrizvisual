@@ -219,11 +219,11 @@ const ProjectDetailModal: React.FC<ProjectDetailModalProps> = ({
             <X size={24} />
           </button>
           
-          {/* MEDIA AREA */}
+          {/* MEDIA AREA - ATUALIZADO PARA 70VH NO DESKTOP */}
           <div className={`w-full bg-black/40 flex items-center justify-center relative group shrink-0
               ${isVerticalVideo 
-                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[45vh]' 
-                : 'min-h-[40vh] md:h-auto md:max-h-[45vh]'}
+                ? 'aspect-[9/16] md:aspect-video h-[60vh] md:h-auto md:max-h-[70vh]' 
+                : 'min-h-[40vh] md:h-auto md:max-h-[70vh]'}
           `}>
             {/* Background Grid Pattern */}
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px]"></div>

@@ -2,8 +2,8 @@ import { GoogleGenAI } from "@google/genai";
 import { INDUSTRIES } from '../../constants';
 import { ProjectCategory } from '../../types';
 
-// --- CONFIGURAÇÃO SEGURA DA API KEY ---
-// Esta função impede que o site trave se as variáveis de ambiente não estiverem carregadas.
+// Função segura para obter a API Key.
+// Usa try-catch para evitar erros se import.meta.env não estiver definido.
 const getApiKey = (): string => {
   const fallbackKey = 'AIzaSyCKbD4qUptSR3JM8uIsh_-XpGNLhVQPyHw';
   
