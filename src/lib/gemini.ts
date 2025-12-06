@@ -96,7 +96,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
         throw new Error("Fonte de imagem inválida.");
     }
 
-    console.log("Enviando para Gemini 1.5 Flash...");
+    console.log("Enviando para Gemini 2.5 Flash...");
 
     // Definição de contexto específico baseado na categoria
     let specificInstruction = "";
@@ -147,7 +147,7 @@ export const analyzeImageWithGemini = async (imageSource: File | string, categor
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       contents: {
         parts: [
           { inlineData: { mimeType, data: base64Data } },
