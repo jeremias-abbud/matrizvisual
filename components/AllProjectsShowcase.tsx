@@ -173,18 +173,16 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         <LogoGrid headless limit={8} onProjectClick={onProjectClick} />
       </section>
 
-      {/* 4. Other Projects */}
+      {/* 4. Design Projects */}
       <section>
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            <div>
-              <SectionHeader icon={<Palette size={24} />} title="Design Gráfico" />
-              <Portfolio headless forcedCategory={ProjectCategory.DESIGN} onProjectClick={onProjectClick} />
-            </div>
-            <div>
-              <SectionHeader icon={<Video size={24} />} title="Vídeo & Motion" />
-              <Portfolio headless forcedCategory={ProjectCategory.VIDEO} onProjectClick={onProjectClick} />
-            </div>
-         </div>
+          <SectionHeader icon={<Palette size={24} />} title="Design Gráfico" />
+          <Portfolio headless forcedCategory={ProjectCategory.DESIGN} onProjectClick={onProjectClick} />
+      </section>
+
+      {/* 5. Video Projects */}
+      <section>
+          <SectionHeader icon={<Video size={24} />} title="Vídeo & Motion" />
+          <Portfolio headless forcedCategory={ProjectCategory.VIDEO} onProjectClick={onProjectClick} />
       </section>
 
     </div>
