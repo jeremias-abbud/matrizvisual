@@ -146,15 +146,7 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
         )}
       </section>
 
-      {/* 2. Web Showcase Section */}
-      <section>
-        <SectionHeader icon={<Monitor size={24} />} title="Websites em Destaque" />
-        <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-matriz-purple/10 overflow-hidden shadow-[0_4px_20px_rgba(139,92,246,0.05)]">
-          <WebShowcase headless limit={3} />
-        </div>
-      </section>
-      
-      {/* 3. Logo Grid Section */}
+      {/* 2. Logo Grid Section (Moved up) */}
       <section>
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
             <div className="flex items-center gap-4">
@@ -171,6 +163,14 @@ const AllProjectsShowcase: React.FC<AllProjectsShowcaseProps> = ({ onProjectClic
             </button>
         </div>
         <LogoGrid headless limit={8} onProjectClick={onProjectClick} />
+      </section>
+
+      {/* 3. Web Showcase Section (Moved down) */}
+      <section>
+        <SectionHeader icon={<Monitor size={24} />} title="Websites em Destaque" />
+        <div className="bg-matriz-dark/30 rounded-lg p-0 md:p-4 border border-matriz-purple/10 overflow-hidden shadow-[0_4px_20px_rgba(139,92,246,0.05)]">
+          <WebShowcase headless limit={3} />
+        </div>
       </section>
 
       {/* 4. Design Projects */}
