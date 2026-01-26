@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-11023132959"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'AW-11023132959');
+    </script>
+    
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,7 +28,6 @@
     <meta property="og:description" content="Especialistas em Identidade Visual, Web Design e Produção Audiovisual. Transformamos sua marca em referência no mercado.">
     
     <!-- IMAGEM DE COMPARTILHAMENTO -->
-    <!-- Certifique-se de que o arquivo 'social-share.jpg' esteja na pasta 'public' -->
     <meta property="og:image" content="https://matrizvisual.com.br/social-share.jpg">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1200">
@@ -45,9 +54,9 @@
               matriz: {
                 black: '#050505',
                 dark: '#0f0f0f',
-                purple: '#8b5cf6', // Violet-500 base
+                purple: '#8b5cf6',
                 glow: '#a78bfa',
-                silver: '#e4e4e7', // Zinc-200
+                silver: '#e4e4e7',
                 gray: '#27272a',
               }
             },
@@ -81,14 +90,13 @@
     <style>
       html {
         scroll-behavior: smooth;
-        scroll-padding-top: 100px; /* Ensures header doesn't cover content */
+        scroll-padding-top: 100px;
       }
       body {
         background-color: #050505;
         color: #ffffff;
         overflow-x: hidden;
       }
-      /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
       }
@@ -102,12 +110,9 @@
       ::-webkit-scrollbar-thumb:hover {
         background: #8b5cf6;
       }
-      
-      /* Custom Utilities */
       .clip-path-slant {
         clip-path: polygon(20px 0, 100% 0, calc(100% - 20px) 100%, 0% 100%);
       }
-      
       .text-outline {
         -webkit-text-stroke: 1px rgba(255, 255, 255, 0.1);
         color: transparent;
@@ -130,7 +135,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-    <!-- JSON-LD para SEO (Schema.org) -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
