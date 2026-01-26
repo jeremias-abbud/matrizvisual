@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
@@ -20,6 +21,16 @@ const Contact: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // --- Google Ads Conversion Tracking ---
+    // This triggers the specific conversion event provided by the user
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'conversion', {
+          'send_to': 'AW-11023132959/udayCJKvyewbEJ_Snogp',
+          'value': 1.0,
+          'currency': 'BRL'
+      });
+    }
+
     const message = `Olá! Me chamo *${formData.name}* ${formData.company ? `da empresa *${formData.company}*` : ''}.
 Gostaria de um orçamento para: *${formData.need}*.
 
