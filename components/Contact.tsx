@@ -22,7 +22,7 @@ const Contact: React.FC = () => {
     e.preventDefault();
     
     // --- Google Ads Conversion Tracking ---
-    // This triggers the specific conversion event provided by the user
+    // Este código dispara o evento de conversão solicitado pelo usuário
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'conversion', {
           'send_to': 'AW-11023132959/udayCJKvyewbEJ_Snogp',
